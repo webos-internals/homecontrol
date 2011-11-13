@@ -1,0 +1,13 @@
+{
+	"title": "Home Control",
+	"id": "org.e.lnx.wee.homecontrol",
+	"version": "0.5.0",
+	"uiRevision": "2",
+	"type": "web",
+	"main": "index.html",
+	"icon": "icon.png",
+	"noWindow": "false",
+	"vendor": "Enlightened Linux Solutions",
+	"vendor_email": "development@e-lnx.org",
+	"vendor_url": "http://wee.e-lnx.org/"
+}

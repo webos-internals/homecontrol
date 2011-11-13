@@ -1,0 +1,91 @@
+.keyboard-input {
+	text-align: center;
+}
+
+.control-up .enyo-button-icon {
+	position: absolute;
+	top: 0px;
+	left: 31px;
+	width: 96px;
+	height: 48px;
+}
+
+.control-up .enyo-button-down .enyo-button-icon {
+	background-position: 0 -48px;
+}
+
+.control-left .enyo-button-icon {
+	position: absolute;
+	top: 30px;
+	left: 0px;
+	width: 48px;
+	height: 96px;
+}
+
+.control-left .enyo-button-down .enyo-button-icon {
+	background-position: 0 -96px;
+}
+
+.control-ok .enyo-button-icon {
+	position: absolute;
+	top: 29px;
+	left: 31px;
+	width: 96px;
+	height: 96px;
+}
+
+.control-ok .enyo-button-down .enyo-button-icon {
+	background-position: 0 -96px;
+}
+
+.control-right .enyo-button-icon {
+	position: absolute;
+	top: 30px;
+	left: 109px;
+	width: 48px;
+	height: 96px;
+}
+
+.control-right .enyo-button-down .enyo-button-icon {
+	background-position: 0 -96px;
+}
+
+.control-down .enyo-button-icon {
+	position: absolute;
+	top: 108px;
+	left: 31px;
+	width: 96px;
+	height: 48px;
+}
+
+.control-down .enyo-button-down .enyo-button-icon {
+	background-position: 0 -48px;
+}
+
+.control-repeat .enyo-toggle-button-bar {
+	min-width: 70px;
+	margin-left: -10px;
+}
+
+.control-random .enyo-toggle-button-bar {
+	min-width: 70px;
+	margin-left: -48px;
+}
+
+.control-mute .enyo-toggle-button-bar {
+	min-width: 70px;
+	margin-left: -48px;
+}
+
+.control-mute .enyo-button-icon {
+	margin-left: 8px;
+	margin-right: -12px;
+	margin-top: 95px;
+}
+
+.control-back .enyo-button-icon {
+	margin-left: -12px;
+	margin-right: 8px;
+	margin-top: 95px;
+}
+
