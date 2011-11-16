@@ -30,6 +30,13 @@ Configuration:
 	* Boxee Box control won't need this server app, instead configure it with
 		the Boxee Box ip and port (default port is 8800)
 
+VLC control:
+
+	* VLC needs to have the LUA interface enabled from the preferences, or
+		start VLC with following command from command line:
+
+		vlc --extraintf=luaintf --lua-intf=http
+
 Temperature sensors:
 
 	* If you have wire-1 temperature sensors and want them to show up in the 
