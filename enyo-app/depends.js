@@ -6,5 +6,6 @@ enyo.depends(
 	"source/extensions/HomeTheater.js",
 	"source/extensions/MusicPlayer.js",
 	"source/extensions/VideoPlayer.js",
-	"source/extensions/StatusInfo.js"
+	"source/extensions/StatusInfo.js",
+    "source/extensions/VideoSurveillance.js"
 );

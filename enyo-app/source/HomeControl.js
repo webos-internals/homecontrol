@@ -19,7 +19,8 @@ enyo.kind({
 				{caption: "Home Theater - Boxee Box", value: "HomeTheater:boxeebox"},
 				{caption: "Music Player - MPD", value: "MusicPlayer:mpd"},
 				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox"},
-				{caption: "Video Player - Totem", value: "VideoPlayer:totem"}
+				{caption: "Video Player - Totem", value: "VideoPlayer:totem"},
+                {caption: "Surveillance - Cisco IP Cam", value: "VideoSurveillance:cisco"},
 			]},
 			{name: "controllerName", kind: "Input", hint: "Name for the controller...", autoCapitalize: "title", 
 				autocorrect: false, spellcheck: false, alwaysLooksFocused: true, style: "margin: 5px 0px;", onclick: "showKeyboard"},
@@ -204,7 +205,10 @@ enyo.kind({
 		if((this._ui == "full") && (inSender.view != this._selected)) {
 			this.$.rightPane.selectViewByIndex(this._selected);
 		}
-	
+
+        if (this._selected && this.$["extensionView" + this._selected].deselected)
+            this.$["extensionView" + this._selected].deselected();
+
 		this._selected = inSender.view;
 	
 		this.$.middlePane.selectViewByIndex(inSender.view);
