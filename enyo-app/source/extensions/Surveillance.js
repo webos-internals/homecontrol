@@ -1,5 +1,5 @@
 enyo.kind({
-	name: "VideoSurveillance",
+	name: "Surveillance",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
 	

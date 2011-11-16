@@ -1,5 +1,5 @@
 enyo.kind({
-	name: "HomeTheater",
+	name: "MediaCenter",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
 
@@ -23,7 +23,7 @@ enyo.kind({
 		{kind: "PageHeader", layoutKind: "HFlexLayout", components: [
 			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{kind: "Spacer", flex: 1},
-				{name: "title", content: "Home Theater", style: "margin-top: 0px;font-weight: bold;"},
+				{name: "title", content: "Media Center", style: "margin-top: 0px;font-weight: bold;"},
 				{kind: "Spacer", flex: 1},
 				{kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}			
 			]},

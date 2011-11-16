@@ -11,15 +11,21 @@ enyo.kind({
 	_config: [],
 	
 	components: [
+		{kind: "ApplicationEvents", onBack: "handleBackEvent"},
+
 		{name: "newPopup", lazy: false, kind: "Popup", showKeyboardWhenOpening: true, style: "width: 80%;max-width: 500px;", components: [
 			{content: "Setup New Controller", flex: 1, style: "text-align: center;"},
 			{name: "controllerType", kind: "ListSelector", value: "StatusInfo", flex: 1, style: "margin: 10px 5px;", items: [
 				{caption: "Status Info - Everything", value: "StatusInfo"},
+				{caption: "Surveillance - IP Camera", value: "Surveillance:ipcam"},
 //				{caption: "Sound Control - Pulseaudio", value: "SoundControl:pulseaudio"},
-				{caption: "Home Theater - Boxee Box", value: "HomeTheater:boxeebox"},
+				{caption: "Computer Input - Linux", value: "ComputerInput:linux"},
+				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxeebox"},
+				{caption: "Media Center - XBMC", value: "MediaCenter:xbmc"},
 				{caption: "Music Player - MPD", value: "MusicPlayer:mpd"},
 				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox"},
-				{caption: "Video Player - Totem", value: "VideoPlayer:totem"}
+				{caption: "Video Player - Totem", value: "VideoPlayer:totem"},
+				{caption: "Video Player - VLC", value: "VideoPlayer:vlc"}
 			]},
 			{name: "controllerName", kind: "Input", hint: "Name for the controller...", autoCapitalize: "title", 
 				autocorrect: false, spellcheck: false, alwaysLooksFocused: true, style: "margin: 5px 0px;", onclick: "showKeyboard"},
@@ -34,7 +40,8 @@ enyo.kind({
 		{name: "appPane", kind: "SlidingPane", multiViewMinWidth: 300, flex: 1, style: "background: #666666;", 
 		onSlideComplete: "adjustSlidingTag", components: [
 			{name: "left", width: "320px", components: [
-				{kind: "Pane", flex: 1, components: [
+				{name: "leftPane", kind: "Pane", transitionKind: enyo.transitions.Simple, flex: 1, components: [
+					{name: "startup", kind: "Startup", onDone: "handleStartupDone"},
 					{layoutKind: "VFlexLayout", flex: 1, components: [
 						{kind: "CustomPageHeader", taglines: [{weight: 100, text: "One remote to rule them all!"}]},
 
@@ -50,7 +57,7 @@ enyo.kind({
 					]},
 				]}
 			]},
-			{name: "middle", fixedWidth: true, peekWidth: 64, width: "704px", components: [
+			{name: "middle", fixedWidth: true, dragAnywhere: false, peekWidth: 64, width: "704px", components: [
 				{name: "tag", kind: "CustomSlidingTag"}, 
 
 				{name: "middlePane", kind: "Pane", transitionKind: "enyo.transitions.Simple", flex: 1, components: []}
@@ -76,11 +83,42 @@ enyo.kind({
 		
 		this.$.tag.hide();
 
+		if((localStorage) && (localStorage["version"])) {
+			version = localStorage["version"];
+
+			if(version != enyo.fetchAppInfo().version) {
+				this.$.startup.hideWelcomeText();
+			} else {
+				this.$.leftPane.selectViewByIndex(1);
+			}
+		}
+
+		localStorage["version"] = enyo.fetchAppInfo().version;
+
 		if((localStorage) && (localStorage["controllers"])) {
 			this._config = enyo.json.parse(localStorage["controllers"]);
+			
+			for(var i = 0; i < this._config.length; i++) {
+				if(this._config[i].extension == "HomeTheater")
+					this._config[i].extension = "MediaCenter";
+			}
+
+			localStorage["controllers"] = enyo.json.stringify(this._config);
 		}
 		
 		this.setupExtensions();
+	},
+
+	handleStartupDone: function() {
+		this.$.leftPane.selectViewByIndex(1);
+	},
+
+	handleBackEvent: function(inSender, inEvent) {
+		if((this._ui == "compact") && (this.$.appPane.getViewIndex() > 0)) {
+			enyo.stopEvent(inEvent);
+
+			this.$.appPane.back();
+		}
 	},
 
 	resizeHandler: function() {
@@ -114,6 +152,7 @@ enyo.kind({
 	showKeyboard: function() {
 		enyo.keyboard.show();
 	},
+
 	
 	setupExtensions: function() {
 		var size = enyo.fetchControlSize(this);

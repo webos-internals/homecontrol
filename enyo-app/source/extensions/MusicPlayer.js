@@ -38,8 +38,8 @@ enyo.kind({
 			{name: "musicStatus", kind: "DividerDrawer", caption: "Playing", open: true, components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
 					{layoutKind: "HFlexLayout", align: "center", style: "max-width: 290px;margin: -5px auto 0px auto;", components: [
-						{name: "currentSong", content: "Not playing...", flex: 1, style: "font-weight: bold;font-size: 18px;"},
-						{content: "--:--", className: "enyo-label", style: "color: gray;font-size: 12px;"}
+						{name: "currentSong", content: "Not playing...", flex: 1, style: "font-weight: bold;font-size: 18px;"}
+/*						{content: "--:--", className: "enyo-label", style: "color: gray;font-size: 12px;"}*/
 					]}
 				]}
 			]},
@@ -66,7 +66,7 @@ enyo.kind({
 						{name: "muteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", className: "control-mute", style: "width: 70px;", onChange: "toggleMute"}
 					]},
 					{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [					
-						{name: "volumeSlider", kind: "Slider", onChange: "changeVolume", tapPosition: false, flex: 1, style: "margin: -6px 0px -6px 0px;"}
+						{name: "volumeSlider", kind: "Slider", onChanging: "updateVolume", onChange: "changeVolume", tapPosition: false, flex: 1, style: "margin: -6px 0px -6px 0px;"}
 					]}
 				]}
 			]}
@@ -173,6 +173,10 @@ enyo.kind({
 			this.$.volumeSlider.getPosition(), onSuccess: "handleMusicStatus"});	
 	},
 	
+	updateVolume: function(inSender, inEvent) {
+		this.$.muteToggle.setOnLabel(this.$.volumeSlider.getPosition());
+	},
+		
 	handleMusicStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
 	

@@ -1,0 +1,5 @@
+{
+	"name": "node_mpd",
+	"version": "0.0.1",
+	"main": "./lib/mpd"
+}
