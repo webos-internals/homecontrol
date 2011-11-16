@@ -17,7 +17,7 @@ enyo.kind({
 			{content: "Setup New Controller", flex: 1, style: "text-align: center;"},
 			{name: "controllerType", kind: "ListSelector", value: "StatusInfo", flex: 1, style: "margin: 10px 5px;", items: [
 				{caption: "Status Info - Everything", value: "StatusInfo"},
-				{caption: "Surveillance - IP Camera", value: "Surveillance:ipcam"},
+				{caption: "Surveillance - Cisco", value: "Surveillance:cisco"},
 //				{caption: "Sound Control - Pulseaudio", value: "SoundControl:pulseaudio"},
 				{caption: "Computer Input - Linux", value: "ComputerInput:linux"},
 				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxeebox"},
