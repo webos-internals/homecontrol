@@ -28,7 +28,7 @@ enyo.kind({
         
         {layoutKind: "VFlexLayout", flex: 1, components: [
 			{kind: "Video", name: "videoObject", src: "rtsp://user:pass@127.0.0.1/img/video.sav",
-                showControls: false, width: "320px", height: "240px", style: "position: absolute; left: 64px; top: 84px;"
+                showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"
             },
 		]},
         

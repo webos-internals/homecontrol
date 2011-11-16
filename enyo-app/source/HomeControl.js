@@ -243,7 +243,10 @@ enyo.kind({
 		if((this._ui == "full") && (inSender.view != this._selected)) {
 			this.$.rightPane.selectViewByIndex(this._selected);
 		}
-	
+
+        if (this._selected && this.$["extensionView" + this._selected].deselected)
+            this.$["extensionView" + this._selected].deselected();
+
 		this._selected = inSender.view;
 	
 		this.$.middlePane.selectViewByIndex(inSender.view);
