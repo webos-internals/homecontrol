@@ -17,7 +17,7 @@ enyo.kind({
 			{content: "Setup New Controller", flex: 1, style: "text-align: center;"},
 			{name: "controllerType", kind: "ListSelector", value: "StatusInfo", flex: 1, style: "margin: 10px 5px;", items: [
 				{caption: "Status Info - Everything", value: "StatusInfo"},
-				{caption: "Surveillance - Cisco", value: "Surveillance:cisco"},
+				{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco"},
 //				{caption: "Sound Control - Pulseaudio", value: "SoundControl:pulseaudio"},
 				{caption: "Computer Input - Linux", value: "ComputerInput:linux"},
 				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxeebox"},
@@ -43,7 +43,7 @@ enyo.kind({
 				{name: "leftPane", kind: "Pane", transitionKind: enyo.transitions.Simple, flex: 1, components: [
 					{name: "startup", kind: "Startup", onDone: "handleStartupDone"},
 					{layoutKind: "VFlexLayout", flex: 1, components: [
-						{kind: "CustomPageHeader", taglines: [{weight: 100, text: "One remote to rule them all!"}]},
+						{kind: "CustomPageHeader", taglines: [{weight: 100, text: "One remote to rule them all!"}], onclick: "handleBackEvent"},
 
 						{name: "controlItems", layoutKind: "VFlexLayout", flex: 1, components: []},
 
@@ -62,7 +62,7 @@ enyo.kind({
 
 				{name: "middlePane", kind: "Pane", transitionKind: "enyo.transitions.Simple", flex: 1, components: []}
 			]},
-			{name: "right", fixedWidth: true, peekWidth: 672, width: "352px", components: [
+			{name: "right", fixedWidth: true, dragAnywhere: false, peekWidth: 672, width: "352px", components: [
 				{name: "rightPane", kind: "Pane", transitionKind: "enyo.transitions.Simple", flex: 1, components: []}
 			]}
 		]},
@@ -105,8 +105,12 @@ enyo.kind({
 
 			localStorage["controllers"] = enyo.json.stringify(this._config);
 		}
+
+		// Some weird bug with calling webserver on rendered if the server is down,
+		// causes white card on launch, with small delay no problems...
 		
-		this.setupExtensions();
+		setTimeout(this.setupExtensions.bind(this), 100);
+//		this.setupExtensions();
 	},
 
 	handleStartupDone: function() {
@@ -114,6 +118,7 @@ enyo.kind({
 	},
 
 	handleBackEvent: function(inSender, inEvent) {
+	enyo.error("AEDASDASD");
 		if((this._ui == "compact") && (this.$.appPane.getViewIndex() > 0)) {
 			enyo.stopEvent(inEvent);
 
@@ -243,10 +248,7 @@ enyo.kind({
 		if((this._ui == "full") && (inSender.view != this._selected)) {
 			this.$.rightPane.selectViewByIndex(this._selected);
 		}
-
-        if (this._selected && this.$["extensionView" + this._selected].deselected)
-            this.$["extensionView" + this._selected].deselected();
-
+	
 		this._selected = inSender.view;
 	
 		this.$.middlePane.selectViewByIndex(inSender.view);

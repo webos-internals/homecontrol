@@ -5,6 +5,8 @@ enyo.kind({
 
 	_event: null,
 
+	_button: 0,
+
 	_keyboard: false,
 	
 	_waiting: false,
@@ -41,7 +43,7 @@ enyo.kind({
 			{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "max-width: 320px; margin: auto auto;", components: [	
 					{layoutKind: "VFlexLayout", flex: 1, style: "margin: 5px 0px 5px 0px;border-radius: 20px;border-style: groove;",	
-						onmousedown: "resetMouseEvent", onmousemove: "handleMouseMove"},
+						onmousedown: "resetMouseEvent", onmouseup: "resetMouseButton", onmousemove: "handleMouseMove"},
 				]}
 			]}
 		]},
@@ -53,11 +55,11 @@ enyo.kind({
 			{name: "mouseRight", caption: " ", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-right: 15px;", 
 				onmousedown: "handleMouseDown", onmouseup: "handleMouseUp"},
 			{name: "kbdCtrl", caption: "Ctrl", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-left: 15px;", 
-				onmousedown: "cancelKbdBlur", onclick: "handleButtonState"},				
+				onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"},				
 			{name: "kbdSuper", caption: "Super", kind: "Button", flex: 2, className: "enyo-button-dark", 
-				onmousedown: "cancelKbdBlur", onclick: "handleButtonState"},
+				onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"},
 			{name: "kbdAlt", caption: "Alt", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-right: 15px;", 
-				onmousedown: "cancelKbdBlur", onclick: "handleButtonState"}
+				onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"}
 		]},
 		
 		{name: "serverRequest", kind: "WebService", onFailure: "handleServerError"}		
@@ -92,6 +94,15 @@ enyo.kind({
 		this.$.kbdCtrl.show();
 		this.$.kbdSuper.show();		
 		this.$.kbdAlt.show();
+
+		if(this.$.kbdCtrl.caption != "Ctrl")		
+			this.$.kbdCtrl.setDown(true);
+
+		if(this.$.kbdSuper.caption != "Super")		
+			this.$.kbdSuper.setDown(true);
+
+		if(this.$.kbdAlt.caption != "Alt")		
+			this.$.kbdAlt.setDown(true);
 	},
 	
 	hideKbdButtons: function() {
@@ -111,70 +122,83 @@ enyo.kind({
 	handleButtonState: function(inSender, inEvent) {
 		enyo.stopEvent(inEvent);
 
+		var action = "";
+
 		if(inSender.name == "kbdCtrl") {
 			if(inSender.caption == "Ctrl") {
+				action = "?down=Control_L";
+			
 				inSender.setCaption("CtrlL");
 				inSender.setDown(true);
 			} else if(inSender.caption == "CtrlL") {
+				action = "?up=Control_L&down=Control_R";
+
 				inSender.setCaption("CtrlR");
 				inSender.setDown(true);
 			}	else {
+				action = "?up=Control_R";
+
 				inSender.setCaption("Ctrl");
 				inSender.setDown(false);
 			}
 		} else if(inSender.name == "kbdSuper") {
 			if(inSender.caption == "Super") {
+				action = "?down=Super_L";
+				
 				inSender.setCaption("SuperL");
 				inSender.setDown(true);
 			} else if(inSender.caption == "SuperL") {
+				action = "?up=Super_L&down=Super_R";
+				
 				inSender.setCaption("SuperR");
 				inSender.setDown(true);
 			}	else {
+				action = "?up=Super_L";
+				
 				inSender.setCaption("Super");
 				inSender.setDown(false);
 			}
 		} else if(inSender.name == "kbdAlt") {
 			if(inSender.caption == "Alt") {
+				action = "?down=Alt_L";
+				
 				inSender.setCaption("AltL");
 				inSender.setDown(true);
 			} else if(inSender.caption == "AltL") {
+				action = "?up=Alt_L&down=ISO_Level3_Shift";
+				
 				inSender.setCaption("AltGr");
 				inSender.setDown(true);
 			}	else {
+				action = "?up=ISO_Level3_Shift";
+							
 				inSender.setCaption("Alt");
 				inSender.setDown(false);
 			}
 		}
+
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard" + action, 
+			onSuccess: "handleDeviceStatus"});
 	},
 
 	handleKeypress: function(inSender, inEvent) {
 		this.$.keyboardInput.setValue("");
 
 		var action = "";
-		
-		if(this.$.kbdCtrl.caption == "CtrlL")
-			action += "Control_L%2B";
-		else if(this.$.kbdCtrl.caption == "CtrlR")
-			action += "Control_R%2B";
 
-		if(this.$.kbdSuper.caption == "SuperL")
-			action += "Super_L%2B";
-		else if(this.$.kbdSuper.caption == "SuperR")
-			action += "Super_R%2B";
-
-		if(this.$.kbdAlt.caption == "AltL")
-			action += "Alt_L%2B";
-		else if(this.$.kbdAlt.caption == "AltGr")
-			action += "ISO_Level3_Shift%2B";
-		
 		action += String.fromCharCode(inEvent.keyCode);
 
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard?event=" + action, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard?key=" + action, 
 			onSuccess: "handleDeviceStatus"});	
 	},
 	
 	resetMouseEvent: function(inSender, inEvent) {	
 		this._event = inEvent;
+	},
+
+	resetMouseButton: function(inSender, inEvent) {	
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?up=" + this._button, 
+			onSuccess: "handleDeviceStatus"});	
 	},
 	
 	handleMouseMove: function(inSender, inEvent) {
@@ -190,13 +214,13 @@ enyo.kind({
 
 	handleMouseDown: function(inSender, inEvent) {
 		if(inSender.name == "mouseLeft")
-			var button = 1;
+			this._button = 1;
 		else if(inSender.name == "mouseMiddle")
-			var button = 2;
+			this._button = 2;
 		else if(inSender.name == "mouseRight")
-			var button = 3;
+			this._button = 3;
 		
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?down=" + button, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?down=" + this._button, 
 			onSuccess: "handleDeviceStatus"});	
 	},
 

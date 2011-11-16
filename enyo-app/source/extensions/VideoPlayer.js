@@ -25,7 +25,7 @@ enyo.kind({
 			]}
 		]}, 
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{name: "videoInfo", kind: "DividerDrawer", caption: "Paused", components: [
+			{name: "videoInfo", kind: "DividerDrawer", caption: "Stopped", components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 0px 15px;", components: [
 					{layoutKind: "HFlexLayout", align: "center", style: "max-width: 290px; margin: -6px auto 4px auto;", components: [
 						{name: "currentVideo", content: "Not playing...", flex: 1, style: "font-weight: bold;font-size: 18px;"},
@@ -47,7 +47,7 @@ enyo.kind({
 			{kind: "DividerDrawer", open: false, caption: "Controls", components: [
 				{name: "controlsVLC", layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
 					{layoutKind: "HFlexLayout", pack: "center", style: "max-width: 290px;margin: -1px auto 12px auto;", components: [
-						{name: "videoSize", kind: "Button", caption: "Toggle Fullscreen", flex: 1, className: "enyo-button-dark", style: "margin: -3px 0px -3px 0px;", onclick: "controlVideo"},
+						{name: "videoFullscreen", kind: "Button", caption: "Toggle Fullscreen", flex: 1, className: "enyo-button-dark", style: "margin: -3px 0px -3px 0px;", onclick: "controlVideo"},
 					]},
 					{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: -1px auto 3px auto;", align: "center", components: [
 						{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
@@ -83,7 +83,7 @@ enyo.kind({
 			{kind: "Spacer"}
 		]},
 		
-		{name: "serverRequest", kind: "WebService", url: "http://" + this.address + "/" + this.module + "/status"}		
+		{name: "serverRequest", kind: "WebService", onFailure: "handleServerError"}		
 	],
 
 	rendered: function() {
@@ -130,7 +130,7 @@ enyo.kind({
 				action = "seek&val=-1M";
 			} else if(inSender.name == "videoForward") {
 				action = "seek&val=+1M";
-			} else if(inSender.name == "videoSize") {
+			} else if(inSender.name == "videoFullscreen") {
 				action = "fullscreen";
 			} else if(inSender.name == "muteToggle") {
 				if(this.$.muteToggle.getState())
@@ -214,6 +214,10 @@ enyo.kind({
 			}
 		} else
 			this.doUpdate("offline");
-	}	
+	},
+
+	handleServerError: function() {
+		this.doUpdate("error");
+	}		
 });
 
