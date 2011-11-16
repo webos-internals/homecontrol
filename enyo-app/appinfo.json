@@ -1,6 +1,6 @@
 {
 	"title": "Home Control",
-	"id": "org.e.lnx.wee.homecontrol",
+	"id": "org.webosinternals.homecontrol",
 	"version": "0.6.0",
 	"uiRevision": "2",
 	"type": "web",
