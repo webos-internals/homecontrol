@@ -89,3 +89,8 @@
 	margin-top: 95px;
 }
 
+.function-key.enyo-button-dark {
+	padding: 0px 8px;
+	line-height: 20px;
+	min-height: 15px;
+}
