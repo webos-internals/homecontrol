@@ -21,7 +21,8 @@ enyo.kind({
 
 					{kind: "Divider", caption: "0.6.0"},
 					{content: "<ul><li>Added support for controlling VLC media player</li>" +
-						"<li>Added surveillance extension with support for IP cameras</li>" +
+						"<li>Added surveillance extension with support for Cisco IP camera</li>" +
+						"<li>Added support for controlling iTunes on a OS X operating system</li>" +
 						"<li>Added support for controlling mouse and keyboard on Linux</li></ul>"},
 
 					{kind: "Divider", caption: "0.5.2"},

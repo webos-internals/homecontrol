@@ -121,18 +121,21 @@ enyo.kind({
 		this.$.kbdSuper.hide();		
 		this.$.kbdAlt.hide();
 
-		this.updateStatus();
+		this.updateStatus(true);
 	},
 
 	selected: function() {
 		this.$.title.setContent(this.title);
 
-		this.updateStatus();
+		this.updateStatus(false);
 	},
 	
-	updateStatus: function() {
+	updateStatus: function(poll) {
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/status", 
 			onSuccess: "handleDeviceStatus"});	
+
+		if(poll)
+			setTimeout(this.updateStatus.bind(this, true), 30000);	
 	},
 
 	handleFunctionKey: function() {
@@ -269,7 +272,7 @@ enyo.kind({
 			"/": "slash", "+": "plus", "(": "parenleft", ")": "parenright", "%": "percent", "\"": "quotedbl", "=": "equal", 
 			"&": "ampersand", "-": "minus", "$": "dollar", "!": "exclam", ":": "colon", "'": "apostrophe", "*": "asterisk", 
 			"#": "numbersign", "?": "question", ";": "semicolon", "_": "underscore", ",": "comma", ".": "period", "at": "at",
-			"Backspace": "BackSpace", "Enter": "Return"
+			"Space": "space", "Backspace": "BackSpace", "Enter": "Return"
 		};
 
 		var fnKeys = {
@@ -278,7 +281,7 @@ enyo.kind({
 			"E": "F1", "R": "F2", "T": "F3", "D": "F4", "F": "F5", "G": "F6", "X": "F7", "C": "F8", "V": "F9", 
 			"q": "F11", "Q": "F11", "w": "F12", "W": "F12", "b": "Left", "B": "Left", "j": "Up", "J": "Up", "n": "Down", 
 			"N": "Down", "m": "Right", "M": "Right", "y": "Home", "Y": "Home", "h": "End", "H": "End", "u": "Insert",
-			"U": "Insert", "i": "Page_Up", "I": "Page_Up", "k": "Page_Down", "K": "Page_Down", " ": "Tab",
+			"U": "Insert", "i": "Page_Up", "I": "Page_Up", "k": "Page_Down", "K": "Page_Down", "Space": "Tab",
 			"Backspace": "Delete", "Enter": "Escape"
 		};
 		
@@ -286,6 +289,8 @@ enyo.kind({
 			var key = "Backspace";
 		else if(inEvent.keyCode == 13)
 			var key = "Enter";
+		else if(inEvent.keyCode == 32)
+			var key = "Space";
 		else if(inEvent.keyCode == 48)
 			var key = "@";
 		else if(inEvent.keyCode == 49)
@@ -305,7 +310,7 @@ enyo.kind({
 
 		if(((!this._function) && (keys[key])) || ((this._function) && (fnKeys[key]))) {
 			if(!this._function) {
-				if((this._shift) || (inEvent.keyCode == 8) || (inEvent.keyCode == 135))
+				if((this._shift) || (inEvent.keyCode == 8) || (inEvent.keyCode == 13) || (inEvent.keyCode == 32))
 					this.$.keyboardInput.setValue(key);
 				else
 					this.$.keyboardInput.setValue(key.toLowerCase());

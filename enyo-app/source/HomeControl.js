@@ -22,6 +22,7 @@ enyo.kind({
 				{caption: "Computer Input - Linux", value: "ComputerInput:linux"},
 				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxeebox"},
 				{caption: "Media Center - XBMC", value: "MediaCenter:xbmc"},
+				{caption: "Music Player - iTunes", value: "MusicPlayer:itunes"},
 				{caption: "Music Player - MPD", value: "MusicPlayer:mpd"},
 				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox"},
 				{caption: "Video Player - Totem", value: "VideoPlayer:totem"},
@@ -118,7 +119,6 @@ enyo.kind({
 	},
 
 	handleBackEvent: function(inSender, inEvent) {
-	enyo.error("AEDASDASD");
 		if((this._ui == "compact") && (this.$.appPane.getViewIndex() > 0)) {
 			enyo.stopEvent(inEvent);
 
@@ -133,12 +133,18 @@ enyo.kind({
 	adjustSliding: function() {
 		var size = enyo.fetchControlSize(this);
 
-		if(size.w < 768) {
+		if(size.w <= 768) {
 			this._ui = "compact";
 		
-			enyo.setAllowedOrientation("up");
+			if(size.w < 768) {
+				enyo.setAllowedOrientation("up");
 
-			this.$.middle.applyStyle("width", (size.w - 64) + "px");
+				this.$.middle.applyStyle("width", (size.w - 64) + "px");
+			} else {
+				this.$.middle.applyStyle("width", (size.w - 320) + "px");
+
+				this.$.middle.setPeekWidth(320);			
+			}
 		} else {	
 			this.$.middle.applyStyle("width", "352px");
 

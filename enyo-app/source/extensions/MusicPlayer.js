@@ -35,7 +35,7 @@ enyo.kind({
 			]}
 		]}, 
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{name: "musicStatus", kind: "DividerDrawer", caption: "Playing", open: true, components: [
+			{name: "musicStatus", kind: "DividerDrawer", caption: "Stopped", open: true, components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
 					{layoutKind: "HFlexLayout", align: "center", style: "max-width: 290px;margin: -5px auto 0px auto;", components: [
 						{name: "currentSong", content: "Not playing...", flex: 1, style: "font-weight: bold;font-size: 18px;"}
@@ -92,8 +92,8 @@ enyo.kind({
 
 	selected: function() {
 		this.$.search.hide();
-		
-		if(this.module == "rhythmbox")
+
+		if(this.module != "mpd")
 			this.$.repeatShuffle.hide();
 	
 		this.$.title.setContent(this.title);
@@ -141,10 +141,10 @@ enyo.kind({
 		var action = "status";
 
 		if(inSender.name == "musicPlayPause") {
-			if(this._state == "paused")
-				action = "play";
-			else
+			if(this._state == "playing")
 				action = "pause";
+			else
+				action = "play";
 		} else if(inSender.name == "musicNextSong")
 			action = "next";
 		else if(inSender.name == "musicPrevSong")
@@ -160,8 +160,12 @@ enyo.kind({
 	
 	toggleMute: function(inSender, inEvent) {
 		if(this.$.muteToggle.getState()) {
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/volume?volume=" + 
-				this._volume, onSuccess: "handleMusicStatus"});	
+			if(this.module == "itunes") {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/unmute"});	
+			} else {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/volume?volume=" + 
+					this._volume, onSuccess: "handleMusicStatus"});	
+			}			
 		} else {
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mute", 
 				onSuccess: "handleMusicStatus"});	
@@ -185,13 +189,15 @@ enyo.kind({
 
 			if(inResponse.status == "paused") {
 				this.doUpdate("Paused");
+				this._state = "paused";
 			
 				this.$.musicStatus.setCaption("Paused");
 			
 				this.$.currentSong.setContent("Playing paused...");
 				this.$.musicPlayPause.setIcon("./images/ctl-play.png");
-			} else {
+			} else if(inResponse.status == "playing") {
 				this.doUpdate("Playing");
+				this._state = "playing";
 
 				this.$.musicStatus.setCaption("Playing");
 
@@ -201,6 +207,13 @@ enyo.kind({
 					this.$.currentSong.setContent(unescape(inResponse.title));
 				
 				this.$.musicPlayPause.setIcon("./images/ctl-pause.png");
+			} else if(inResponse.status == "stopped") {
+				this.doUpdate("Stopped");
+				this._state = "stopped";
+				
+				this.$.musicStatus.setCaption("Stopped");
+				
+				this.$.currentSong.setContent("Not playing...");
 			}
 
 			if(inResponse.repeat)
@@ -215,7 +228,7 @@ enyo.kind({
 				this.$.favorites.refresh();
 			}
 			
-			if(inResponse.volume == "0") {
+			if((inResponse.mute == undefined) && (inResponse.volume == "0")) {
 				this.$.muteToggle.setOnLabel("0");
 
 				this.$.muteToggle.setState(false);
@@ -225,7 +238,11 @@ enyo.kind({
 			
 				this.$.muteToggle.setOnLabel(inResponse.volume);
 
-				this.$.muteToggle.setState(true);
+				if(inResponse.mute != "true")
+					this.$.muteToggle.setState(true);
+				else
+					this.$.muteToggle.setState(false);
+				
 				this.$.volumeSlider.setPosition(this._volume);
 			}
 		} else

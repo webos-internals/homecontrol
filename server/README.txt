@@ -8,10 +8,6 @@ Installation / requirements:
 
 	* Node.js, refer to your distributions documentation how to install node.js
 	
-	* Expressjs module for node.js, after node.js is installed then execute:
-		
-		npm install express
-
 	* For mouse/keyboard control in linux you need to install xdotool:
 
 		apt-get install xdotool (might be with different name)
