@@ -44,10 +44,11 @@ enyo.kind({
 	],
 	
 	rendered: function() {
-		this.playVideo();
+        
 	},
     
     selected: function() {
+        this.pauseVideo();
 		this.$.title.setContent(this.title);
 
 		this.playVideo();

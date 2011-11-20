@@ -9,5 +9,7 @@
 	"noWindow": "false",
 	"vendor": "Enlightened Linux Solutions",
 	"vendor_email": "development@e-lnx.org",
-	"vendor_url": "http://wee.e-lnx.org/"
+	"vendor_url": "http://wee.e-lnx.org/",
+    "dockMode": true,
+    "touchstoneMode": "enabled"
 }

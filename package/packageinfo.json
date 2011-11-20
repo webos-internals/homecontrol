@@ -8,5 +8,5 @@
   "vendor": "Enlightened Linux Solutions",
   "vendorurl": "wee.e-lnx.org",
   "app": "org.webosinternals.homecontrol",
-  "services": []
+  "services": ["org.webosinternals.homecontrol.service"]
 }

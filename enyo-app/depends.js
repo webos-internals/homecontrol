@@ -9,5 +9,8 @@ enyo.depends(
 	"source/extensions/MusicPlayer.js",
 	"source/extensions/VideoPlayer.js",
 	"source/extensions/StatusInfo.js",
-	"source/extensions/Surveillance.js"
+	"source/extensions/Surveillance.js",
+    "source/extensions/UPnPController.js",
+    "source/extensions/UPnPSpeaker.js",
+    "source/extensions/UPnPTV.js"
 );

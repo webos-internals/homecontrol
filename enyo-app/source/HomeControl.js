@@ -25,8 +25,10 @@ enyo.kind({
 				{caption: "Music Player - iTunes", value: "MusicPlayer:itunes"},
 				{caption: "Music Player - MPD", value: "MusicPlayer:mpd"},
 				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox"},
+                {caption: "Speaker - UPnP/DLNA", value: "UPnPSpeaker:speaker"},
 				{caption: "Video Player - Totem", value: "VideoPlayer:totem"},
-				{caption: "Video Player - VLC", value: "VideoPlayer:vlc"}
+				{caption: "Video Player - VLC", value: "VideoPlayer:vlc"},
+                {caption: "TV - UPnP/DLNA", value: "UPnPTV:tv"},
 			]},
 			{name: "controllerName", kind: "Input", hint: "Name for the controller...", autoCapitalize: "title", 
 				autocorrect: false, spellcheck: false, alwaysLooksFocused: true, style: "margin: 5px 0px;", onclick: "showKeyboard"},
