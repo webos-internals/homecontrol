@@ -1,5 +1,4 @@
 enyo.depends(
-	"$enyo-lib/mediacapture/",
 	"css/CustomKinds.css",
 	"css/HomeControl.css",
 	"source/CustomKinds.js",
@@ -13,5 +12,6 @@ enyo.depends(
 	"source/extensions/Surveillance.js",
 	"source/extensions/UPnPController.js",
 	"source/extensions/UPnPSpeaker.js",
-	"source/extensions/UPnPTV.js"
+	"source/extensions/UPnPTV.js",
+	"$enyo-lib/mediacapture/"
 );
