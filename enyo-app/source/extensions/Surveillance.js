@@ -47,8 +47,9 @@ enyo.kind({
         
 	},
     
-    selected: function() {
-        this.pauseVideo();
+	selected: function() {
+		this.pauseVideo();
+
 		this.$.title.setContent(this.title);
 
 		this.playVideo();

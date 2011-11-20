@@ -6,10 +6,10 @@
 	"type": "web",
 	"main": "index.html",
 	"icon": "icon.png",
-	"noWindow": "false",
+	"noWindow": "true",
+	"dockMode": true,
+	"touchstoneMode": "enabled",
 	"vendor": "Enlightened Linux Solutions",
 	"vendor_email": "development@e-lnx.org",
-	"vendor_url": "http://wee.e-lnx.org/",
-    "dockMode": true,
-    "touchstoneMode": "enabled"
+	"vendor_url": "http://wee.e-lnx.org/"
 }

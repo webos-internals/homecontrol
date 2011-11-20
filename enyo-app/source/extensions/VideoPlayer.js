@@ -177,16 +177,16 @@ enyo.kind({
 				var state = regexp.exec(inResponse);
 
 				if(state.length > 0) {
-					this.doUpdate(state[1]);
+					this.doUpdate(state[1].replace("stop", "stopped"));
 					
-					this.$.videoInfo.setCaption(enyo.cap(state[1]));
+					this.$.videoInfo.setCaption(enyo.cap(state[1].replace("stop", "stopped")));
 					
 					var regexp = new RegExp("<info name='title'>([\\s\\S]*?)<\\/info>");
 
 					var info = regexp.exec(inResponse);
 
 					if(info.length > 0)
-						this.$.currentVideo.setContent(info[1]);
+						this.$.currentVideo.setContent(info[1].replace("stop", "stopped"));
 					else
 						this.$.currentVideo.setContent("Unknown Video");
 				} else

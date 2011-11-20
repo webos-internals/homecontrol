@@ -1,4 +1,28 @@
 enyo.kind({
+   name: "CustomCanvas",
+   kind: enyo.Control,
+   
+   nodeTag: "canvas",
+   
+   published: {
+	   canvas: "",
+   	context: "",
+   },
+   
+   domAttributes: {
+      width: "200px",
+      height: "200px"
+   },
+   
+   rendered: function() {
+   	this.hasNode();	 //Sets the node property of the rendered DOM node
+   	this.canvas = this.node;
+   	this.context = this.canvas.getContext('2d');
+//   	this.drawCanvas();
+	}
+});
+
+enyo.kind({
 	name: "CustomPageHeader",
 	kind: enyo.Control,
 	

@@ -9,7 +9,13 @@
 	</head>
 	<body>
 		<script type="text/javascript">
-			enyo.create({kind: "HomeControl"}).renderInto(document.body);
+			enyo.windows.activate("main.html", "main", {});
+
+			enyo.application = {
+				applicationRelaunchHandler: function(params) {
+					enyo.windows.activate("main.html", "main", {});
+				}
+			};
 		</script>
 	</body>
 </html>
