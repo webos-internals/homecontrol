@@ -3,8 +3,9 @@
 	"version": "0.6.0",
 	"main": "hc-server",
 	"dependencies": {
-		"applescript": "0.x.x",
-		"express": "2.x.x",
-		"x11": "0.x.x"
+		"applescript": "x.x.x",
+		"connect-form": "x.x.x",
+		"express": "x.x.x",
+		"x11": "x.x.x"
 	}
 }

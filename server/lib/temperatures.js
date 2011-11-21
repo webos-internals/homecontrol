@@ -44,7 +44,7 @@ var update = function(cb) {
 	if(!cb)
 		console.log("Reading temperature sensors");
 
-	var execute_string = "./data/scripts/temperatures-update.sh";
+	var execute_string = "./data/bin/temperatures-update.sh";
 
 	var child = exec(execute_string, function(error, stdout, stderr) {
 		if((error) && (cb))
@@ -64,7 +64,7 @@ exports.setup = function(cb) {
 exports.execute = function(req, res) {
 	console.log("Executing temperatures command: " + req.params[0]);
 
-	var execute_string = "./data/scripts/temperatures-fetch.sh";
+	var execute_string = "./data/bin/temperatures-fetch.sh";
 
 	var child = exec(execute_string, function(error, stdout, stderr) {
 		if(error !== null) {
