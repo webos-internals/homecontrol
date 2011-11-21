@@ -31,10 +31,10 @@ enyo.kind({
 	components: [
 		{kind: "ApplicationEvents", onWindowActivated: "windowActivate", onWindowDeactivated: "windowDeactivate"},	
 
-		{name: "fullscreenPopup", kind: "Popup", layoutKind: "VFlexLayout",  
+		{name: "fullscreenPopup", kind: "Popup", lazy: false, layoutKind: "VFlexLayout",  
 			style: "width: 100%; height: 100%;", components: [
 			{kind: "Scroller", flex: 1, components: [
-				{name: "fsImage", kind: "SizeableImage", autoSize: true, src: "/media/internal/test0.jpg"}
+				{name: "fsImage", kind: "SizeableImage", autoSize: true, src: ""}
 			]},
 			{kind: "Button", caption: "Close", style: "margin: 10px auto 0px auto; width: 80px;", onclick: "closeFullscreen"}
 		]},
@@ -59,9 +59,12 @@ enyo.kind({
 						]}
 					]}
 				]},
-				{name: "videoObject", kind: "Video", src: "rtsp://user:pass@127.0.0.1/img/video.sav",
-				    showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"
-				}
+				{name: "videoView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+					{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+						{name: "videoObject", kind: "Video", src: "",
+						    showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"}
+					 ]}
+				]}				
 			]},
 
 			{name: "server", layoutKind: "VFlexLayout", flex: 1, components: [
@@ -309,6 +312,11 @@ enyo.kind({
 			if(this.module == "cisco") {
 		     this.$.applicationManager.call({target: this.$.videoObject.src});
 		    } else {
+		    		if(this._shot)
+						this.$.fsImage.setSrc("/media/internal/test-" + this._timestamps[0] + ".jpg");
+					else
+						this.$.fsImage.setSrc("/media/internal/test-" + this._timestamps[1] + ".jpg");
+						
 			    this.$.fullscreenPopup.openAtCenter();	
 		    }
         }
