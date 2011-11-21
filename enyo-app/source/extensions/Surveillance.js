@@ -44,64 +44,66 @@ enyo.kind({
 		]},
 
 	   {layoutKind: "VFlexLayout", flex: 1, components: [
-			{name: "client", layoutKind: "VFlexLayout", components: [
-				{name: "captureStatus", kind: "Divider", caption: "Offline", open: true},
-				{name: "imageView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-					{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-						{name: "imageObject", kind: "CustomCanvas", style: "display: none;"},
-						{layoutKind: "HFlexLayout", components: [
-							{name: "image1", kind: "Image", maxZoomRatio: 0, autoSize: true, src: "/media/internal/test0.jpg", style: "max-width: 140px;margin-right: 5px;"},
-							{name: "image2", kind: "Image", maxZoomRatio: 0, autoSize: true, src: "/media/internal/test1.jpg", style: "max-width: 140px;margin-left: 5px;"}
-						]},						
-						{layoutKind: "HFlexLayout", components: [
-							{content: "Difference:", flex: 1, style: "text-effect: bold;"},
-							{name: "difference", content: "-"}
-						]}
-					]}
-				]},
-				{name: "videoView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-					{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-						{name: "videoObject", kind: "Video", src: "",
-						    showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"}
-					 ]}
-				]}				
-			]},
-
-			{name: "server", layoutKind: "VFlexLayout", flex: 1, components: [
-				{kind: "Divider", caption: "Alert Settings", open: true},
-				{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-					{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-						{layoutKind: "HFlexLayout", pack: "center", components: [
-							{content: "Alert Threshold:", flex: 1, style: "text-effect: bold;"},
-							{kind: "ListSelector", value: 100, onChange: "itemChanged", items: [
-								{caption: "High (1000)", value: 1000},
-								{caption: "Medium (500)", value: 500},
-								{caption: "Low (100)", value: 100},
-							]},
-						]},				
-						{layoutKind: "HFlexLayout", components: [
-							{kind: "ToolInput", hint: "Email address for alerts...", flex: 1, alwaysLooksFocused: true, onchange: "inputChange"}
-						]}
-					]}
-				]},
-				{kind: "Divider", caption: "Capture Settings", open: true},
-				{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-					{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-						{layoutKind: "HFlexLayout", pack: "center", components: [
-							{content: "Frequency:", flex: 1, style: "text-effect: bold;"},
-							{kind: "ListSelector", value: 5, onChange: "itemChanged", items: [
-								{caption: "High (5s)", value: 5},
-								{caption: "Medium (15s)", value: 15},
-								{caption: "Low (30s)", value: 30},
+   	   {layoutKind: "VFlexLayout", flex: 1, components: [
+				{name: "client", layoutKind: "VFlexLayout", components: [
+					{name: "captureStatus", kind: "Divider", caption: "Offline", open: true},
+					{name: "imageView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+							{name: "imageObject", kind: "CustomCanvas", style: "display: none;"},
+							{layoutKind: "HFlexLayout", components: [
+								{name: "image1", kind: "Image", maxZoomRatio: 0, autoSize: true, src: "", style: "max-width: 140px;margin-right: 5px;"},
+								{name: "image2", kind: "Image", maxZoomRatio: 0, autoSize: true, src: "", style: "max-width: 140px;margin-left: 5px;"}
+							]},						
+							{layoutKind: "HFlexLayout", components: [
+								{content: "Difference:", flex: 1, style: "text-effect: bold;"},
+								{name: "difference", content: "-"}
 							]}
-						]},
-						{layoutKind: "HFlexLayout", pack: "center", components: [
-							{content: "Sensitivity:", flex: 1, style: "text-effect: bold;"},
-							{kind: "ListSelector", value: 50, onChange: "itemChanged", items: [
-								{caption: "High (200)", value: 200},
-								{caption: "Medium (100)", value: 100},
-								{caption: "Low (50)", value: 50},
+						]}
+					]},
+					{name: "videoView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+							{name: "videoObject", kind: "Video", src: "",
+								 showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"}
+						 ]}
+					]}				
+				]},
+
+				{name: "server", layoutKind: "VFlexLayout", flex: 1, components: [
+					{kind: "Divider", caption: "Alert Settings", open: true},
+					{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+							{layoutKind: "HFlexLayout", pack: "center", components: [
+								{content: "Alert Threshold:", flex: 1, style: "text-effect: bold;"},
+								{kind: "ListSelector", value: 100, onChange: "itemChanged", items: [
+									{caption: "High (1000)", value: 1000},
+									{caption: "Medium (500)", value: 500},
+									{caption: "Low (100)", value: 100},
+								]},
+							]},				
+							{layoutKind: "HFlexLayout", components: [
+								{kind: "ToolInput", hint: "Email address for alerts...", flex: 1, alwaysLooksFocused: true, onchange: "inputChange"}
+							]}
+						]}
+					]},
+					{kind: "Divider", caption: "Capture Settings", open: true},
+					{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+							{layoutKind: "HFlexLayout", pack: "center", components: [
+								{content: "Frequency:", flex: 1, style: "text-effect: bold;"},
+								{kind: "ListSelector", value: 5, onChange: "itemChanged", items: [
+									{caption: "High (5s)", value: 5},
+									{caption: "Medium (15s)", value: 15},
+									{caption: "Low (30s)", value: 30},
+								]}
 							]},
+							{layoutKind: "HFlexLayout", pack: "center", components: [
+								{content: "Sensitivity:", flex: 1, style: "text-effect: bold;"},
+								{kind: "ListSelector", value: 50, onChange: "itemChanged", items: [
+									{caption: "High (200)", value: 200},
+									{caption: "Medium (100)", value: 100},
+									{caption: "Low (50)", value: 50},
+								]},
+							]}
 						]}
 					]}
 				]}
