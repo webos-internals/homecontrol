@@ -9,6 +9,13 @@ enyo.kind({
 	_selected: 0,
 
 	_config: [],
+
+// Status info = 1-wire stuff
+// Surveillance = support for video/picture + motion detection
+// Computer Input = mouse & keyboard control
+// Media Center = media boxes with d-pad controls
+// Music Player = music players
+// Video Player = video players
 	
 	components: [
 		{kind: "ApplicationEvents", onBack: "handleBackEvent"},
@@ -18,6 +25,7 @@ enyo.kind({
 			{name: "controllerType", kind: "ListSelector", value: "StatusInfo", flex: 1, style: "margin: 10px 5px;", items: [
 				{caption: "Status Info - Everything", value: "StatusInfo"},
 				{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco"},
+				{caption: "Surveillance - TouchPad Cam", value: "Surveillance:touchpad"},
 //				{caption: "Sound Control - Pulseaudio", value: "SoundControl:pulseaudio"},
 				{caption: "Computer Input - Linux", value: "ComputerInput:linux"},
 				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxeebox"},
@@ -25,10 +33,10 @@ enyo.kind({
 				{caption: "Music Player - iTunes", value: "MusicPlayer:itunes"},
 				{caption: "Music Player - MPD", value: "MusicPlayer:mpd"},
 				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox"},
-                {caption: "Speaker - UPnP/DLNA", value: "UPnPSpeaker:speaker"},
+				{caption: "Speaker - UPnP/DLNA", value: "UPnPSpeaker:speaker"},
 				{caption: "Video Player - Totem", value: "VideoPlayer:totem"},
 				{caption: "Video Player - VLC", value: "VideoPlayer:vlc"},
-                {caption: "TV - UPnP/DLNA", value: "UPnPTV:tv"},
+				{caption: "TV - UPnP/DLNA", value: "UPnPTV:tv"},
 			]},
 			{name: "controllerName", kind: "Input", hint: "Name for the controller...", autoCapitalize: "title", 
 				autocorrect: false, spellcheck: false, alwaysLooksFocused: true, style: "margin: 5px 0px;", onclick: "showKeyboard"},
@@ -253,9 +261,10 @@ enyo.kind({
 	},
 	
 	updateView: function(inSender) {
-		if((this._ui == "full") && (inSender.view != this._selected)) {
+		if((this._ui == "full") && (inSender.view != this._selected))
 			this.$.rightPane.selectViewByIndex(this._selected);
-		}
+		
+		this.$["extensionView" + this._selected].selected(false);
 	
 		this._selected = inSender.view;
 	
@@ -268,7 +277,7 @@ enyo.kind({
 			this.$.tag.setPosition(this.$[inSender.name].getOffset().top + ((inSender.hasNode().clientHeight - 50) / 2) + 2);
 		}
 			
-		this.$["extensionView" + inSender.view].selected();
+		this.$["extensionView" + inSender.view].selected(true);
 	},
 	
 	updateStatus: function(inSender, inStatus) {

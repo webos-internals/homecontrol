@@ -12,13 +12,13 @@
 			var dockMode = enyo.windowParams && enyo.windowParams.dockMode;		
 
 			if(!dockMode)
-				enyo.windows.openWindow("main.html", "main", {});
+				enyo.windows.openWindow("main.html", "main", {dockMode: false});
 			else
-				enyo.windows.openWindow("main.html", "dock", {}, {window: "dockMode"});
+				enyo.windows.openWindow("main.html", "dock", {dockMode: true}, {window: "dockMode"});
 
 			enyo.application = {
 				applicationRelaunchHandler: function(params) {
-					enyo.windows.activate("main.html", "main", {});
+					enyo.windows.activate("main.html", "main", {dockMode: false});
 				}
 			};
 		</script>
