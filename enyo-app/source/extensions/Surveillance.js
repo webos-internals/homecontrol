@@ -207,7 +207,7 @@ enyo.kind({
 	},
 
 	imageCaptured: function() {
-		this.$.captureStatus.setContent("Offline");
+		this.$.captureStatus.setCaption("Offline");
 	
     	this.doUpdate("offline");
 
@@ -236,7 +236,7 @@ enyo.kind({
 	},
 
 	captureImage: function(image) {
-		this.$.captureStatus.setContent("Capturing");
+		this.$.captureStatus.setCaption("Capturing");
 		
     	this.doUpdate("capturing");
 	
