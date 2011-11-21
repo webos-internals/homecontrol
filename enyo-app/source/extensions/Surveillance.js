@@ -50,13 +50,18 @@ enyo.kind({
 					{name: "imageView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
 						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
 							{name: "imageObject", kind: "CustomCanvas", style: "display: none;"},
-							{layoutKind: "HFlexLayout", components: [
-								{name: "image1", kind: "Image", maxZoomRatio: 0, autoSize: true, src: "", style: "max-width: 140px;margin-right: 5px;"},
-								{name: "image2", kind: "Image", maxZoomRatio: 0, autoSize: true, src: "", style: "max-width: 140px;margin-left: 5px;"}
+							{name: "clientImage", layoutKind: "HFlexLayout", components: [
+								{name: "image", kind: "Image", autoSize: true, src: "", style: "max-width: 290px;"}
 							]},						
-							{layoutKind: "HFlexLayout", components: [
-								{content: "Difference:", flex: 1, style: "text-effect: bold;"},
-								{name: "difference", content: "-"}
+							{name: "serverImage", layoutKind: "VFlexLayout", components: [
+								{layoutKind: "HFlexLayout", components: [
+									{name: "image1", kind: "Image", autoSize: true, src: "", style: "max-width: 140px;margin-right: 5px;"},
+									{name: "image2", kind: "Image", autoSize: true, src: "", style: "max-width: 140px;margin-left: 5px;"}
+								]},						
+								{layoutKind: "HFlexLayout", components: [
+									{content: "Difference:", flex: 1, style: "text-effect: bold;"},
+									{name: "difference", content: "-"}
+								]}
 							]}
 						]}
 					]},
@@ -117,11 +122,16 @@ enyo.kind({
 		]},
         
       {name: "applicationManager", kind: "PalmService", service: "palm://com.palm.applicationManager", method: "open",
-          onSuccess: "gotAccounts", onFailure: "genericFailure"
+          onSuccess: "gotAccounts", onFailure: "handleServerError"
       },
 
 		{name: "mediaCapture", kind: "enyo.MediaCapture", onInitialized: "loadMediaCap", onLoaded: "mediaCapLoaded", 
-			onImageCaptureComplete: "imageCaptured", onError: "genericFailure"}
+			onImageCaptureComplete: "imageCaptured", onError: "handleServerError"},
+			
+		{name : "uploadFile", kind : "PalmService", service : "palm://com.palm.downloadmanager/", method : "upload",
+			onFailure : "handleServerError"},
+			
+		{name: "serverRequest", kind: "WebService", onFailure: "handleServerError"}
 	],
 	
 	rendered: function() {
@@ -132,9 +142,17 @@ enyo.kind({
 		else
 			this.$.imageView.hide();		
 
-		if(device != this.module)
+		if(device != this.module) {
 			this.$.server.hide();
-		else {
+
+			this.$.serverImage.hide();
+			
+			this.$.image.setSrc("http://" + this.address + "/surveillance/latest");
+
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status", onSuccess: "handleStatus"});
+		} else {
+			this.$.clientImage.hide();
+			
 			this.$.imageObject.rendered();
 		
 			this.img1 = new Image();
@@ -153,7 +171,7 @@ enyo.kind({
     
 	selected: function(visible) {
 		var device = enyo.fetchDeviceInfo().modelNameAscii.toLowerCase();
-				
+
 		if(visible) {
 			this.$.title.setContent(this.title);
 
@@ -165,10 +183,26 @@ enyo.kind({
 				this.pauseVideo();
 
 				this.playVideo();
-			}
+			} else {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status", onSuccess: "handleStatus"});
+			}			
 		} else {
         this.pauseVideo();
 		}
+	},
+
+	handleStatus: function(inSender, inResponse) {
+		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
+
+		if(inResponse) {
+			this.$.captureStatus.setCaption(enyo.cap(inResponse.status));
+	
+   	 	this.doUpdate(inResponse.status);			
+   	 } else {
+			this.$.captureStatus.setCaption("Offline");
+	
+	    	this.doUpdate("offline");
+  		}   	 
 	},
 
 	windowActivate: function(inSender, inEvent) {
@@ -213,6 +247,14 @@ enyo.kind({
 	
     	this.doUpdate("offline");
 
+		this.$.uploadFile.call({
+			"fileName": "/media/internal/test-" + this._timestamps[this._shot] + ".jpg",
+			"fileLabel":"image",
+			"url": "http://" + this.address + "surveillance/upload",
+			"contentType": "image/jpg",
+			"subscribe": true 
+		});	
+
 		if(!this._shot) {
 			this._shot = 1;
 
@@ -234,7 +276,7 @@ enyo.kind({
 
 			if(this._dockMode)
 				setTimeout(this.capture.bind(this, 0), 5000);
-		}	
+		}
 	},
 
 	captureImage: function(image) {
@@ -322,17 +364,21 @@ enyo.kind({
 			if(this.module == "cisco") {
 		     this.$.applicationManager.call({target: this.$.videoObject.src});
 		    } else {
-		    		if(this._shot)
+				if(this._shot == undefined)
+					this.$.fsImage.setSrc("http://" + this.address + "/surveillance/latest");			
+				else if(this._shot == 1)
 						this.$.fsImage.setSrc("/media/internal/test-" + this._timestamps[0] + ".jpg");
-					else
+					else if(this._shot == 0)
 						this.$.fsImage.setSrc("/media/internal/test-" + this._timestamps[1] + ".jpg");
-						
+					
 			    this.$.fullscreenPopup.openAtCenter();	
 		    }
         }
     },
     
-    genericFailure: function(inSender, inResponse) {
+    handleServerError: function(inSender, inResponse) {
+		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
+
     	this.doUpdate("error");
     }
 });
