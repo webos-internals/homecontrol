@@ -45,7 +45,7 @@ enyo.kind({
 
 	   {layoutKind: "VFlexLayout", flex: 1, components: [
 			{name: "client", layoutKind: "VFlexLayout", components: [
-				{kind: "Divider", caption: "Offline", open: true},
+				{name: "captureStatus", kind: "Divider", caption: "Offline", open: true},
 				{name: "imageView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
 					{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
 						{name: "imageObject", kind: "CustomCanvas", style: "display: none;"},
@@ -207,6 +207,10 @@ enyo.kind({
 	},
 
 	imageCaptured: function() {
+		this.$.captureStatus.setContent("Offline");
+	
+    	this.doUpdate("offline");
+
 		if(!this._shot) {
 			this._shot = 1;
 
@@ -232,6 +236,10 @@ enyo.kind({
 	},
 
 	captureImage: function(image) {
+		this.$.captureStatus.setContent("Capturing");
+		
+    	this.doUpdate("capturing");
+	
 		this._timestamps[image] = (new Date()).getTime();
 	
 		this.$.mediaCapture.startImageCapture("/media/internal/test-" + this._timestamps[image] + ".jpg", 
