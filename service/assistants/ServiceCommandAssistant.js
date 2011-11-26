@@ -102,6 +102,12 @@ CommandAssistant.prototype.run = function(future, subscription)
         case "previousTrack":
             renderer.previousTrack(callback);
             break;
+        case "setMute":
+            renderer.setMute(1, callback);
+            break;
+        case "setUnMute":
+            renderer.setMute(0, callback);
+            break;
         case "getTrackPos":
         case "setTrackPos":
         case "getVolume":

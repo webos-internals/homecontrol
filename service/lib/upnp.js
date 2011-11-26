@@ -450,6 +450,26 @@ MediaRenderer.prototype.nextTrack = function(callback) {
 MediaRenderer.prototype.previousTrack = function(callback) {
     this.issueCommand("Previous", callback);
 }
+MediaRenderer.prototype.setMute = function(mute, callback)
+{
+  cmd = "SetMute";
+  this._getSOAPResponse(
+    "<u:" + cmd + " xmlns:u=\"" + AVTRANSPORT + "\"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredMute>" +
+        mute + "</DesiredMute></u:" + cmd + ">",
+    AVTRANSPORT,
+    cmd,
+    function(err, response) {
+      if (err) return callback(err);
+      var rtn = {};
+      try {
+        //rtn['NewExternalIPAddress'] = this._getArgFromXml(response.body, "NewExternalIPAddress", true);
+      } catch(e) {
+        return callback(e);
+      }
+      callback.apply(null, this._objToArgs(rtn));
+    }
+  );    
+};
 
 MediaRenderer.prototype._getSOAPResponse = function(soap, service, func, callback) {
   var self = this;

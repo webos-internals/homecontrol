@@ -136,10 +136,27 @@ enyo.kind({
 		var action = "status";
 
 		if(inSender.name == "musicPlayPause") {
-			if(this._state == "playing")
+			if (this._state == "playing") {
 				action = "pause";
-			else
+                
+                this.doUpdate("Paused");
+				this._state = "paused";
+			
+				this.$.musicStatus.setCaption("Paused");
+			
+				this.$.currentSong.setContent("Playing paused...");
+				this.$.musicPlayPause.setIcon("./images/ctl-play.png");
+			} else {
 				action = "play";
+                
+                this.doUpdate("Playing");
+				this._state = "playing";
+
+				this.$.musicStatus.setCaption("Playing");
+				this.$.currentSong.setContent("Playing..."); /* TODO: Update with a GetSongPosition */
+				
+				this.$.musicPlayPause.setIcon("./images/ctl-pause.png");
+            }
 		} else if(inSender.name == "musicNextSong")
 			action = "nextTrack";
 		else if(inSender.name == "musicPrevSong")
@@ -160,11 +177,21 @@ enyo.kind({
 	},
 	
 	toggleMute: function(inSender, inEvent) {
+        var action = "setMute";
 		if(this.$.muteToggle.getState()) {
-						
+            action = "setMute";
 		} else {
-			
+			action = "setUnMute";
 		}
+        
+        this.$.upnpCommand.call({
+                "subscribe": true,
+                "command": action,
+                "port": this._port,
+                "host": this._host,
+                "path": this._path,
+                "userAgent": this._userAgent
+            });
 	},
 	
 	changeVolume: function(inSender, inEvent) {
