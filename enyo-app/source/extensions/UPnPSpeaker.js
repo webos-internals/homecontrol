@@ -15,6 +15,7 @@ enyo.kind({
     _host: "127.0.0.1",
     _path: "/MediaRenderer/AVTransport/Control",
     _userAgent: "HomeControl webOS OpenMobl/1.0 UPnP/1.0 DLNADOC/1.50",
+    _foundDevice: false,
 	
 	events: {
 		onUpdate: ""
@@ -32,14 +33,15 @@ enyo.kind({
 		]},
 	
 		{kind: "PageHeader", layoutKind: "HFlexLayout", components: [
-			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, components: [
-				{kind: "Spacer", flex: 1},
-				{name: "title", content: "Music Player", style: "margin-top: 0px;font-weight: bold;"},
-				{kind: "Spacer", flex: 1},
-				{name: "search", kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-search.png"}			
+			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, pack:"center", components: [
+				{name: "title", content: "Music Player", style: "margin-top: 0px;font-weight: bold;"}			
 			]}
-		]}, 
-		{layoutKind: "VFlexLayout", flex: 1, components: [
+		]},
+        {layoutKind: "HFlexLayout", name: "discovery", pack:"center", align:"center", flex: 1, components: [
+            {kind:"Spinner", name: "discoverySpinner"},
+            {content: $L("Discovering Device")}
+        ]},
+		{layoutKind: "VFlexLayout", name: "player", flex: 1, components: [
 			{name: "musicStatus", kind: "DividerDrawer", caption: "Stopped", open: true, components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
 					{layoutKind: "HFlexLayout", align: "center", style: "max-width: 290px;margin: -5px auto 0px auto;", components: [
@@ -48,7 +50,7 @@ enyo.kind({
 					]}
 				]}
 			]},
-			{name: "listDivider", kind: "DividerDrawer", open: true, caption: "Favorites", style: "margin-top: -5px;", onOpenChanged: "toggleList"},
+			/*{name: "listDivider", kind: "DividerDrawer", open: true, caption: "Favorites", style: "margin-top: -5px;", onOpenChanged: "toggleList"},
 			{layoutKind: "VFlexLayout", flex: 1, style: "margin: 0px -2px 0px 10px;border-style: groove;", components: [
 				{name: "favorites", kind: "VirtualList", flex: 1, onSetupRow: "setupFavorite", components: [
 					{kind: "Item", tapHighlight: true, style: "margin: 0px;padding: 0px;", onclick: "selectAction", components: [
@@ -58,7 +60,7 @@ enyo.kind({
 						]}
 					]}
 				]}
-			]},
+			]},*/
 			{kind: "DividerDrawer", open: false, caption: "Controls", components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
 					{name: "repeatShuffle", layoutKind: "HFlexLayout", pack: "center",  style: "max-width: 290px;margin: 0px auto 15px auto;", components: [
@@ -97,6 +99,9 @@ enyo.kind({
 	],
 
 	rendered: function() {
+        this.$.discovery.show();
+        this.$.player.hide();
+        
 		this.inherited(arguments);
 	},
 
@@ -281,6 +286,9 @@ enyo.kind({
     },
     
     discoverySuccess: function(inSender, inResponse) {
+        if (this._foundDevice)
+            return;
+        
         enyo.error("Found this device: " + enyo.json.stringify(inResponse));
         
         if (inResponse.devices !== null) {
@@ -291,6 +299,10 @@ enyo.kind({
                         this._port = inResponse.devices[i].port;
                         this._host = inResponse.devices[i].hostname;
                         this._path = inResponse.devices[i].pathName;
+                        
+                        this._foundDevice = true;
+                        this.$.discovery.hide();
+                        this.$.player.show();
                 }
             }
         }
