@@ -225,12 +225,12 @@ enyo.kind({
 				inSender.setCaption("SuperL");
 				inSender.setDown(true);
 			} else if(inSender.caption == "SuperL") {
-				action = "?up=Super_L&down=Super_R";
+				action = "?up=Super_L&down=Multi_key";
 				
 				inSender.setCaption("SuperR");
 				inSender.setDown(true);
 			}	else {
-				action = "?up=Super_L";
+				action = "?up=Multi_key";
 				
 				inSender.setCaption("Super");
 				inSender.setDown(false);

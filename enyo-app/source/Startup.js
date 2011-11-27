@@ -19,6 +19,13 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.0"},
+					{content: "<ul><li>Added support for controlling QuickTime on OS X</li>" +
+						"<li>Added experimental support for touchpad surveillance</li>" +
+						"<li>Added experimental support for controlling mouse on OS X</li>" +
+						"<li>Added support for controlling front row application on OS X</li>" + 
+						"<li>Added support for controlling system volume on Linux / OS X</li></ul>"},
+
 					{kind: "Divider", caption: "0.6.0"},
 					{content: "<ul><li>Added support for controlling VLC media player</li>" +
 						"<li>Added surveillance extension with support for Cisco IP camera</li>" +
