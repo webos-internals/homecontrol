@@ -31,65 +31,57 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISE
 OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-// TODO
-//
-// - Drawing of graphs...
-//
 
 var exec = require('child_process').exec;
 
-var refresh = null;
-
-var update = function(cb) {
-	if(!cb)
-		console.log("Reading temperature sensors");
-
-	var execute_string = "./data/bin/temperatures-update.sh";
-
-	var child = exec(execute_string, function(error, stdout, stderr) {
-		if((error) && (cb))
-			cb(false);
-		else if(cb) {
-			cb(true);
-			
-			refresh = setTimeout(update, 60000);
-		}
+exports.setup = function(cb) {
+	var child = exec("totem --help", function(error, stdout, stderr) {
+		if(error)
+			cb(null);
+		else
+			cb("totem", "Totem", "Video Player");
 	});
 };
 
-exports.setup = function(cb) {
-	return update(cb);
-};
-
 exports.execute = function(req, res) {
-	console.log("Executing temperatures command: " + req.params[0]);
-
-	var execute_string = "./data/bin/temperatures-fetch.sh";
-
+	console.log("Executing totem command: " + req.params[0]);
+	
+	if(req.params[0] != "close")
+		var execute_string = "pgrep totem";
+	else
+		var execute_string = "totem --quit";
+	
 	var child = exec(execute_string, function(error, stdout, stderr) {
-		if(error !== null) {
-			res.send('null');
-		} else {
-			var data = "[";
-			
-			var info = stdout.split('\n');
+		if((stdout.length > 0) || (req.params[0] == "start")) {
+			var execute_string = "";
 
-			for(var i = 0; i < info.length; i++) {
-				var tmp = info[i].split(" ");
-				
-				if(tmp.length == 4) {
-					if(data.length > 1)
-						data += ",";
-				
-					data += '{"sensor":"' + tmp[0] + '", "current":"' + tmp[1] + 
-						'","lowest":"' + tmp[2] + '","highest":"' + tmp[3] + '"}';
-				}
+			if(req.params[0] == "start") {
+				var execute_string = "totem;";
+			} else if(req.params[0] == "play-pause") {
+				var execute_string = "totem --play-pause;";
+			} else if(req.params[0] == "seek") {
+				var execute_string = "totem --seek-" + req.param("action") + ";";
+			} else if(req.params[0] == "mute") {
+				var execute_string = "totem --mute;";
+			} else if(req.params[0] == "fullscreen") {
+				var execute_string = "totem --fullscreen;";
+			} else if(req.params[0] == "volume") {
+				var execute_string = "totem --volume-" + 
+					req.param("action") + ";";
 			}
 			
-			data += "]";
-			
-			res.send(data);
+			var child = exec(execute_string, function(error, stdout, stderr) {
+				res.header('Content-Type', 'text/javascript');
+				
+				if(error !== null) {
+					res.send({"state": "unknown"});
+				} else {
+					res.send({"state": "running"});
+				}
+			});
+		} else {
+			res.send({"state": "closed"});
 		}
-	});			
+	});
 };
 

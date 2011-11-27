@@ -16,7 +16,7 @@ Running the server:
 
 	* To run the server just run the following command in this directory:
 
-		node server.js
+		node hc-server.js
 
 Temperature sensors:
 

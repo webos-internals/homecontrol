@@ -32,60 +32,55 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-// TODO:
-//
-// - Add ability to search songs from the music library
-// - Add ability to browse the music library
-//
+var timeout = null;
 
 var exec = require('child_process').exec;
 
-exports.setup = function(cb) {
-	var child = exec("totem --help", function(error, stdout, stderr) {
-		if(error)
-			cb(false);
-		else
-			cb(true);
-	});
-};
-
-exports.execute = function(req, res) {
-	console.log("Executing totem command: " + req.params[0]);
-
-	var child = exec("pgrep totem", function(error, stdout, stderr) {
-		if(stdout.length > 0) {
-			var execute_string = "";
-
-			if(req.params[0] == "play") {
-				var execute_string = "totem --play;";
-			} else if(req.params[0] == "pause") {
-				var execute_string = "totem --pause;";
-			} else if(req.params[0] == "play-pause") {
-				var execute_string = "totem --play-pause;";
-			} else if(req.params[0] == "seek-fwd") {
-				var execute_string = "totem --seek-fwd;";
-			} else if(req.params[0] == "seek-bwd") {
-				var execute_string = "totem --seek-bwd;";
-			} else if(req.params[0] == "mute") {
-				var execute_string = "totem --mute;";
-			} else if(req.params[0] == "fullscreen") {
-				var execute_string = "totem --fullscreen;";
-			} else if(req.params[0] == "volume") {
-				var execute_string = "totem --volume-" + 
-					req.param("volume") + ";";
-			}
-
-			var child = exec(execute_string, function(error, stdout, stderr) {
-				res.header('Content-Type', 'text/javascript');
-
-				if(error !== null) {
-					res.send('null');
-				} else {
-					res.send({status: "running"});
-				}
-			});
-		} else {
-			res.send({status: "closed"});
+var update = function(cb) {
+	if(!cb)
+		console.log("Reading 1-wire sensors");
+	
+	var execute_string = "./data/bin/temperatures-update.sh";
+	
+	var child = exec(execute_string, function(error, stdout, stderr) {
+		if((error) && (cb))
+			cb(null);
+		else if(cb) {
+			cb("1-wire", "1-Wire", "Status Info");
+			
+			timeout = setTimeout(update, 60000);
 		}
 	});
 };
+
+exports.setup = function(cb) {
+	return update(cb);
+};
+
+exports.execute = function(req, res) {
+	console.log("Executing 1-wire command: " + req.params[0]);
+	
+	var execute_string = "./data/bin/temperatures-fetch.sh";
+	
+	var child = exec(execute_string, function(error, stdout, stderr) {
+		if(error !== null) {
+			res.send('null');
+		} else {
+			var sensors = new Array();
+			
+			var info = stdout.split('\n');
+			
+			for(var i = 0; i < info.length; i++) {
+				var tmp = info[i].split(" ");
+				
+				if(tmp.length == 4) {
+					sensors.push({"sensor": tmp[0], "current": tmp[1], 
+						"lowest": tmp[2], "highest": tmp[3]});
+				}
+			}
+			
+			res.send({"sensors": sensors});
+		}
+	});			
+};
+

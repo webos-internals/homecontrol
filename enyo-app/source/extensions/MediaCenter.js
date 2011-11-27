@@ -1,8 +1,13 @@
+//
+// Status: state
+//
+
 enyo.kind({
 	name: "MediaCenter",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
-
+	
+	_timeout: null,
 	_keyboard: false,
 	
 	events: {
@@ -25,7 +30,7 @@ enyo.kind({
 				{kind: "Spacer", flex: 1},
 				{name: "title", content: "Media Center", style: "margin-top: 0px;font-weight: bold;"},
 				{kind: "Spacer", flex: 1},
-				{kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}			
+				{name: "keyboard", kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}			
 			]},
 			{name: "keyboardHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{name: "keyboardInput", kind: "ToolInput", alwaysLooksFocused: true, flex: 1, 
@@ -76,34 +81,52 @@ enyo.kind({
 			{name: "controlNext", kind: "ToolButton", icon: "./images/ctl-next.png", style: "margin: -1px 0px -1px -6px;", onclick: "controlDevice"},
 		]},
 		
-		{name: "serverRequest", kind: "WebService", onFailure: "handleServerError"}		
+		{name: "serverRequest", kind: "WebService", onFailure: "unknownError"}		
 	],
-
+	
 	rendered: function() {
 		this.inherited(arguments);
 
 		this.$.keyboardHeader.hide();
+
+		if((this.module != "boxee") && (this.module != "xbmc")) {
+			this.$.keyboard.hide();
+			this.$.playbackStatus.hide();
+			this.$.volumeStatus.hide();
+		}
 
 		if(enyo.fetchDeviceInfo().modelNameAscii.toLowerCase() == "touchpad") {
 			this.$.playbackStatus.toggleOpen();
 			this.$.volumeStatus.toggleOpen();
 		}
 
-		this.updateStatus(true);
-	},
-
-	selected: function() {
-		this.$.title.setContent(this.title);
-
-		this.updateStatus(false);
+		this.checkStatus();
 	},
 	
-	updateStatus: function(poll) {
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetPercentage", 
-			onSuccess: "handlePlaybackStatus"});
-
-		if(poll)
-			setTimeout(this.updateStatus.bind(this, true), 5000);	
+	selected: function(visible) {
+		this.$.title.setContent(this.title);
+		
+		if(visible) {
+			if((this.module == "boxee") || (this.module == "xbmc")) {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetPercentage", 
+					onSuccess: "updatePlayback"});
+			} else {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/start", 
+					onSuccess: "updatePlayback"});
+			}
+		}
+	},
+	
+	checkStatus: function(poll) {
+		if((this.module == "boxee") || (this.module == "xbmc")) {
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetPercentage", 
+				onSuccess: "updatePlayback"});
+		} else {
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status", 
+				onSuccess: "updatePlayback"});
+		}
+				
+		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
 	},
 	
 	updateSlider: function(inSender, inEvent) {
@@ -116,7 +139,7 @@ enyo.kind({
 	toggleKeyboard: function() {
 		if(this._keyboard) {
 			this._keyboard = false;
-		
+			
 			this.$.keyboardHeader.hide();
 			this.$.normalHeader.show();
 		} else {
@@ -130,77 +153,94 @@ enyo.kind({
 	
 	handleKeypress: function(inSender, inEvent) {
 		this.$.keyboardInput.setValue("");
-
+		
 		var action = "SendKey(" + (61696 + inEvent.keyCode) + ")";		
-
+		
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=" + action, 
-			onSuccess: "handleDeviceStatus"});		
+			onSuccess: "updateStatus"});		
 	},
 	
 	controlDevice: function(inSender, inEvent) {
-		if(inSender.name == "controlPlayPause")
-			var action = "Pause";		
-		else if(inSender.name == "controlNext")
-			var action = "PlayNext";
-		else if(inSender.name == "controlPrev")
-			var action = "PlayPrev";
-		else if(inSender.name == "controlFwd")
-			var action = "SeekPercentageRelative(2)";
-		else if(inSender.name == "controlRwd")
-			var action = "SeekPercentageRelative(-2)";
-		else if(inSender.name == "controlOk")
-			var action = "SendKey(61453)";
-		else if(inSender.name == "controlLeft")
-			var action = "SendKey(272)";
-		else if(inSender.name == "controlRight")
-			var action = "SendKey(273)";
-		else if(inSender.name == "controlUp")
-			var action = "SendKey(270)";
-		else if(inSender.name == "controlDown")
-			var action = "SendKey(271)";
-		else if(inSender.name == "controlMute")
-			var action = "Mute";
-		else if(inSender.name == "controlBack")
-			var action = "SendKey(275)";
-		else if(inSender.name == "controlPlayback") {
-			this.$.playbackStatus.setCaption("Playback");
-	
-			var action = "SeekPercentage(" + this.$.controlPlayback.getPosition() + ")";
-		} else if(inSender.name == "controlVolume") {
-			this.$.volumeStatus.setCaption("Volume");
+		var action = "status";
 
-			var action = "SetVolume(" + this.$.controlVolume.getPosition() + ")";
-		}
+		if((this.module == "boxee") || (this.module == "xbmc")) {
+			if(inSender.name == "controlPlayPause")
+				action = "Pause";		
+			else if(inSender.name == "controlNext")
+				action = "PlayNext";
+			else if(inSender.name == "controlPrev")
+				action = "PlayPrev";
+			else if(inSender.name == "controlFwd")
+				action = "SeekPercentageRelative(2)";
+			else if(inSender.name == "controlRwd")
+				action = "SeekPercentageRelative(-2)";
+			else if(inSender.name == "controlOk")
+				action = "SendKey(61453)";
+			else if(inSender.name == "controlLeft")
+				action = "SendKey(272)";
+			else if(inSender.name == "controlRight")
+				action = "SendKey(273)";
+			else if(inSender.name == "controlUp")
+				action = "SendKey(270)";
+			else if(inSender.name == "controlDown")
+				action = "SendKey(271)";
+			else if(inSender.name == "controlMute")
+				action = "Mute";
+			else if(inSender.name == "controlBack")
+				action = "SendKey(275)";
+			else if(inSender.name == "controlPlayback") {
+				this.$.playbackStatus.setCaption("Playback");
 			
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=" + action, 
-			onSuccess: "handleDeviceStatus"});
+				action = "SeekPercentage(" + this.$.controlPlayback.getPosition() + ")";
+			} else if(inSender.name == "controlVolume") {
+				this.$.volumeStatus.setCaption("Volume");
+			
+				action = "SetVolume(" + this.$.controlVolume.getPosition() + ")";
+			}
+		
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=" + action, 
+				onSuccess: "updateStatus"});
+		} else {
+			if(inSender.name == "controlPlayPause")
+				action = "play-pause";		
+			else if(inSender.name == "controlNext")
+				action = "next";
+			else if(inSender.name == "controlPrev")
+				action = "prev";
+			else if(inSender.name == "controlFwd")
+				action = "seek?action=fwd";
+			else if(inSender.name == "controlRwd")
+				action = "seek?action=bwd";
+			else if(inSender.name == "controlOk")
+				action = "select";
+			else if(inSender.name == "controlLeft")
+				action = "left";
+			else if(inSender.name == "controlRight")
+				action = "right";
+			else if(inSender.name == "controlUp")
+				action = "up";
+			else if(inSender.name == "controlDown")
+				action = "down";
+			else if(inSender.name == "controlMute")
+				action = "mute";
+			else if(inSender.name == "controlBack")
+				action = "back";
+		
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action, 
+				onSuccess: "updateStatus"});
+		}
 	},
-
-	handleDeviceStatus: function(inSender, inResponse) {
-		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
 	
+	updateStatus: function(inSender, inResponse) {
+		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
+		
 		if(inResponse) {
 			this.doUpdate("online");
 		} else
 			this.doUpdate("offline");
 	},	
-
-	handlePlaybackStatus: function(inSender, inResponse) {
-		if(inResponse) {
-			this.doUpdate("online");
-
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetVolume", 
-				onSuccess: "handleVolumeStatus"});
-
-			var position = inResponse.replace(/<.*?>/g, '');
-			
-			if(position != "Error")
-				this.$.controlPayback.setPosition(position);
-		} else
-			this.doUpdate("offline");
-	},
-
-	handleVolumeStatus: function(inSender, inResponse) {
+	
+	updateVolume: function(inSender, inResponse) {
 		if(inResponse) {
 			var position = inResponse.replace(/<.*?>/g, '');
 			
@@ -209,7 +249,28 @@ enyo.kind({
 		}
 	},
 
-	handleServerError: function(inSender, inResponse) {
+	updatePlayback: function(inSender, inResponse) {
+		if((inResponse) && ((inResponse.state) || 
+			(this.module == "boxee") || (this.module == "xbmc")))
+		{
+			this.doUpdate("online");
+
+			if((this.module == "boxee") || (this.module == "xbmc")) {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetVolume", 
+					onSuccess: "updateVolume"});
+			
+				var position = inResponse.replace(/<.*?>/g, '');
+			
+				if(position != "Error")
+					this.$.controlPayback.setPosition(position);
+			} else {
+
+			}
+		} else
+			this.doUpdate("offline");
+	},
+	
+	unknownError: function(inSender, inResponse) {
 		this.doUpdate("error");
 	}
 });

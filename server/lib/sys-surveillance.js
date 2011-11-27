@@ -38,7 +38,7 @@ var util = require('util');
 var timestamp = null;
 
 exports.setup = function(cb) {
-	cb(true);
+	cb("surveillance", "Surveillance", "TouchPad Cam");
 };
 
 exports.execute = function(req, res, next) {

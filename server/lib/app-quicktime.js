@@ -39,53 +39,56 @@ var applescript = require("applescript");
 exports.setup = function(cb) {
 	var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
 		if(error)
-			cb(false);
+			cb(null);
 		else
-			cb(true);
+			cb("quicktime", "QuickTime", "Video Player");
 	});
 };
 
 exports.execute = function(req, res) {
-	console.log("Executing itunes command: " + req.params[0]);
+	console.log("Executing quicktime command: " + req.params[0]);
 
 	var script_string = "";
 
 	if(req.params[0] == "play") {
-		var script_string = 'tell application "iTunes" to play\n';
+		var script_string = 'tell application "QuickTime Player" to play document frontmost\n';
 	} else if(req.params[0] == "pause") {
-		var script_string = 'tell application "iTunes" to pause\n';
-	} else if(req.params[0] == "next") {
-		var script_string = 'tell application "iTunes" next track\n';
-	} else if(req.params[0] == "prev") {
-		var script_string = 'tell application "iTunes" previous track\n';
+		var script_string = 'tell application "QuickTime Player" to pause document frontmost\n';
+	} else if(req.params[0] == "seek") {
+		if(req.param("action") == "fwd")
+			var script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';
+		else if(req.param("action") == "bwd")
+			var script_string = 'tell application "QuickTime Player" to step backward document frontmost\n';
+	} else if(req.params[0] == "fullscreen") {
+		var script_string = 'tell application "QuickTime Player"\n';
+		
+		script_string += 'if presenting of document frontmost is true\n';
+		
+		script_string += 'set present of document frontmost to false\nelse\n';
+		
+		script_string += 'set present of document frontmost to true\nend if\nend tell\n';
 	} else if(req.params[0] == "mute") {
-		var script_string = 'tell application "iTunes" to set mute to true\n';
-	} else if(req.params[0] == "unmute") {
-		var script_string = 'tell application "iTunes" to set mute to false\n';
+		var script_string = 'tell application "QuickTime Player" to set muted of document frontmost to ' + 
+			req.param("state") + '\n';
 	} else if(req.params[0] == "volume") {
-		var script_string = 'tell application "iTunes" to set sound volume to ' + req.param("volume") + "\n";
+		var script_string = 'tell application "QuickTime Player" to set audio volume of document frontmost to ' + 
+			(req.param("value") / 100) + "\n";
 	}
 
-	script_string += 'tell application "iTunes" to mute & sound volume & player state';
+	script_string += 'tell application "QuickTime Player" to get ' +
+		'{playing, name, presenting, audio volume, muted} of document frontmost';
 
-	applescript.execString(script_string, function(error, info) {
+	applescript.execString(script_string, function(error, result) {
 		if(error) {
-			res.send('{"status": "error"}');
+			res.send({"state": "stopped", "fullscreen": false, "volume": 0, "mute": true});
 		} else {
-			if((info[2] != "playing") && (info[2] != "paused")) {
-				res.send('{"status": "stopped", "mute": "' + info[0] + '","volume": "' + info[1] + '"}');
-			} else {
-				script_string = 'tell application "iTunes" to get {artist, name} of current track';
-
-				applescript.execString(script_string, function(error, track) {
-					if(error) {
-						res.send('{"status": "error"}');
-					} else {
-						res.send('{"status": "' + info[2] + '", "mute": "' + info[0] + '","volume": "' + info[1] + 
-							'", "artist": "' + track[0] + '", "title": "' + track[1] + '"}');
-					}
-				});
-			}
+			var state = "paused";
+			
+			if(result[0] == "true")
+				state = "playing";
+			
+			res.send({"state": state, "title": result[1], "fullscreen": (result[2] == "true"), 
+				"volume": Math.round(result[3] * 100), "mute": (result[4] == "true")});
 		}
 	});
 };

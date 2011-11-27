@@ -10,33 +10,46 @@ enyo.kind({
 
 	_config: [],
 
-// Status info = 1-wire stuff
-// Surveillance = support for video/picture + motion detection
-// Computer Input = mouse & keyboard control
-// Media Center = media boxes with d-pad controls
-// Music Player = music players
-// Video Player = video players
+// *	Status Info: for showing 1-wire status info (ready for 1.0)
+// - Surveillance: support for video/snapshots (ready for 0.7)
+// - System Input: system mouse and keyboard controls (ready for 1.0)
+// * System Sound: master sound and speaker controls (ready for 1.0)
+// * Media Center: media boxes with d-pad controls (ready for 1.0)
+// * Music Player: music player applications (ready for 0.7)
+// * Video Player: video player applications (ready for 0.7)
 	
 	components: [
 		{kind: "ApplicationEvents", onBack: "handleBackEvent"},
 
 		{name: "newPopup", lazy: false, kind: "Popup", showKeyboardWhenOpening: true, style: "width: 80%;max-width: 500px;", components: [
 			{content: "Setup New Controller", flex: 1, style: "text-align: center;"},
-			{name: "controllerType", kind: "ListSelector", value: "StatusInfo", flex: 1, style: "margin: 10px 5px;", items: [
-				{caption: "Status Info - Everything", value: "StatusInfo"},
-				{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco"},
-				{caption: "Surveillance - TouchPad Cam", value: "Surveillance:touchpad"},
-//				{caption: "Sound Control - Pulseaudio", value: "SoundControl:pulseaudio"},
-				{caption: "Computer Input - Linux", value: "ComputerInput:linux"},
-				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxeebox"},
-				{caption: "Media Center - XBMC", value: "MediaCenter:xbmc"},
-				{caption: "Music Player - iTunes", value: "MusicPlayer:itunes"},
-				{caption: "Music Player - MPD", value: "MusicPlayer:mpd"},
-				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox"},
-				{caption: "Speaker - UPnP/DLNA", value: "UPnPSpeaker:speaker"},
-				{caption: "Video Player - Totem", value: "VideoPlayer:totem"},
-				{caption: "Video Player - VLC", value: "VideoPlayer:vlc"},
-				{caption: "TV - UPnP/DLNA", value: "UPnPTV:tv"},
+			{name: "controllerType", kind: "ListSelector", value: "StatusInfo:1-wire:linux", flex: 1, style: "margin: 10px 5px;", items: [
+				{caption: "Status Info - 1-Wire", value: "StatusInfo:1-wire:linux"},
+				{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco:device"},
+				{caption: "Surveillance - TouchPad Cam", value: "Surveillance:touchpad:device"},
+//				{caption: "Surveillance - Web Camera", value: "Surveillance:webcam:none"},
+				{caption: "System Sound - Mac OS X", value: "SystemSound:sound:osx"},
+				{caption: "System Sound - Pulseaudio", value: "SystemSound:sound:linux"},
+//				{caption: "System Sound - Windows", value: "SystemSound:sound:windows"},
+				{caption: "System Input - Mac OS X", value: "SystemInput:input:osx"},
+				{caption: "System Input - Linux X11", value: "SystemInput:input:linux"},
+//				{caption: "System Input - Windows", value: "SystemInput:input:windows"},
+				{caption: "Media Center - Front Row", value: "MediaCenter:frontrow:osx"},
+				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxee:device"},
+//				{caption: "Media Center - MythTV", value: "MediaCenter:mythtv:linux"},
+				{caption: "Media Center - XBMC", value: "MediaCenter:xbmc:device"},
+				{caption: "Music Player - iTunes", value: "MusicPlayer:itunes:osx"},
+				{caption: "Music Player - MPD", value: "MusicPlayer:mpd:linux"},
+				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox:linux"},
+//				{caption: "Music Player - Winamp", value: "MusicPlayer:winamp:windows"},
+				{caption: "Video Player - Quicktime", value: "VideoPlayer:quicktime:osx"},
+				{caption: "Video Player - Totem", value: "VideoPlayer:totem:linux"},
+				{caption: "Video Player - VLC", value: "VideoPlayer:vlc:none"},
+//				{caption: "Video Player - WMP", value: "VideoPlayer:wmp:windows"},
+//				{caption: "IR Device - DVD Player", value: "IRDevice:dvdplayer:device"},
+//				{caption: "IR Device - Projector", value: "IRDevice:projector:device"},
+//				{caption: "Audio Speaker - UPnP/DLNA", value: "UPnPSpeaker:speaker:device"},
+//				{caption: "Television - UPnP/DLNA", value: "UPnPTV:tv:device"},
 			]},
 			{name: "controllerName", kind: "Input", hint: "Name for the controller...", autoCapitalize: "title", 
 				autocorrect: false, spellcheck: false, alwaysLooksFocused: true, style: "margin: 5px 0px;", onclick: "showKeyboard"},
@@ -112,6 +125,19 @@ enyo.kind({
 			for(var i = 0; i < this._config.length; i++) {
 				if(this._config[i].extension == "HomeTheater")
 					this._config[i].extension = "MediaCenter";
+
+				if((this._config[i].extension == "Computer") ||
+					(this._config[i].extension == "ComputerInput"))
+				{
+					this._config[i].extension = "SystemInput";
+					this._config[i].module = "input";
+				}
+
+				if(this._config[i].extension == "StatusInfo")
+					this._config[i].module = "1-wire";
+
+				if(this._config[i].module == "boxeebox")
+					this._config[i].module = "boxee";
 			}
 
 			localStorage["controllers"] = enyo.json.stringify(this._config);

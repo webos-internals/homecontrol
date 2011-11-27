@@ -1,5 +1,5 @@
 enyo.kind({
-	name: "ComputerInput",
+	name: "SystemInput",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
 
@@ -84,7 +84,7 @@ enyo.kind({
 						inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
 						style: "margin: 0px 0px 0px 0px;", onfocus: "showKbdButtons",
 						onblur: "hideKbdButtons", onkeydown: "handleKeyDown", onkeyup: "handleKeyUp"},
-					{name: "functionKey", caption: "FN", kind: "Button", className: "function-key enyo-button-dark", 
+					{name: "functionKey", caption: "FN", kind: "Button", className: "control-key enyo-button-dark", 
 						style: "margin-left: 10px;margin-right: 0px;", onclick: "handleFunctionKey"}
 				]}
 			]},
@@ -131,7 +131,7 @@ enyo.kind({
 	},
 	
 	updateStatus: function(poll) {
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/status", 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status", 
 			onSuccess: "handleDeviceStatus"});	
 
 		if(poll)
@@ -254,7 +254,7 @@ enyo.kind({
 			}
 		}
 
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard" + action, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/keyboard" + action, 
 			onSuccess: "handleDeviceStatus"});
 	},
 
@@ -315,18 +315,18 @@ enyo.kind({
 				else
 					this.$.keyboardInput.setValue(key.toLowerCase());
 
-				this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard?key=" + keys[key], 
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/keyboard?key=" + keys[key], 
 					onSuccess: "handleDeviceStatus"});	
 			} else {
 				this.$.keyboardInput.setValue(fnKeys[key].replace("_", " "));
 
-				this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard?key=" + fnKeys[key], 
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/keyboard?key=" + fnKeys[key], 
 					onSuccess: "handleDeviceStatus"});	
 			}
 		} else if(inEvent.keyCode == 16) {
 			this._shift = false;
 		
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard?up=Shift_L", 
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/keyboard?up=Shift_L", 
 				onSuccess: "handleDeviceStatus"});		
 		} else if(inEvent.keyCode != 129) 
 			this.$.keyboardInput.setValue("<Unknown Key>");
@@ -340,7 +340,7 @@ enyo.kind({
 
 			this._shift = true;
 
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/keyboard?down=Shift_L", 
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/keyboard?down=Shift_L", 
 				onSuccess: "handleDeviceStatus"});		
 		}
 	},
@@ -350,7 +350,7 @@ enyo.kind({
 	},
 
 	resetMouseButton: function(inSender, inEvent) {	
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?up=" + this._button, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mouse?up=" + this._button, 
 			onSuccess: "handleDeviceStatus"});	
 	},
 	
@@ -359,7 +359,7 @@ enyo.kind({
 
 		var y = inEvent.screenY - this._event.screenY;
 
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?move=" + x + "," + y, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mouse?move=" + x + "," + y, 
 			onSuccess: "handleDeviceStatus"});	
 			
 		this._event = inEvent;
@@ -373,7 +373,7 @@ enyo.kind({
 		else if(inSender.name == "mouseRight")
 			this._button = 3;
 		
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?down=" + this._button, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mouse?down=" + this._button, 
 			onSuccess: "handleDeviceStatus"});	
 	},
 
@@ -385,7 +385,7 @@ enyo.kind({
 		else if(inSender.name == "mouseRight")
 			var button = 3;
 		
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/computer/mouse?up=" + button, 
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mouse?up=" + button, 
 			onSuccess: "handleDeviceStatus"});	
 	},
 	

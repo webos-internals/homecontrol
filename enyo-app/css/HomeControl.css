@@ -89,8 +89,8 @@
 	margin-top: 95px;
 }
 
-.function-key.enyo-button-dark {
-	padding: 0px 8px;
+.control-key.enyo-button-dark {
+	padding: 0px 8px 1px 8px;
 	line-height: 20px;
-	min-height: 15px;
+	min-height: 16px;
 }

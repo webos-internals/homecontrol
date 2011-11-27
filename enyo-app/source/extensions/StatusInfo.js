@@ -1,14 +1,18 @@
+//
+// Status: *sensors
+//
+
 enyo.kind({
 	name: "StatusInfo",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
 	
 	_config: {},
-
 	_sensors: [],
-	
 	_selected: 0,
-
+	_timeout: null,
+	_visible: false,
+	
 	events: {
 		onUpdate: ""
 	},
@@ -23,21 +27,21 @@ enyo.kind({
 		{name: "actionPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
 			{value: "Rename Sensor"}
 		]},
-
-		{name: "renamePopup", lazy: false, kind: "Popup", showKeyboardWhenOpening: true, 
+		
+		{name: "renamePopup", kind: "Popup", lazy: false, showKeyboardWhenOpening: true, 
 			style: "width: 80%;max-width: 500px;", components: [
 			{content: "Rename Sensor", flex: 1, style: "text-align: center;margin-bottom: 3px;"},
-			{name: "newSensorName", kind: "Input", hint: "Name for the sensor...", autoCapitalize: "title", alwaysLooksFocused: true,
-				autocorrect: false, spellcheck: false, onclick: "showKeyboard"},
+			{name: "newSensorName", kind: "Input", hint: "Name for the sensor...", autoCapitalize: "title", 
+				alwaysLooksFocused: true, autocorrect: false, spellcheck: false, onclick: "showKeyboard"},
 			{layoutKind: "HFlexLayout", components: [
 				{kind: "Button", flex: 1, caption: "Cancel", onclick: "cancelRename"},
 				{kind: "Button", flex: 1, caption: "OK", className: "enyo-button-affirmative", onclick: "handleRename"}
 			]}
-		]},	
+		]},
 		
 		{kind: "PageHeader", layoutKind: "VFlexLayout", components: [
-				{name: "title", content: "Status Info", style: "margin-top: 0px;font-weight: bold;"},
-		]}, 
+			{name: "title", content: "Status Info", style: "margin-top: 0px;font-weight: bold;"}
+		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
 			{kind: "Divider", caption: "Temperatures"},
 			{name: "temperatures", kind: "VirtualRepeater", onSetupRow: "setupSensor", components: [
@@ -56,33 +60,37 @@ enyo.kind({
 				]}
 			]}
 		]},
-		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: [
-		]},
+		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: []},
 		
-		{name: "serverRequest", kind: "WebService", url: "http://" + this.address + "/temperatures/status", onFailure: "handleServerError"}		
+		{name: "serverRequest", kind: "WebService", onSuccess: "handleTemperatures", onFailure: "handleServerError"}
 	],
 	
 	rendered: function() {
 		if((localStorage) && (localStorage["sensors"])) {
 			this._config = enyo.json.parse(localStorage["sensors"]);
 		}
-
-		this.updateStatus(true);
+		
+		this.updateStatus();
 	},
-
-	selected: function() {
+	
+	selected: function(visible) {
+		this._visible = visible;
+	
 		this.$.title.setContent(this.title);
-
-		this.updateStatus(false);
+		
+		this.updateStatus();
 	},
-
-	updateStatus: function(poll) {
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/temperatures/status", onSuccess: "handleTemperatures"});
-
-		if(poll)
-			setTimeout(this.selected.bind(this, true), 60000);
+	
+	updateStatus: function() {
+		if(this._timeout)
+			clearTimeout(this._timeout);
+		
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
+		
+		if(this._visible)
+			this._timeout = setTimeout(this.selected.bind(this, true), 30000);
 	},
-
+	
 	showKeyboard: function() {
 		enyo.keyboard.show();
 	},
@@ -90,15 +98,16 @@ enyo.kind({
 	setupSensor: function(inSender, inIndex) {
 		if((inIndex >= 0) && (inIndex < this._sensors.length)) {
 			var sensorName = "Sensor " + inIndex;
-		
+			
 			if(this._config[this._sensors[inIndex].sensor])
 				sensorName = this._config[this._sensors[inIndex].sensor].name;
-
+			
 			this.$.sensorName.setContent(sensorName);
+			
 			this.$.sensorTemp.setContent(this._sensors[inIndex].current + "°C");
 			this.$.sensorMin.setContent(this._sensors[inIndex].lowest + "°C");
 			this.$.sensorMax.setContent(this._sensors[inIndex].highest + "°C");
-					
+			
 			return true;
 		}
 	},
@@ -108,53 +117,62 @@ enyo.kind({
 		
 		this.$.actionPopup.openAtEvent(inEvent);
 	},
-
+	
 	executeAction: function(inSender, inSelected) {
 		if(inSelected.getValue() == "Rename Sensor") {
 			this.$.newSensorName.setValue("");
-		
-			this.$.renamePopup.openAtCenter();			
+			
+			this.$.renamePopup.openAtCenter();
 		}
 	},
 	
 	cancelRename: function() {
 		this.$.renamePopup.close();
-
+		
 		enyo.keyboard.hide();
-
+		
 		enyo.keyboard.setManualMode(false);
 	},
 	
 	handleRename: function() {
 		this.$.renamePopup.close();
-
+		
 		enyo.keyboard.hide();
-
+		
 		enyo.keyboard.setManualMode(false);
 		
 		if(this._config[this._sensors[this._selected].sensor])
 			this._config[this._sensors[this._selected].sensor].name = this.$.newSensorName.getValue();
 		else
 			this._config[this._sensors[this._selected].sensor] = {name: this.$.newSensorName.getValue()};
-
+		
 		this.$.temperatures.render();
-
+		
 		localStorage["sensors"] = enyo.json.stringify(this._config);
 	},
 	
 	handleTemperatures: function(inSender, inResponse) {
-		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
-	
+		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
+		
+		this._sensors = [];
+		
 		if(inResponse) {
-			this._sensors = inResponse;
+			this.doUpdate("online");
 			
-			this.$.temperatures.render();
+			if((inResponse.sensors) && (inResponse.sensors.length > 0))
+				this._sensors = inResponse.sensors;
 		} else {
 			this.doUpdate("offline");
 		}
+		
+		this.$.temperatures.render();		
 	},
 	
 	handleServerError: function(inSender, inResponse) {
+		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
+		
+		this._sensors = [];
+		
 		this.doUpdate("error");
 	}
 });
