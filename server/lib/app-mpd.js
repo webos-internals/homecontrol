@@ -34,7 +34,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var savedVolume = 0; // Go around having no mute / unmute
 
-var node_mpd = require("lib/mpd-pre-release");
+var node_mpd = require("./mpd-pre-release");
 
 var exec = require('child_process').exec;
 

@@ -40,7 +40,7 @@ var applescript = null;
 
 var os = require("os");
 
-var keycodes = require('../data/keycodes/linux-x11.js').keycodes;
+var keycodes = require('./x11-keycodes.js').keycodes;
 
 var modifiers = {};
 
@@ -52,7 +52,7 @@ exports.setup = function(cb) {
 	} else if(os.type() == "Linux") {
 //		var child = exec("xdotool --help", function(error, stdout, stderr) {
 
-		x11 = require('lib/x11-pre-release');
+		x11 = require('./x11-pre-release');
 
 		x11.createClient(function(display) {
 			if((display) && (display.client) && (display.client.display) && 
