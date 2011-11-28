@@ -19,6 +19,9 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.1"},
+					{content: "<ul><li>Added queue / playlists / search features for MPD</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.0"},
 					{content: "<ul><li>Added support for controlling QuickTime on OS X</li>" +
 						"<li>Added experimental support for touchpad surveillance</li>" +
