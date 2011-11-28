@@ -1,3 +1,4 @@
 server/data/sensors/*
 server/data/surveillance/*
 server/data/temperatures/*
+server/node_modules
