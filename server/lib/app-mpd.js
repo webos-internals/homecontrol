@@ -56,37 +56,17 @@ exports.execute = function(req, res) {
 	  console.log("Got mpd error: " + inspect(error.toString()));    
 	});
 	
-	mpd.connect(function (error, result) {
+	mpd.connect(function (error) {
 		if(error) {
 			res.send({"state": "closed", "repeat": false, "random": false, "volume": 0, "mute": true});
 		} else {
 			var args = [];
+			var preargs = [];
 			
 			var command = "status";
+			var precommand = "";
 			
-			if(req.params[0] == "play")
-				command = "play";
-			else if(req.params[0] == "pause")
-				command = "pause";
-			else if(req.params[0] == "prev")
-				command = "previous";
-			else if(req.params[0] == "next")
-				command = "next";
-			else if(req.params[0] == "repeat") {
-				command = "repeat";
-				
-				if(req.param("state") == "true")
-					args.push(1);
-				else
-					args.push(0);
-			} else if(req.params[0] == "random") {
-				command = "random";
-				
-				if(req.param("state") == "true")
-					args.push(1);
-				else
-					args.push(0);
-			} else if(req.params[0] == "mute") {
+			if(req.params[0] == "output/mute") {
 				if(req.param("state") == "true") {
 					command = "setvol";
 					args.push(0);
@@ -94,62 +74,151 @@ exports.execute = function(req, res) {
 					command = "setvol";
 					args.push(savedVolume);
 				}
-			} else if(req.params[0] == "volume") {
+			} else if(req.params[0] == "output/volume") {
 				command = "setvol";
-				args.push(req.param("value"));
-			}
-			
-			mpd.cmd(command, args, function (error, result) {
-				if(error) {
-					res.send({"state": "unknown", "repeat": false, "random": false, "volume": 0, "mute": true});
-				} else {
-					mpd.cmd("status", [], function (error, result) {
-						if(error) {
-							res.send({"state": "error", "repeat": false, "random": false, "volume": 0, "mute": true});
-						} else {
-							var response = {"state": "stopped", "repeat": false, "random": false, "volume": 0, "mute": false};
-							
-							if(result.state == "play")
-								response.state = "playing";
-							else if(result.state == "pause")
-								response.state = "paused";
-							
-							response.artist = "";
-							response.title = "";
-							response.duration = "";
-							response.elapsed = "";
-
-							if(result.repeat == 1)
-								response.repeat = true;
-							
-							if(result.random == 1)
-								response.random = true;
-							
-							if((result.volume < 0) || (req.params[0] == "play")) {
-								response.volume = savedVolume;
-							} else if(result.volume > 0) {
-								savedVolume = result.volume;
-								
-								response.volume = result.volume;
-							} else {
-								response.mute = true;
-							}
-							
-							mpd.cmd("currentsong", [], function (error, result) {
-								response.artist = result.Artist;
-								
-								if(result.Name)
-									response.title = result.Name;
-								else
-									response.title = result.Title;
-								
-								res.send(response);
-								
-								mpd.disconnect();
-							});
-						}
-					});
+				args.push(req.param("level"));
+			} else if(req.params[0] == "library/search") {
+				command = "search";
+				args.push("any");
+				args.push(req.param("filter"));
+			} else if(req.params[0] == "library/select") {
+				precommand = "addid";
+				preargs.push(req.param("id"));
+			} else if(req.params[0] == "playback/state") {
+				command = req.param("action");
+			} else if(req.params[0] == "playback/song") {
+				if(req.param("action") == "prev")
+					command = "previous";
+				else if(req.param("action") == "next")
+					command = "next";
+			} else if(req.params[0] == "playmode/random") {
+				command = "random";
+				
+				if(req.param("state") == "true")
+					args.push(1);
+				else
+					args.push(0);
+			} else if(req.params[0] == "playmode/repeat") {
+				command = "repeat";
+				
+				if(req.param("state") == "true")
+					args.push(1);
+				else
+					args.push(0);
+			} else if(req.params[0] == "playlists/list") {
+				if(req.param("id") == "*")
+					command = "listplaylists";
+				else {
+					command = "listplaylistinfo";
+					args.push(req.param("id"));
 				}
+			} else if(req.params[0] == "playlists/select") {
+				precommand = "clear";
+				command = "load";
+				args.push(req.param("id"));
+			} else if(req.params[0] == "playqueue/list") {
+				if(req.param("action") == "info")
+					command = "playlistinfo";
+				else if(req.param("action") == "clear")
+					command = "clear";
+			} else if(req.params[0] == "playqueue/append") {
+				command = "add";
+				args.push(req.param("id"));
+			} else if(req.params[0] == "playqueue/remove") {
+				command = "deleteid";
+				args.push(req.param("id"));
+			}
+
+			mpd.cmd(precommand, preargs, function (error, result) {
+				if(req.params[0] == "library/select") {
+					command = "playid";
+					args.push(result.id);
+				}
+			
+				mpd.cmd(command, args, function (error, result) {
+					if(error) {
+						res.send({"state": "unknown", "repeat": false, "random": false, "volume": 0, "mute": true});
+					} else {
+						mpd.cmd("status", [], function (error, status) {
+							if(error) {
+								res.send({"state": "error", "repeat": false, "random": false, "volume": 0, "mute": true});
+							} else {
+								var response = {"state": "stopped", "repeat": false, "random": false, "volume": 0, "mute": false};
+							
+								if(status.state == "play")
+									response.state = "playing";
+								else if(status.state == "pause")
+									response.state = "paused";
+							
+								response.artist = "";
+								response.title = "";
+								response.duration = "";
+								response.elapsed = "";
+
+								if(status.repeat == 1)
+									response.repeat = true;
+							
+								if(status.random == 1)
+									response.random = true;
+							
+								if((status.volume < 0) || (req.params[0] == "play")) {
+									response.volume = savedVolume;
+								} else if(status.volume > 0) {
+									savedVolume = status.volume;
+								
+									response.volume = status.volume;
+								} else {
+									response.mute = true;
+								}
+							
+								if((result) && (command == "listplaylists")) {
+									response.playlists = [];
+								
+									for(var i = 0; i < result.length; i++) {
+										response.playlists.push({
+											name: result[i].playlist,
+											id: result[i].playlist});
+									}
+								} else if((result) && ((command == "search") ||
+									(command == "playlistinfo") || (command == "listplaylistinfo")))
+								{
+									var songs = [];
+
+									for(var i = 0; i < result.length; i++) {
+										songs.push({
+											artist: result[i].artist,
+											title: result[i].title,
+											album: result[i].album,
+											id: result[i].id || result[i].file});
+									}
+
+									if(command == "search")
+										response.results = songs;
+									else if(command == "playlistinfo")
+										response.queue = songs;
+									else if(command == "listplaylistinfo") {
+										response.playlist = {
+											name: req.param("id"),
+											songs: songs};									
+									}
+								}
+							
+								mpd.cmd("currentsong", [], function (error, current) {
+									response.artist = current.artist;
+								
+									if(current.name)
+										response.title = current.name;
+									else
+										response.title = current.title;
+								
+									res.send(response);
+								
+									mpd.disconnect();
+								});
+							}
+						});
+					}
+				});
 			});
 		}
 	});

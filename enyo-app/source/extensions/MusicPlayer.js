@@ -7,10 +7,17 @@ enyo.kind({
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
 	
+	_list: "queue",
 	_state: "offline",
-	_timeout: null,
 	
-//	_selected: 0,
+	_timeout: null,
+	_keyboard: false,
+	_selected: 0,
+	
+	_queue: [],
+	_results: [],
+	_playlists: [],
+
 //	_favorites: [],
 	
 	events: {
@@ -24,17 +31,32 @@ enyo.kind({
 	},
 	
 	components: [
-/*		{name: "actionPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
-			{value: "Play Now"}, {value: "Add to Queue"}
+		{name: "queuePopup", kind: "PopupSelect", onSelect: "executeAction", items: [
+			/*{value: "Play This Song Now"},*/ {value: "Remove from Queue"}
 		]},
-		*/
+
+		{name: "playlistsPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
+			{value: "Select This Playlist"} /*, {value: "Load Songs to Queue"}*/
+		]},
+
+		{name: "resultsPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
+			{value: "Play Song Now"} , {value: "Add Song to Queue"}
+		]},
+		
 		{kind: "PageHeader", layoutKind: "HFlexLayout", components: [
 			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{kind: "Spacer", flex: 1},
 				{name: "title", content: "Music Player", style: "margin-top: 0px; font-weight: bold;"},
-				{kind: "Spacer", flex: 1}
-//				{name: "search", kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-search.png"}
-			]}
+				{kind: "Spacer", flex: 1},
+				{name: "search", kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-search.png",
+					onclick: "toggleKeyboard"}
+			]},
+			{name: "keyboardHeader", layoutKind: "HFlexLayout", flex: 1, components: [
+				{name: "keyboardInput", kind: "ToolInput", alwaysLooksFocused: true, flex: 1, 
+					inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
+						style: "margin: -5px 10px -5px 0px;", onchange: "searchMusic"},
+				{kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}
+			]}			
 		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
 			{name: "musicStateInfo", kind: "DividerDrawer", caption: "Offline", open: true, components: [
@@ -45,17 +67,18 @@ enyo.kind({
 					]}
 				]}
 			]},
-			{/*name: "listDivider", */kind: "DividerDrawer", caption: "Favorites", open: true, style: "margin-top: -5px;"/*, 
-				onOpenChanged: "toggleList"*/},
+			{name: "musicListDivider", kind: "DividerDrawer", caption: "Play Queue", open: true, style: "margin-top: -5px;", 
+				onOpenChanged: "toggleList"},
 			{layoutKind: "VFlexLayout", flex: 1, style: "margin: 0px -2px 0px 10px; border-style: groove;", components: [
-/*				{name: "favorites", kind: "VirtualList", flex: 1, onSetupRow: "setupFavorite", components: [
+				{name: "musicListView", kind: "VirtualList", flex: 1, onSetupRow: "setupListItem", components: [
 					{kind: "Item", tapHighlight: true, style: "margin: 0px;padding: 0px;", onclick: "selectAction", components: [
 						{layoutKind: "HFlexLayout", flex: 1, align: "center", style: "margin: 0px;padding: 0px;", components: [
-							{name: "favoriteName", content: "", flex: 1, style: "margin: 8px 5px;font-size: 14px;"},
-							{name: "favoriteType", content: "", className: "enyo-label", style: "color: gray;font-size: 10px;margin: 0px 15px;"}
+							{name: "listItemName", content: "", flex: 1, style: "margin: 8px 5px;font-size: 14px;"}
+							
+//							{name: "listItemType", content: "", className: "enyo-label", style: "color: gray;font-size: 10px;margin: 0px 15px;"}
 						]}
 					]}
-				]}*/
+				]}
 			]},
 			{kind: "DividerDrawer", open: false, caption: "Controls", components: [
 				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
@@ -97,6 +120,8 @@ enyo.kind({
 	rendered: function() {
 		this.inherited(arguments);
 		
+		this.$.keyboardHeader.hide();
+		
 		this.checkStatus();
 	},
 	
@@ -108,42 +133,142 @@ enyo.kind({
 	},
 	
 	checkStatus: function() {
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
+		if(this._list == "queue")
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/playqueue/list?action=info"});
+		else if(this._list == "playlists")
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/playlists/list?id=*"});
+		else
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
 		
-		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
+		this._timeout = setTimeout(this.checkStatus.bind(this), 5000);	
 	},
-/*	
+
 	toggleList: function(inSender) {
-		this.$.listDivider.open();
+		if(!this.$.musicListDivider.open) {
+			if(this._list == "queue") {
+				this._list = "playlists";
+			
+				this.$.musicListDivider.setCaption("Playlists");
+			} else {
+				this._list = "queue";
+			
+				this.$.musicListDivider.setCaption("Play Queue");
+			}
+			
+			this.$.musicListView.refresh();
+		}
 	},
+
+	toggleKeyboard: function() {
+		if(this._keyboard) {
+			this._keyboard = false;
+			
+			this.$.keyboardHeader.hide();
+			this.$.normalHeader.show();
+
+			if(this._list == "results") {
+				this._list = "queue";
+		
+				this.$.musicListDivider.setCaption("Play Queue");
+			}
+		} else {
+			this._keyboard = true;
+			
+			this.$.normalHeader.hide();
+			this.$.keyboardHeader.show();
+			this.$.keyboardInput.forceFocus();
+
+			if(this._list != "results") {
+				this._list = "results";
+			
+				this.$.musicListDivider.setCaption("Search Results");
+			}
+		}
+
+		this.$.musicListView.refresh();
+	},	
 	
-	setupFavorite: function(inSender, inIndex) {
-		if((inIndex >= 0) && (inIndex < this._favorites.length)) {
-			this.$.favoriteName.setContent(this._favorites[inIndex].name);
-			this.$.favoriteType.setContent(this._favorites[inIndex].type);
+	setupListItem: function(inSender, inIndex) {
+		if((this._list == "queue") && 
+			(inIndex >= 0) && (inIndex < this._queue.length))
+		{
+			var song = this._queue[inIndex].artist + " - " + this._queue[inIndex].title;
+		
+			this.$.listItemName.setContent(song);
 			
 			return true;
-		}
+		} else if((this._list == "playlists") && 
+			(inIndex >= 0) && (inIndex < this._playlists.length))
+		{
+			var playlist = this._playlists[inIndex].name;
+		
+			this.$.listItemName.setContent(playlist);
+			
+			return true;
+		} else if((this._list == "results") && 
+			(inIndex >= 0) && (inIndex < this._results.length))
+		{
+			var song = this._results[inIndex].artist + " - " + this._results[inIndex].title;
+		
+			this.$.listItemName.setContent(song);
+			
+			return true;
+		} else
+			this.$.musicListDivider.setOpen(true);
 	},
 	
 	selectAction: function(inSender, inEvent) {
-		this._selected = inEvent.rowIndex;
+		if(this.$.musicListDivider.open) {
+			this._selected = inEvent.rowIndex;
 		
-		this.$.actionPopup.openAtEvent(inEvent);
+			this.$[this._list + "Popup"].openAtEvent(inEvent);
+		}
 	},
 	
 	executeAction: function(inSender, inSelected) {
-		if(inSelected.getValue() == "Play Now") {
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/url?url=" + this._favorites[this._selected].url, 
-				});
-		} else if(inSelected.getValue() == "Add to Queue") {
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/queue?url=" + this._favorites[this._selected].url, 
-				});
-		}		
-	}, */
+		if(this._list == "queue") {
+			if(inSelected.getValue() == "Remove from Queue") {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
+					this.module + "/playqueue/remove?id=" + this._queue[this._selected].id});
+
+				this._queue.splice(this._selected, 1);
+				
+				this.$.musicListView.refresh();
+			}
+		} else if(this._list == "playlists") {
+			if(inSelected.getValue() == "Select This Playlist") {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
+					this.module + "/playlists/select?id=" + this._playlists[this._selected].name});
+			}
+		} else if(this._list == "results") {
+			if(inSelected.getValue() == "Play Song Now") {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
+					this.module + "/library/select?id=" + this._results[this._selected].id});
+			} else if(inSelected.getValue() == "Add Song to Queue") {
+				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
+					this.module + "/playqueue/append?id=" + this._results[this._selected].id});
+			}
+		}
+	}, 
 	
 	updateVolume: function(inSender, inEvent) {
 		this.$.musicMuteToggle.setOnLabel(this.$.musicVolumeSlider.getPosition());
+	},
+	
+	searchMusic: function() {
+		var text = this.$.keyboardInput.getValue();
+
+		this._results = [];
+
+		this._list = "results";
+			
+		this.$.musicListDivider.setCaption("Search Results");
+
+		this.$.musicListView.refresh();
+
+	
+		if(text.length > 0)
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/library/search?filter=" + text});			
 	},
 	
 	controlMusic: function(inSender, inEvent) {
@@ -151,24 +276,24 @@ enyo.kind({
 		
 		if(inSender.name == "musicPlayPause") {
 			if(this._state == "playing")
-				action = "pause";
+				action = "playback/state?action=pause";
 			else
-				action = "play";
+				action = "playback/state?action=play";
 		} else if(inSender.name == "musicNextSong")
-			action = "next";
+			action = "playback/song?action=next";
 		else if(inSender.name == "musicPrevSong")
-			action = "prev";
+			action = "playback/song?action=prev";
 		else if(inSender.name == "musicRepeatToggle")
-			action = "repeat?state=" + this.$.musicRepeatToggle.getState();
+			action = "playmode/repeat?state=" + this.$.musicRepeatToggle.getState();
 		else if(inSender.name == "musicRandomToggle")
-			action = "random?state=" + this.$.musicRandomToggle.getState();
+			action = "playmode/random?state=" + this.$.musicRandomToggle.getState();
 		else if(inSender.name == "musicMuteToggle") {
 			if(!this.$.musicMuteToggle.getState())
-				action = "mute?state=true";
+				action = "output/mute?state=true";
 			else
-				action = "mute?state=false";
+				action = "output/mute?state=false";
 		} else if(inSender.name == "musicVolumeSlider")
-			action = "volume?value=" + this.$.musicVolumeSlider.getPosition();
+			action = "output/volume?level=" + this.$.musicVolumeSlider.getPosition();
 		
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});	
 	},
@@ -224,6 +349,27 @@ enyo.kind({
 				this.$.musicRandomToggle.setState(inResponse.random);
 			else
 				this.$.musicRepeatRandom.hide();
+
+			if(inResponse.queue != undefined) {
+				this._queue = inResponse.queue;
+				
+				if(this._list == "queue")
+					this.$.musicListView.refresh();
+			}
+
+			if(inResponse.playlists != undefined) {
+				this._playlists = inResponse.playlists;
+				
+				if(this._list == "playlists")
+					this.$.musicListView.refresh();
+			}
+
+			if(inResponse.results != undefined) {
+				this._results = inResponse.results;
+				
+				if(this._list == "results")
+					this.$.musicListView.refresh();
+			}
 			
 			if(inResponse.volume != undefined) {
 				this._volume = inResponse.volume;

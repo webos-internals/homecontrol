@@ -62,19 +62,7 @@ exports.execute = function(req, res) {
 		if((stdout.length > 0) || (req.params[0] == "start")) {
 			var execute_string = "";
 			
-			if(req.params[0] == "play") {
-				var execute_string = "rhythmbox-client --play;";
-
-				currentState = "playing";
-			} else if(req.params[0] == "pause") {
-				var execute_string = "rhythmbox-client --pause;";
-				
-				currentState = "paused";
-			} else if(req.params[0] == "next") {
-				var execute_string = "rhythmbox-client --next;";
-			} else if(req.params[0] == "prev") {
-				var execute_string = "rhythmbox-client --previous;";
-			} else if(req.params[0] == "mute") {
+			if(req.params[0] == "output/mute") {
 				if(req.param("state") == "true") {
 					var execute_string = "rhythmbox-client --mute;";
 				} else {
@@ -85,9 +73,21 @@ exports.execute = function(req, res) {
 				var execute_string = "rhythmbox-client --play-uri=" + req.param("url") + ";";
 			} else if(req.params[0] == "queue") {
 				var execute_string = "rhythmbox-client --enqueue \"" + req.param("url") + "\";";*/
-			} else if(req.params[0] == "volume") {
+			} else if(req.params[0] == "output/volume") {
 				var execute_string = "rhythmbox-client --unmute; rhythmbox-client --set-volume " + 
-					(req.param("value") / 100) + ";";
+					(req.param("level") / 100) + ";";
+			} else if(req.params[0] == "playback/state") {
+				if(req.param("action") == "play")
+					currentState = "playing";				
+				else
+					currentState = "paused";
+				
+				var execute_string = "rhythmbox-client --" + req.param("action") + ";";
+			} else if(req.params[0] == "playback/song") {
+				if(req.param("action") == "prev")
+					var execute_string = "rhythmbox-client --previous;";
+				else if(req.param("action") == "next")
+					var execute_string = "rhythmbox-client --next;";
 			}
 
 			execute_string += "rhythmbox-client --print-volume;";

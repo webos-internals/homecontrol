@@ -1,0 +1,3 @@
+./server/data/sensors/*
+./server/data/surveillance/*
+./server/data/temperatures/*

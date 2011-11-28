@@ -50,15 +50,28 @@ exports.execute = function(req, res) {
 	
 	var script_string = "";
 	
-	if(req.params[0] == "play") {
-		var script_string = 'tell application "iTunes" to play\n';
-	} else if(req.params[0] == "pause") {
-		var script_string = 'tell application "iTunes" to pause\n';
-	} else if(req.params[0] == "next") {
-		var script_string = 'tell application "iTunes" to next track\n';
-	} else if(req.params[0] == "prev") {
-		var script_string = 'tell application "iTunes" to previous track\n';
-	} else if(req.params[0] == "repeat") {
+	if(req.params[0] == "output/mute") {
+		var script_string = 'tell application "iTunes" to set mute to ' +
+			req.param("state") + '\n';
+	} else if(req.params[0] == "output/volume") {
+		var script_string = 'tell application "iTunes" to set sound volume to ' + 
+			req.param("level") + "\n";
+	} else if(req.params[0] == "playback/state") {
+		var script_string = 'tell application "iTunes" to ' + req.param("action") + '\n';
+	} else if(req.params[0] == "playback/song") {
+		if(req.param("action") == "prev")
+			var script_string = 'tell application "iTunes" to previous track\n';
+		else if(req.param("action") == "next")
+			var script_string = 'tell application "iTunes" to next track\n';
+	} else if(req.params[0] == "playmode/random") {
+		var script_string = 'tell application "iTunes"\n';
+
+		script_string += 'if player state is playing or player state is paused then\n';
+
+		script_string += 'set shuffle of current playlist to ' + req.param("state") + '\n';
+		
+		script_string += 'end if\nend tell\n';
+	} else if(req.params[0] == "playmode/repeat") {
 		var script_string = 'tell application "iTunes"\n';
 
 		script_string += 'if player state is playing or player state is paused then\n';
@@ -69,20 +82,6 @@ exports.execute = function(req, res) {
 			script_string += 'set song repeat of current playlist to off\n';
 		
 		script_string += 'end if\nend tell\n';
-	} else if(req.params[0] == "random") {
-		var script_string = 'tell application "iTunes"\n';
-
-		script_string += 'if player state is playing or player state is paused then\n';
-
-		script_string += 'set shuffle of current playlist to ' + req.param("state") + '\n';
-		
-		script_string += 'end if\nend tell\n';
-	} else if(req.params[0] == "mute") {
-		var script_string = 'tell application "iTunes" to set mute to ' +
-			req.param("state") + '\n';
-	} else if(req.params[0] == "volume") {
-		var script_string = 'tell application "iTunes" to set sound volume to ' + 
-			req.param("value") + "\n";
 	}
 	
 	script_string += 'tell application "iTunes" to get player state & sound volume & mute';
