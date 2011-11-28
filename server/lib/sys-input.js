@@ -34,57 +34,53 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var X = null;
 
-var os = null;
+var x11 = null;
 
-var x11 = require('x11');
+var applescript = null;
 
-var exec = require('child_process').exec;
-
-var applescript = require("applescript");
+var os = require("os");
 
 var keycodes = require('../data/keycodes/linux-x11.js').keycodes;
 
 var modifiers = {};
 
 exports.setup = function(cb) {
-//	var child = exec("xdotool --help", function(error, stdout, stderr) {
+	if(os.type() == "Darwin") {
+		var applescript = require("applescript");
 
-	x11.createClient(function(display) {
-		if((display) && (display.client) && (display.client.display) && 
-			(display.client.display.screen[0]) && (display.client.display.screen[0].root))
-		{
-			X = display.client;
+		cb("input", "Mac OS X", "System Input");
+	} else if(os.type() == "Linux") {
+//		var child = exec("xdotool --help", function(error, stdout, stderr) {
 
-			X.require('xtest', function(ext) {
-				X.Test = ext;
-				
-				os = "Linux";
-			
-				cb("input", "Linux X11", "System Input");
-				
-				// 
-				
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_R"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_R"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Super_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Multi_key"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-				X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
-			});
-		} else {
-			var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
-				if(error) {
-					cb(false);
-				} else {
-					os = "OSX";
-			
-					cb("input", "Mac OS X", "System Input");
-				}
-			});				
-		}
-	});
+		x11 = require('x11');
+
+		x11.createClient(function(display) {
+			if((display) && (display.client) && (display.client.display) && 
+				(display.client.display.screen[0]) && (display.client.display.screen[0].root))
+			{
+				X = display.client;
+
+				X.require('xtest', function(ext) {
+					X.Test = ext;
+
+					cb("input", "Linux X11", "System Input");
+
+					// Reset modifiers...
+
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_R"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_R"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Super_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Multi_key"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+					X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
+				});
+			} else {
+				cb(false);
+			}
+		});
+	}
 };
 
 exports.execute = function(req, res) {
