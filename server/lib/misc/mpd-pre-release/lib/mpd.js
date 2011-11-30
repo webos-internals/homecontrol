@@ -182,7 +182,7 @@ MPD.prototype.initializeCommands = function() {
 //		"seekid":           this._fetch_nothing,
 //		"stop":             this._fetch_nothing,
 //	Playlist Commands
-//		"add":              this._fetch_nothing,
+		"add":              this._fetch_nothing,
 		"addid":            this._fetch_object,
 		"clear":            this._fetch_nothing,
 //		"delete":           this._fetch_nothing,

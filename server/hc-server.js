@@ -32,22 +32,66 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-var express = require('express');
+var addr = "127.0.0.1";
+var port = 3000;
 
+var net = require('net');
+var dgram = require('dgram');
+var express = require('express');
 var form = require('connect-form');
 
 var loaded = [];
 
-var modules = ["app-frontrow", "app-itunes", "app-mpd", "app-quicktime", "app-rhythmbox", "app-totem",
-	"sys-1-wire", "sys-input", "sys-sound", "sys-surveillance"];
+var modules = ["app/frontrow", "app/itunes", "app/mpd", "app/quicktime", "app/rhythmbox", "app/totem",
+	"sys/1-wire", "sys/input", "sys/sound", "sys/surveillance"];
+
+//
 
 console.log("Home Control server: starting");
 
-var srv = express.createServer(
+var socket = net.createConnection(80, 'www.google.com');
+
+socket.on('connect', function() {
+
+	addr = socket.address().address;
+
+	var ssd_srv = dgram.createSocket("udp4");
+
+	ssd_srv.on("message", function (msg, rinfo) {
+		console.log("Received SSD message: " + rinfo.address + ":" + rinfo.port);
+	
+		if(msg.slice(0, 8) == "M-SEARCH") {
+			var message = new Buffer(
+				"HTTP/1.1 200 OK\r\n" +
+				"LOCATION: http://" + addr + ":" + port + "/\r\n" +
+				"SERVER: Home Control\r\n" +
+				"ST: " +
+				"EXT: " +
+				"\r\n"
+			);
+
+			console.log("Sending SSD message: " + addr + ":" + port);
+
+			var client = dgram.createSocket("udp4");
+
+			client.send(message, 0, message.length, rinfo.port, rinfo.address);
+			
+			client.close();
+		}
+	});
+
+	ssd_srv.bind(1900);
+
+	ssd_srv.addMembership('239.255.255.250');
+
+	socket.end();
+});
+
+var http_srv = express.createServer(
 	form({ keepExtensions: true })
 );
 
-srv.get("/status", function(req, res) {
+http_srv.get("/modules", function(req, res) {
 	res.send(loaded);
 });
 
@@ -58,14 +102,14 @@ for(var i = 0; i < modules.length; i++) {
 		if((moduleID) && (moduleName) && (moduleCategory)) {
 			console.log("Loading " + moduleCategory + " module: " + moduleName);
 
-			srv.get("/" + moduleID + "/*", module.execute);
+			http_srv.get("/" + moduleID + "/*", module.execute);
 
-			srv.post("/" + moduleID + "/*", module.execute);
+			http_srv.post("/" + moduleID + "/*", module.execute);
 
 			loaded.push({id: moduleID, name: moduleName, category: moduleCategory});
 		}	
 	}.bind(this, module));
 }
 
-srv.listen(3000);
+http_srv.listen(port);
 

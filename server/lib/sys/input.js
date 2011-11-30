@@ -38,9 +38,10 @@ var x11 = null;
 
 var applescript = null;
 
+var fs = require('fs');
 var os = require("os");
 
-var keycodes = require('./x11-keycodes.js').keycodes;
+var keycodes = require('../x11-keycodes.js').keycodes;
 
 var modifiers = {};
 
@@ -52,34 +53,40 @@ exports.setup = function(cb) {
 	} else if(os.type() == "Linux") {
 //		var child = exec("xdotool --help", function(error, stdout, stderr) {
 
-		x11 = require('./x11-pre-release');
+		try { 
+			stats = fs.lstatSync("/tmp/.X0-lock"); 
 
-		x11.createClient(function(display) {
-			if((display) && (display.client) && (display.client.display) && 
-				(display.client.display.screen[0]) && (display.client.display.screen[0].root))
-			{
-				X = display.client;
+			x11 = require('../misc/x11-pre-release');
 
-				X.require('xtest', function(ext) {
-					X.Test = ext;
+			x11.createClient(function(display) {
+				if((display) && (display.client) && (display.client.display) && 
+					(display.client.display.screen[0]) && (display.client.display.screen[0].root))
+				{
+					X = display.client;
 
-					cb("input", "Linux X11", "System Input");
+					X.require('xtest', function(ext) {
+						X.Test = ext;
 
-					// Reset modifiers...
+						// Reset modifiers...
 
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_R"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_R"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Super_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Multi_key"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-					X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
-				});
-			} else {
-				cb(false);
-			}
-		});
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_R"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_R"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Super_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Multi_key"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+						X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
+
+						cb("input", "Linux X11", "System Input");
+					});
+				} else {
+					cb(false);
+				}
+			});		
+		} catch (error) {
+			cb(false);
+		}
 	}
 };
 
