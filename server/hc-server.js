@@ -42,7 +42,8 @@ var form = require('connect-form');
 
 var loaded = [];
 
-var modules = ["app/frontrow", "app/itunes", "app/mpd", "app/quicktime", "app/rhythmbox", "app/totem",
+var modules = ["app/banshee", "app/frontrow", "app/itunes", "app/mpd", 
+	"app/quicktime", "app/rhythmbox", "app/totem",
 	"sys/1-wire", "sys/input", "sys/sound", "sys/surveillance"];
 
 //
@@ -82,7 +83,11 @@ socket.on('connect', function() {
 
 	ssd_srv.bind(1900);
 
-	ssd_srv.addMembership('239.255.255.250');
+	try {
+		ssd_srv.addMembership('239.255.255.250');
+	} catch (error) {
+		console.log("Automatic discovery: disabled");
+	}
 
 	socket.end();
 });

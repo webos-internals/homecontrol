@@ -1,7 +1,5 @@
 //
 
-// TODO: Cleanup the status object usage and finish the api...
-
 var crypto = require('crypto');
 
 // MUSIC PLAYER API:
@@ -16,7 +14,7 @@ var crypto = require('crypto');
   library/select?id=songitem
   playback/state?action=play/pause
   playback/skip?action=prev/next
-  playback/seek?action=fwd/bwd					!!!!!!!!!!!!!!!!!
+  playback/seek?action=fwd/bwd
   playback/select?id=songitem
 - playmode/consume?state=true/false
 - playmode/single?state=true/false
@@ -54,7 +52,7 @@ exports.musicPlayerStatus = MusicPlayerStatus = function(outputCtl,
 	}
 
 	if(currentInfo)
-		this.current = {"title": ""};
+		this.current = {};
 
 	if(librarySearch)
 		this.search = {"name": "Search Results", "items": []};

@@ -52,6 +52,8 @@ exports.setup = function(cb) {
 
 exports.execute = function(req, res) {
 	console.log("Executing itunes command: " + req.params[0]);
+
+	res.header('Content-Type', 'text/javascript');
 	
 	var script_string = "";
 

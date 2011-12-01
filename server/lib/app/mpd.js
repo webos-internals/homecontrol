@@ -67,6 +67,8 @@ exports.setup = function(cb) {
 exports.execute = function(req, res) {
 	console.log("Executing mpd command: " + req.params[0]);
 
+	res.header('Content-Type', 'text/javascript');
+
 	mpd.connect(function (error) {
 		if(error) {
 			res.send(currentStatus.getStatus(req.socket.address().address, "closed"));

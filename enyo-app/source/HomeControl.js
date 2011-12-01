@@ -38,6 +38,7 @@ enyo.kind({
 				{caption: "Media Center - Boxee Box", value: "MediaCenter:boxee:device"},
 //				{caption: "Media Center - MythTV", value: "MediaCenter:mythtv:linux"},
 				{caption: "Media Center - XBMC", value: "MediaCenter:xbmc:device"},
+				{caption: "Music Player - Banshee", value: "MusicPlayer:banshee:linux"},
 				{caption: "Music Player - iTunes", value: "MusicPlayer:itunes:osx"},
 				{caption: "Music Player - MPD", value: "MusicPlayer:mpd:linux"},
 				{caption: "Music Player - RhythmBox", value: "MusicPlayer:rhythmbox:linux"},

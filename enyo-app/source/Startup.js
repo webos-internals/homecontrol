@@ -19,6 +19,9 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.4"},
+					{content: "<ul><li>Added support for Banshee music player</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.3"},
 					{content: "<ul><li>Added seek fwd/bwd support for MPD and iTunes</li>" +
 						"<li>Fine tuned the music player user interface</li></ul>"},

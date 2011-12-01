@@ -73,6 +73,7 @@ exports.setup = function(cb) {
 exports.execute = function(req, res) {
 	console.log("Executing rhythmbox command: " + req.params[0]);
 	
+	res.header('Content-Type', 'text/javascript');
 
 	//dbus-send --print-reply --dest=org.gnome.Rhythmbox /org/gnome/Rhythmbox/PlaylistManager org.gnome.Rhythmbox.PlaylistManager.getPlaylists
 	//			var execute_string = "rhythmbox-client --play-uri=" + req.param("url") + ";";
@@ -126,47 +127,51 @@ alias decvolume='dbus-send --dest=org.gnome.Rhythmbox /org/gnome/Rhythmbox/Playe
 							var execute_string = "rhythmbox-client --next;";
 						break;
 
+					case "playback/seek":
+						break;
+
 					default:
 						break;
 				}
 
 				execute_string += "rhythmbox-client --print-volume;";
 			
-				execute_string += "rhythmbox-client --print-playing-format='%ta;%tt;%td;%te'";
+				execute_string += "rhythmbox-client --print-playing-format='%ta;%at;%tt;%td;%te'";
 			
 				var child = exec(execute_string, function(error, stdout, stderr) {
-					res.header('Content-Type', 'text/javascript');
-				
-					if(error !== null) {
-						res.send(currentStatus.getStatus(req.socket.address().address, "unknown"));
-					} else {
-						var output = stdout.split("\n");
-					
-						if(output[0].slice(0, 17) == "Playback is muted") {
-							currentStatus.mute = true;
+					if(error) {
+						res.send(currentStatus.getStatus(req.socket.address().address, "error"));
 						
-							currentStatus.volume = Math.round(output[1].slice(19, 27) * 100);
-						
-							var status = output[2].split(";");
-						} else {
-							currentStatus.mute = false;
-						
-							currentStatus.volume = Math.round(output[0].slice(19, 27) * 100);
-						
-							var status = output[1].split(";");
-						}
-					
-						if(status[0].slice(0, 11) == "Not playing") {
-							res.send(currentStatus.getStatus(req.socket.address().address, "paused"));
-						} else {
-							currentStatus.current.artist = escape(status[0]);
-							currentStatus.current.title = escape(status[1]);
+						return;
+					}
 
-							if(req.param("action") == "play")
-								res.send(currentStatus.getStatus(req.socket.address().address, "playing"));
-							else
-								res.send(currentStatus.getStatus(req.socket.address().address, "paused"));
-						}
+					var output = stdout.split("\n");
+				
+					if(output[0].slice(0, 17) == "Playback is muted") {
+						currentStatus.mute = true;
+					
+						currentStatus.volume = Math.round(output[1].slice(19, 27) * 100);
+					
+						var status = output[2].split(";");
+					} else {
+						currentStatus.mute = false;
+					
+						currentStatus.volume = Math.round(output[0].slice(19, 27) * 100);
+					
+						var status = output[1].split(";");
+					}
+				
+					if(status[0].slice(0, 11) == "Not playing") {
+						res.send(currentStatus.getStatus(req.socket.address().address, "paused"));
+					} else {
+						currentStatus.current.artist = escape(status[0]);
+						currentStatus.current.album = escape(status[1]);
+						currentStatus.current.title = escape(status[2]);
+
+						if(req.param("action") == "play")
+							res.send(currentStatus.getStatus(req.socket.address().address, "playing"));
+						else
+							res.send(currentStatus.getStatus(req.socket.address().address, "paused"));
 					}
 				});
 			} else {
