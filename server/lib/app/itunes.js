@@ -93,8 +93,6 @@ exports.execute = function(req, res) {
 			break;
 
 		case "library/search":
-			currentStatus.search.filter = req.param("filter");		
-		
 			script_string = 'set searchresults to {}\n' + 'tell application "iTunes"\n' + 
 				'set results to (search playlist "Library" for "' + req.param("filter") + '")\n' + 
 				'repeat with result in results\n' + 
@@ -125,6 +123,33 @@ exports.execute = function(req, res) {
 				script_string = 'tell application "iTunes" to previous track\n';
 			else if(req.param("action") == "next")
 				script_string = 'tell application "iTunes" to next track\n';
+			break;
+
+		case "playback/seek":
+			if(req.param("action") == "bwd") {
+				script_string = 'tell application "iTunes"\n' +
+					'if player state is playing then\n' +
+					'set currTime to get player position\n' +
+					'set currSkip to currTime - 10\n' +
+					'if currSkip < 0 then\n' +
+					'set currSkip to 0\n' + 
+					'end if\n' +
+    				'set player position to currSkip\n' +
+					'end if\n' +
+					'end tell\n';
+			} else if(req.param("action") == "fwd") {
+				script_string = 'tell application "iTunes"\n' +
+					'if player state is playing then\n' +
+					'set trackTime to duration of current track\n' +
+					'set currTime to get player position\n' +
+					'set currSkip to currTime + 10\n' +
+					'if currSkip > trackTime then\n' +
+					'set currSkip to trackTime\n' + 
+					'end if\n' +
+    				'set player position to currSkip\n' +
+					'end if\n' +
+					'end tell\n';
+			}
 			break;
 
 		case "playback/select":
@@ -225,10 +250,10 @@ exports.execute = function(req, res) {
 		if((!error) && (result) && (result.length > 0)) {
 			switch(req.params[0]) {
 				case "library/search":
-					currentStatus.search.results = [];
+					currentStatus.search.items = [];
 
 					for(var i = 0; i < result.length; i++) {
-						currentStatus.search.results.push({
+						currentStatus.search.items.push({
 							id: result[i][0],
 							artist: result[i][1],
 							album: result[i][2],
@@ -243,6 +268,7 @@ exports.execute = function(req, res) {
 						for(var i = 1; i < result.length; i++) {
 							currentStatus.views.playlists.items.push({
 								name: result[i],
+								type: "User Created",
 								id: result[i] });
 						}
 					} else if(req.param("id") == "current") {

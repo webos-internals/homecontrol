@@ -2,6 +2,65 @@
 	text-align: center;
 }
 
+.tool-button {
+	margin: -13px -10px;
+}
+
+.divider {
+	margin-bottom: -8px;
+}
+
+.divider-content {
+	padding: 5px 15px;
+}
+
+.divider-container {
+	max-width: 290px;
+	margin: auto auto;
+}
+
+.divider-container-box {
+	margin: 0px -2px 0px 10px;
+	border-style: groove;
+}
+
+.list-view-item {
+	margin: -6px 0px 12px 0px;
+	padding: 0px;
+}
+
+.list-view-title {
+	max-height: 20px;
+	margin: 8px 0px 12px 5px;
+	font-size: 15px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.list-view-subtitle {
+	max-height: 16px;
+	margin: 6px 5px 10px 5px;
+	font-size: 12px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.current-info {
+	font-weight: bold;
+	font-size: 18px;
+	max-height: 24px; 
+	white-space: nowrap; 
+	text-overflow: ellipsis; 
+	overflow:hidden;
+	-webkit-marquee-direction: left;
+	-webkit-marquee-speed: fast;
+	-webkit-marquee-increment: small;
+}
+
+.current-container {
+	margin: -10px auto 2px auto;
+}
+
 .control-up .enyo-button-icon {
 	position: absolute;
 	top: 0px;
@@ -83,6 +142,10 @@
 	margin-top: 95px;
 }
 
+.control-volume {
+	margin: -2px 0px -8px 0px;
+}
+
 .control-back .enyo-button-icon {
 	margin-left: -12px;
 	margin-right: 8px;
@@ -94,3 +157,17 @@
 	line-height: 20px;
 	min-height: 16px;
 }
+
+.control-first {
+	margin: -1px -6px -1px 0px;
+}
+
+.control-middle {
+	margin: -1px 0px -1px 0px;
+}
+
+.control-last {
+	margin: -1px 0px -1px -6px;
+}
+
+

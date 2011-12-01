@@ -87,11 +87,11 @@ enyo.kind({
 		]},
 		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: [
 			{kind: "Spacer"},
-			{name: "videoSeekBwd", kind: "ToolButton", icon: "./images/ctl-rewind.png", onclick: "controlVideo"},
+			{name: "videoSeekBwd", kind: "ToolButton", icon: "./images/ctl-bwd.png", onclick: "controlVideo"},
 			{kind: "Spacer"},
 			{name: "videoPlayPause", kind: "ToolButton", icon: "./images/ctl-play.png", onclick: "controlVideo"},
 			{kind: "Spacer"},
-			{name: "videoSeekFwd", kind: "ToolButton", icon: "./images/ctl-forward.png", onclick: "controlVideo"},
+			{name: "videoSeekFwd", kind: "ToolButton", icon: "./images/ctl-fwd.png", onclick: "controlVideo"},
 			{kind: "Spacer"}
 		]},
 		

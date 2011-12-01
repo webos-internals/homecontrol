@@ -179,7 +179,7 @@ MPD.prototype.initializeCommands = function() {
 		"playid":           this._fetch_nothing,
 		"previous":         this._fetch_nothing,
 //		"seek":             this._fetch_nothing,
-//		"seekid":           this._fetch_nothing,
+		"seekid":           this._fetch_nothing,
 //		"stop":             this._fetch_nothing,
 //	Playlist Commands
 		"add":              this._fetch_nothing,

@@ -19,6 +19,10 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.3"},
+					{content: "<ul><li>Added seek fwd/bwd support for MPD and iTunes</li>" +
+						"<li>Fine tuned the music player user interface</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.2"},
 					{content: "<ul><li>Added showing of current song in play queue</li>" +
 						"<li>Added queue / playlists / search features for iTunes</li></ul>"},

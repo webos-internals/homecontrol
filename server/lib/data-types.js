@@ -16,7 +16,7 @@ var crypto = require('crypto');
   library/select?id=songitem
   playback/state?action=play/pause
   playback/skip?action=prev/next
-- playback/seek?action=fwd/bwd
+  playback/seek?action=fwd/bwd					!!!!!!!!!!!!!!!!!
   playback/select?id=songitem
 - playmode/consume?state=true/false
 - playmode/single?state=true/false
@@ -57,7 +57,7 @@ exports.musicPlayerStatus = MusicPlayerStatus = function(outputCtl,
 		this.current = {"title": ""};
 
 	if(librarySearch)
-		this.search = {"filter": "", "results": []};
+		this.search = {"name": "Search Results", "items": []};
 
 	if(listViews) {
 		this.views = {};

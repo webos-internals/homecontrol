@@ -102,8 +102,6 @@ exports.execute = function(req, res) {
 				break;
 
 			case "library/search":
-				currentStatus.search.filter = req.param("filter");
-			
 				command = "search";
 				args.push("any");
 				args.push(req.param("filter"));
@@ -123,6 +121,10 @@ exports.execute = function(req, res) {
 					command = "previous";
 				else if(req.param("action") == "next")
 					command = "next";
+				break;
+
+			case "playback/seek":
+				command = "status";
 				break;
 
 			case "playmode/random":
@@ -190,26 +192,26 @@ exports.execute = function(req, res) {
 				return;
 			}
 			
-			switch(command) {
-				case "addid":
+			switch(req.params[0]) {
+				case "library/select":
 					command = "playid";
-					args.push(result.id);
+					args = [result.id];
 					break;
 
-				case "clear":
+				case "playlists/select":
 					currentStatus.views.playqueue.items = [];
 
 					command = "load";
-					args.push(req.param("id"));
+					args = [req.param("id")];
 					break;
 
-				case "search":
-					command = ""; args = "";
+				case "library/search":
+					command = ""; args = [];
 
-					currentStatus.search.results = [];
+					currentStatus.search.items = [];
 
 					for(var i = 0; i < result.length; i++) {
-						currentStatus.search.results.push({
+						currentStatus.search.items.push({
 							artist: result[i].artist,
 							title: result[i].title,
 							album: result[i].album,
@@ -217,49 +219,67 @@ exports.execute = function(req, res) {
 					}
 					break;
 
-				case "listplaylists":
-					command = ""; args = "";
+				case "playlists/list":
+					if(req.param("id") == "*") {
+						command = ""; args = [];
 
-					currentStatus.views.playlists.items = [];
+						currentStatus.views.playlists.items = [];
 			
-					for(var i = 0; i < result.length; i++) {
-						currentStatus.views.playlists.items.push({
-							name: result[i].playlist,
-							id: result[i].playlist });
-					}
+						for(var i = 0; i < result.length; i++) {
+							currentStatus.views.playlists.items.push({
+								name: result[i].playlist,
+								type: "User Created",
+								id: result[i].playlist });
+						}
+					} else {
+						command = ""; args = [];
+
+						currentStatus.views.selected.name = req.param("id");
+						currentStatus.views.selected.items = [];
+
+						for(var i = 0; i < result.length; i++) {
+							currentStatus.views.selected.items.push({
+								artist: result[i].artist,
+								title: result[i].title,
+								album: result[i].album,
+								id: result[i].id});
+						}
+					}				
 					break;
 
-				case "playlistinfo":
-					command = ""; args = "";
-
-					currentStatus.views.playqueue.items = [];
-
-					for(var i = 0; i < result.length; i++) {
-						currentStatus.views.playqueue.items.push({
-							artist: result[i].artist,
-							title: result[i].title,
-							album: result[i].album,
-							id: result[i].id});
-					}
+				case "playback/seek":
+					var time = result.time.split(":");
+					
+					command = "seekid";
+					args = [result.songid];
+					
+					if(req.param("action") == "bwd")
+						args.push(parseInt(time[0]) - 10);
+					else if(req.param("action") == "fwd")
+						args.push(parseInt(time[0]) + 10);
 					break;
 
-				case "listplaylistinfo":
-					command = ""; args = "";
+				case "start":
+				case "close":
+				case "status":
+				case "playqueue/list":
+					command = ""; args = [];
 
-					currentStatus.views.selected.name = req.param("id");
-					currentStatus.views.selected.items = [];
+					if(result) {
+						currentStatus.views.playqueue.items = [];
 
-					for(var i = 0; i < result.length; i++) {
-						currentStatus.views.selected.items.push({
-							artist: result[i].artist,
-							title: result[i].title,
-							album: result[i].album,
-							id: result[i].id});
+						for(var i = 0; i < result.length; i++) {
+							currentStatus.views.playqueue.items.push({
+								artist: result[i].artist,
+								title: result[i].title,
+								album: result[i].album,
+								id: result[i].id});
+						}
 					}
 					break;
 
 				default:
-					command = ""; args = "";
+					command = ""; args = [];
 					break;
 			}
 		

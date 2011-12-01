@@ -72,11 +72,11 @@ enyo.kind({
 		{kind: "Toolbar", className: "enyo-toolbar-light", components: [
 			{name: "controlPrev", kind: "ToolButton", icon: "./images/ctl-prev.png", style: "margin: -1px -6px -1px 0px;", onclick: "controlDevice"},
 			{kind: "Spacer"},
-			{name: "controlRwd", kind: "ToolButton", icon: "./images/ctl-rewind.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
+			{name: "controlRwd", kind: "ToolButton", icon: "./images/ctl-bwd.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
 			{kind: "Spacer"},
 			{name: "controlPlayPause", kind: "ToolButton", icon: "./images/ctl-playpause.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
 			{kind: "Spacer"},
-			{name: "controlFwd", kind: "ToolButton", icon: "./images/ctl-forward.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
+			{name: "controlFwd", kind: "ToolButton", icon: "./images/ctl-fwd.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
 			{kind: "Spacer"},
 			{name: "controlNext", kind: "ToolButton", icon: "./images/ctl-next.png", style: "margin: -1px 0px -1px -6px;", onclick: "controlDevice"},
 		]},
