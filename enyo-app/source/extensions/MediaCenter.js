@@ -271,6 +271,8 @@ enyo.kind({
 	},
 	
 	unknownError: function(inSender, inResponse) {
+		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
+		
 		this.doUpdate("error");
 	}
 });

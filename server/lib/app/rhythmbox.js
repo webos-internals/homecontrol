@@ -53,7 +53,7 @@ exports.setup = function(cb) {
 						else {
 							limitedInterface = true;
 	
-							currentStatus = new MusicPlayerStatus(true, false, true, false, null);
+							currentStatus = new MusicPlayerStatus(true, false, true, false, false, null);
 
 							currentStatus.state = "stopped";
 

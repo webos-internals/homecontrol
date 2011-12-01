@@ -32,7 +32,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-// TODO: when selecting track / playlist should refresh play queue info!
+// TODO: when selecting track / playlist should refresh play queue info and not just empty it out...
 //			maybe also when skipping tracks if consume is on...
 //			i.e. server should make sure that all changed statuses are in the 
 //			status info which is send as a response
@@ -43,7 +43,7 @@ var exec = require('child_process').exec;
 
 var hcdata = require('../data-types.js');
 
-var currentStatus = new MusicPlayerStatus(true, true, true, true, 
+var currentStatus = new MusicPlayerStatus(true, true, true, true, true, 
 	["playlists", "playqueue", "selected"]);
 
 exports.setup = function(cb) {
@@ -56,7 +56,7 @@ exports.setup = function(cb) {
 			mpd = new MPD();
 
 			mpd.addListener("error", function (error) {
-			  console.log("Got mpd error: " + inspect(error.toString()));    
+			  console.log("Got mpd error: " + error.toString());    
 			});
 
 			cb("mpd", "MPD", "Music Player");
@@ -111,7 +111,7 @@ exports.execute = function(req, res) {
 
 			case "library/select":
 				command = "addid";
-				args.push(req.param("id"));
+				args.push('"' + req.param("id") + '"');
 				break;
 
 			case "playback/state":
@@ -259,6 +259,8 @@ exports.execute = function(req, res) {
 						args.push(parseInt(time[0]) - 10);
 					else if(req.param("action") == "fwd")
 						args.push(parseInt(time[0]) + 10);
+					else if(!isNaN(parseInt(req.param("action"))))
+						args.push(parseInt(req.param("action")));
 					break;
 
 				case "start":
@@ -327,6 +329,18 @@ exports.execute = function(req, res) {
 					else
 						currentStatus.random = false;
 
+					if(status.time) {
+						var position = status.time.split(":");
+
+						currentStatus.position.elapsed = position[0];
+
+						currentStatus.position.duration = position[1];
+					} else {
+						currentStatus.position.elapsed = 0;
+
+						currentStatus.position.duration = 0;
+					}
+					
 					mpd.cmd("currentsong", [], function (error, current) {
 						if(error) {
 							res.send(currentStatus.getStatus(req.socket.address().address, "error"));

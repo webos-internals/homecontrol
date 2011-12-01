@@ -19,6 +19,10 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.5"},
+					{content: "<ul><li>Lots of bug fixes for music players</li>" + 
+						"<li>Added progress bar for music players</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.4"},
 					{content: "<ul><li>Added support for Banshee music player</li></ul>"},
 

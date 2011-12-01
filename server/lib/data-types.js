@@ -31,7 +31,7 @@ var crypto = require('crypto');
 // MUSIC PLAYER STATUS OBJECT
 
 exports.musicPlayerStatus = MusicPlayerStatus = function(outputCtl, 
-	playmodeCtl, currentInfo, librarySearch, listViews)
+	playmodeCtl, currentInfo, positionInfo, librarySearch, listViews)
 {
 	// Hold on statuses per client so that we can minimize the data
 
@@ -53,6 +53,9 @@ exports.musicPlayerStatus = MusicPlayerStatus = function(outputCtl,
 
 	if(currentInfo)
 		this.current = {};
+
+	if(positionInfo)
+		this.position = {};
 
 	if(librarySearch)
 		this.search = {"name": "Search Results", "items": []};
@@ -127,6 +130,9 @@ exports.musicPlayerStatus = MusicPlayerStatus = function(outputCtl,
 		
 		if(this.current)
 			status.current = this.current;
+
+		if(this.position)
+			status.position = this.position;
 
 		return status;
 	}

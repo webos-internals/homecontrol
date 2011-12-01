@@ -149,7 +149,7 @@ enyo.kind({
 		}
 	},
 	
-	unknownError: function() {
+	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 		
 		this.doUpdate("error");

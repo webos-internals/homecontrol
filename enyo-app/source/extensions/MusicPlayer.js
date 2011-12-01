@@ -9,7 +9,9 @@ enyo.kind({
 
 	_state: "offline",
 
+	_timer: null,
 	_timeout: null,
+
 	_opening: false,
 	_keyboard: false,
 
@@ -17,6 +19,8 @@ enyo.kind({
 	_playing: 0,
 
 	_list: null,
+	_position: null,
+	
 	_queue: null,
 	_current: null,
 	_selected: null,
@@ -66,45 +70,50 @@ enyo.kind({
 			]}					
 		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{name: "musicStateInfo", kind: "DividerDrawer", caption: "Offline", className: "divider", open: true, components: [
-				{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
-					{layoutKind: "HFlexLayout", className: "current-container", components: [
-						{name: "musicCurrentSong", content: "Not playing...", flex: 1, className: "current-info"}
-/*						{content: "--:--", className: "enyo-label", style: "color: gray;font-size: 12px;"}*/
-					]}
-				]}
-			]},
-			{name: "musicEmptyList", kind: "Spacer"},
-			{name: "musicListDivider", kind: "DividerDrawer", caption: "Play Queue", open: true, onOpenChanged: "toggleList"},
-			{name: "musicListViews", layoutKind: "VFlexLayout", flex: 1, className: "divider-container-box", components: [
-				{name: "musicListView", kind: "VirtualList", flex: 1, onSetupRow: "setupListItem", components: [
-					{kind: "Item", tapHighlight: true, style: "margin: 0px;padding: 0px;", onclick: "selectAction", components: [
-						{layoutKind: "VFlexLayout", flex: 1, className: "list-view-item", components: [
-							{name: "listItemTitle", content: "", flex: 1, className: "list-view-title"},
-							{name: "listItemSubtitle", content: "", flex: 1, className: "list-view-subtitle"}
+			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
+				{layoutKind: "VFlexLayout", flex: 1, components: [
+					{name: "musicStateInfo", kind: "DividerDrawer", caption: "Offline", className: "divider", open: true, components: [
+						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
+							{name: "musicCurrentSong", content: "Not playing...", className: "current-info",
+								style: "text-overflow: ellipsis;", onclick: "toggleProgress"},
+							{name: "musicProgressBar", kind: "Slider", tapPosition: false, className: "control-progress",
+								onChanging: "updateProgress", onChange: "controlMusic"}
 						]}
-					]}
-				]}
-			]},
-			{kind: "DividerDrawer", open: false, caption: "Controls", onOpenChanged: "toggleControls", components: [
-				{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
-					{name: "musicRepeatRandom", layoutKind: "HFlexLayout", pack: "center", className: "divider-container",
-						style: "margin: -5px auto 8px auto;", components: [
-						{name: "musicRepeatToggle", kind: "ToggleButton", onLabel: "Repeat", offLabel: "Repeat", 
-							className: "control-repeat", style: "width: 70px;", onChange: "controlMusic"},
-						{kind: "Spacer"},
-						{name: "musicRandomToggle", kind: "ToggleButton", onLabel: "Shuffle", offLabel: "Shuffle", 
-							className: "control-random", style: "width: 70px;", onChange: "controlMusic"}
 					]},
-					{name: "musicVolumeControls", layoutKind: "VFlexLayout", components: [
-						{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
-							{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
-							{name: "musicMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
-								className: "control-mute", style: "width: 70px;", onChange: "controlMusic"}
-						]},
-						{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [
-							{name: "musicVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
-								onChanging: "updateVolume", onChange: "controlMusic", className: "control-volume"}
+					{name: "musicEmptyList", kind: "Spacer"},
+					{name: "musicListDivider", kind: "DividerDrawer", caption: "Play Queue", open: true, onOpenChanged: "toggleList"},
+					{name: "musicListViews", layoutKind: "VFlexLayout", flex: 1, className: "divider-container-box", components: [
+						{name: "musicListView", kind: "VirtualList", flex: 1, onSetupRow: "setupListItem", components: [
+							{kind: "Item", tapHighlight: true, style: "margin: 0px;padding: 0px;", onclick: "selectAction", components: [
+								{layoutKind: "VFlexLayout", flex: 1, className: "list-view-item", components: [
+									{name: "listItemTitle", content: "", flex: 1, className: "list-view-title"},
+									{name: "listItemSubtitle", content: "", flex: 1, className: "list-view-subtitle"}
+								]}
+							]}
+						]}
+					]},
+					{name: "musicExtraControls", kind: "DividerDrawer", open: false, caption: "Controls", 
+						onOpenChanged: "toggleControls", components: [
+						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
+							{name: "musicRepeatRandom", layoutKind: "HFlexLayout", pack: "center", className: "divider-container",
+								style: "margin: -6px auto 6px auto;", components: [
+								{name: "musicRepeatToggle", kind: "ToggleButton", onLabel: "Repeat", offLabel: "Repeat", 
+									className: "control-repeat", style: "width: 70px;", onChange: "controlMusic"},
+								{kind: "Spacer"},
+								{name: "musicRandomToggle", kind: "ToggleButton", onLabel: "Shuffle", offLabel: "Shuffle", 
+									className: "control-random", style: "width: 70px;", onChange: "controlMusic"}
+							]},
+							{name: "musicVolumeControls", layoutKind: "VFlexLayout", components: [
+								{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
+									{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
+									{name: "musicMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
+										className: "control-mute", style: "width: 70px;", onChange: "controlMusic"}
+								]},
+								{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [
+									{name: "musicVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
+										className: "control-volume", onChanging: "updateVolume", onChange: "controlMusic"}
+								]}
+							]}
 						]}
 					]}
 				]}
@@ -136,6 +145,8 @@ enyo.kind({
 		this.inherited(arguments);
 		
 		this.$.keyboardHeader.hide();
+
+		this.$.musicProgressBar.hide();
 		
 		this.$.musicEmptyList.hide();
 		this.$.musicSeekBwd.hide();
@@ -178,21 +189,15 @@ enyo.kind({
 
 		if(!this.$.musicListDivider.open) {
 			if((this._list == "queue") && (this._playlists))
-				this._list = "playlists";
+				this.updateList("playlists");
 			else if((this._list == "current") && (this._playlists))
-				this._list = "playlists";
+				this.updateList("playlists");
 			else if((this._keyboard) && (this._results) && (this._list != "results"))
-				this._list = "results";
+				this.updateList("results");
 			else if(this._queue)
-				this._list = "queue";
+				this.updateList("queue");
 			else if(this._current)
-				this._list = "current";
-
-			this.$.musicListDivider.setCaption(this["_" + this._list].name);
-			
-			this.$.musicListView.refresh();
-			
-			this.checkStatus();
+				this.updateList("current");
 		} else {
 			this._opening = true;
 
@@ -205,11 +210,42 @@ enyo.kind({
 			return;
 
 		if(inSender.open == true) {
-			this.$.musicSeekBwd.show();
-			this.$.musicSeekFwd.show();
+			if((this._position) && (this._state == "playing")) {
+				this.$.musicSeekBwd.show();
+				this.$.musicSeekFwd.show();
+			}
 		} else {
 			this.$.musicSeekBwd.hide();
 			this.$.musicSeekFwd.hide();
+		}
+	},
+
+	toggleProgress: function(inSender) {
+		if(this.$.musicProgressBar.showing) {
+			this.$.musicStateInfo.setCaption(enyo.cap(this._state));
+
+			this.$.musicProgressBar.hide();
+			this.$.musicCurrentSong.show();			
+		} else if((this._position) && (this._state == "playing")) {
+			var dM = Math.floor(this._position.duration / 60);
+			var dS = this._position.duration - (dM * 60);
+			
+			if(dS < 10) dS = "0" + dS;
+
+			var eM = Math.floor(this._position.elapsed / 60);
+			var eS = this._position.elapsed - (eM * 60);
+
+			if(eS < 10) eS = "0" + eS;
+
+			this.$.musicStateInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);
+		
+			this.$.musicCurrentSong.hide();			
+			this.$.musicProgressBar.show();
+
+			if(this._timer)
+				clearTimeout(this._timer);
+			
+			this._timer = setTimeout(this.toggleProgress.bind(this), 5000);
 		}
 	},
 
@@ -222,13 +258,11 @@ enyo.kind({
 
 			if(this._list == "results") {
 				if(this._queue)
-					this._list = "queue";
+					this.updateList("queue");
 				else if(this._current)
-					this._list = "current";
+					this.updateList("current");
 				else if(this._playlists)
-					this._list = "playlists";
-
-				this.$.musicListDivider.setCaption(this["_" + this._list].name);
+					this.updateList("playlists");
 			}
 		} else {
 			this._keyboard = true;
@@ -237,14 +271,9 @@ enyo.kind({
 			this.$.keyboardHeader.show();
 			this.$.keyboardInput.forceFocus();
 
-			if((this._results) && (this._list != "results")) {
-				this._list = "results";
-			
-				this.$.musicListDivider.setCaption(this._results.name);
-			}
+			if((this._results) && (this._list != "results"))
+				this.updateList("results");
 		}
-
-		this.$.musicListView.refresh();
 	},	
 	
 	setupListItem: function(inSender, inIndex) {
@@ -326,6 +355,10 @@ enyo.kind({
 			if(inSelected.getValue() == "Play This Song") {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
 					this.module + "/playback/select?id=" + this._current.items[this._clicked].id});
+
+				this._playing = this._current.items[this._clicked].id;
+
+				this.$.musicListView.refresh();
 			}
 		} else if(this._list == "playlists") {
 			if(inSelected.getValue() == "Select This Playlist") {
@@ -336,6 +369,8 @@ enyo.kind({
 			if(inSelected.getValue() == "Play Song Now") {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
 					this.module + "/library/select?id=" + this._results.items[this._clicked].id});
+
+				this.toggleKeyboard();
 			} else if(inSelected.getValue() == "Add Song to Queue") {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
 					this.module + "/playqueue/append?id=" + this._results.items[this._clicked].id});
@@ -343,8 +378,39 @@ enyo.kind({
 		}
 	}, 
 	
+	updateList: function(inList) {
+		this._list = inList;
+
+		this.$.musicListDivider.setCaption(this["_" + this._list].name);
+			
+		this.$.musicListView.refresh();
+
+		this.$.musicListView.punt();
+
+		this.checkStatus();
+	},
+	
 	updateVolume: function(inSender, inEvent) {
 		this.$.musicMuteToggle.setOnLabel(this.$.musicVolumeSlider.getPosition());
+	},
+
+	updateProgress: function(inSender, inEvent) {
+		if(this._timer)
+			clearTimeout(this._timer);
+
+		var p = this.$.musicProgressBar.getPosition();
+
+		var dM = Math.floor(this._position.duration / 60);
+		var dS = this._position.duration - (dM * 60);
+		
+		if(dS < 10) dS = "0" + dS;
+
+		var eM = Math.floor((p * this._position.duration / 100) / 60);
+		var eS = Math.floor((p * this._position.duration / 100)) - (eM * 60);
+
+		if(eS < 10) eS = "0" + eS;
+
+		this.$.musicStateInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);	
 	},
 	
 	searchMusic: function() {
@@ -379,6 +445,14 @@ enyo.kind({
 				action = "output/mute?state=true";
 			else
 				action = "output/mute?state=false";
+		} else if(inSender.name == "musicProgressBar") {
+			this.toggleProgress();
+		
+			var p = this.$.musicProgressBar.getPosition();
+			
+			var position = Math.floor(p * this._position.duration / 100);
+		
+			action = "playback/seek?action=" + position;
 		} else if(inSender.name == "musicVolumeSlider")
 			action = "output/volume?level=" + this.$.musicVolumeSlider.getPosition();
 		
@@ -394,15 +468,18 @@ enyo.kind({
 			this.doUpdate(inResponse.state);
 			
 			if(inResponse.state == "playing") {
-				this.$.musicStateInfo.setCaption("Playing");
+				if(!this.$.musicProgressBar.showing)
+					this.$.musicStateInfo.setCaption("Playing");
 			
 				this.$.musicPlayPause.setIcon("./images/ctl-pause.png");
 			} else if(inResponse.state == "paused") {
-				this.$.musicStateInfo.setCaption("Paused");
+				if(!this.$.musicProgressBar.showing)
+					this.$.musicStateInfo.setCaption("Paused");
 			
 				this.$.musicPlayPause.setIcon("./images/ctl-play.png");
 			} else if(inResponse.state == "stopped") {
-				this.$.musicStateInfo.setCaption("Stopped");
+				if(!this.$.musicProgressBar.showing)
+					this.$.musicStateInfo.setCaption("Stopped");
 			
 				this.$.musicPlayPause.setIcon("./images/ctl-play.png");
 			}
@@ -441,6 +518,24 @@ enyo.kind({
 				
 				this.$.musicPlayPause.setIcon("./images/ctl-playpause.png");
 			}
+
+			if(inResponse.position != undefined) {
+				this._position = inResponse.position;
+				
+				var p = Math.floor(100 * this._position.elapsed / this._position.duration);
+		
+				this.$.musicProgressBar.setPosition(p);
+
+				if(this.$.musicExtraControls.open == true) {
+					if(this._state == "playing") {
+						this.$.musicSeekBwd.show();
+						this.$.musicSeekFwd.show();
+					} else {
+						this.$.musicSeekBwd.hide();
+						this.$.musicSeekFwd.hide();
+					}
+				}
+			}
 			
 			if(inResponse.repeat != undefined)
 				this.$.musicRepeatToggle.setState(inResponse.repeat);
@@ -456,35 +551,29 @@ enyo.kind({
 				if(inResponse.views.playqueue != undefined) {
 					this._queue = inResponse.views.playqueue;
 
-					if((!this._list) || (!this._queue)) {
+					if((!this._list) || (this._list == "playlists"))
 						this._list = "queue";
-
-						this.$.musicListDivider.setCaption(this._queue.name);
-					}
 				}
 
 				if(inResponse.views.current != undefined) {
 					this._current = inResponse.views.current;
 
-					if((!this._list) || (!this._current)) {
+					if((!this._list) || (this._list == "playlists"))
 						this._list = "current";
-					
-						this.$.musicListDivider.setCaption(this._current.name);
-					}
 				}
 
 				if(inResponse.views.playlists != undefined) {
 					this._playlists = inResponse.views.playlists;
 				
-					if(!this._list) {
+					if(!this._list)
 						this._list = "playlists";
-						
-						this.$.musicListDivider.setCaption("All Playlists");
-					}						
 				}
 
-				if(this._list)
+				if(this._list) {
+					this.$.musicListDivider.setCaption(this["_" + this._list].name);
+				
 					this.$.musicListView.refresh();
+				}
 
 				if(!this.$.musicListDivider.open) {
 					this._opening = true;
@@ -533,7 +622,7 @@ enyo.kind({
 		}
 	},
 	
-	unknownError: function() {
+	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 		
 		this.doUpdate("error");

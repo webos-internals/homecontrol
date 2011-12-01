@@ -24,6 +24,8 @@ SOFTWARE.
 
 */
 
+var debug = false;
+
 var sys = require('sys');
 var fs = require('fs');
 var net = require('net');
@@ -59,7 +61,7 @@ MPD.prototype.connect = function(callback) {
 
 		if(!m) {
 			self.emit("error", "Got invalid hello msg from mpd: " + result);
-		} else {
+		} else if(debug) {
 			console.log("MPD Server running version: " + m[1]);
 		}
 	});
@@ -282,7 +284,8 @@ MPD.prototype.addListeners = function() {
 
 				result = self.linesBuffer.splice(0, i+1);
 
-				console.log("Command result: " + result);
+				if(debug)
+					console.log("Command result: " + result);
 
 				i = 0;
 
@@ -310,13 +313,15 @@ MPD.prototype.cmd = function (command, args, callback) {
 		request += " " + args.toString().replace(",", " ");
 
 	if(command.length > 0) {
-		console.log("Running command: " + request);
+		if(debug)
+			console.log("Running command: " + request);
 
 		this.cmdQueue.push(function(error, result) {
 			if(error)
 				return callback(error);
 
-			console.log("Finished command: " + request);
+			if(debug)
+				console.log("Finished command: " + request);
 
 			var func = self._commands[command];
 

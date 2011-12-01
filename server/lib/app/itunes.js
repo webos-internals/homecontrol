@@ -38,7 +38,7 @@ var applescript = require("applescript");
 
 var hcdata = require('../data-types.js');
 
-var currentStatus = new MusicPlayerStatus(true, true, true, true, 
+var currentStatus = new MusicPlayerStatus(true, true, true, true, true,
 	["playlists", "current", "selected"]);
 
 exports.setup = function(cb) {
@@ -151,6 +151,11 @@ exports.execute = function(req, res) {
     				'set player position to currSkip\n' +
 					'end if\n' +
 					'end tell\n';
+			} else if(!isNaN(parseInt(req.param("action")))) {
+				script_string = 'tell application "iTunes"\n' +
+					'if player state is playing then\n' +
+    				'set player position to ' + req.param("action") + '\n' + 
+					'end if\n' + 'end tell\n';
 			}
 			break;
 
@@ -336,7 +341,8 @@ exports.execute = function(req, res) {
 				res.send(currentStatus.getStatus(req.socket.address().address, "stopped"));
 			} else { 
 				script_string = 'tell application "iTunes" to get song repeat of current playlist & ' +
-					'shuffle of current playlist & {id, artist, name} of current track';
+					'shuffle of current playlist & {id, artist, name, duration} of current track & ' +
+					'player position';
 			
 				applescript.execString(script_string, function(error, status) {
 					if(error) {
@@ -352,6 +358,9 @@ exports.execute = function(req, res) {
 					currentStatus.current.artist = status[3];
 					currentStatus.current.title = status[4];
 
+					currentStatus.position.duration = Math.floor(status[5]);
+					currentStatus.position.elapsed = status[6];
+					
 					res.send(currentStatus.getStatus(req.socket.address().address, info[0]));
 				});
 			}
