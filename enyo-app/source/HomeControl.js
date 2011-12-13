@@ -287,6 +287,8 @@ enyo.kind({
 			if(inEvent)
 				enyo.stopEvent(inEvent);
 
+			this._selected = -1;
+
 			this.$.appPane.back();
 		}
 	},
@@ -396,8 +398,6 @@ enyo.kind({
 			this.$.rightPane.selectViewByIndex(this._selected);
 		
 		if(inSender.view == this._selected) {
-			this._selected = -1;
-			
 			this.handleBackEvent();
 
 			this._off["extensionView" + inSender.view] = true;
@@ -611,7 +611,7 @@ enyo.kind({
 	},
 	
 	handleServerResponse: function(inSender, inResponse) {
-		enyo.error("Server query - " + inSender.url + " : " + enyo.json.stringify(inResponse));
+		enyo.error("Server query - " + enyo.json.stringify(inResponse));
 		
 		if((inResponse) && (inResponse.request) && (inResponse.modules)) {
 			for(var i = 0; i < inResponse.modules.length; i++) {

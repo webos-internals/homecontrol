@@ -87,13 +87,52 @@ exports.setup = function(cb) {
 		} catch (error) {
 			cb(false);
 		}
-	}
+	} else {
+		cb(false);
+	}	
 };
 
 exports.execute = function(req, res) {
 	console.log("Executing input command: " + req.params[0]);
 
-	if(os == "Linux") {
+	if(os.type() == "Darwin") {
+		var script_string = "";
+		
+//		tell application "System Events" to keystroke "o"
+
+//  with {shift down}
+
+		if(req.params[0] == "mouse") {
+			if(req.param("move")) {
+				var pos = req.param("move").split(",");
+
+				script_string = "set mypoint to (get position of the mouse)\n";
+				
+				script_string += "move mouse {(item 1 of mypoint) + " + pos[0] + 
+					", (item 2 of mypoint) + " + pos[1] + "}\n";
+			} else if(req.param("down")) {
+				// Do nothing...
+			} else if(req.param("up")) {
+				var btn = req.param("up");
+				
+				var buttons = ["primary", "middle", "secondary"];
+
+				script_string = "set mypoint to (get position of the mouse)\n";
+		
+				script_string += "click mouse {(item 1 of mypoint), (item 2 of mypoint)}" + 
+					" using " + buttons[btn - 1] + " button\n";
+			}
+		}
+
+		applescript.execString(script_string, function(error, result) {
+			res.header('Content-Type', 'text/javascript');
+			
+			if(error)
+				res.send({"state": "offline"});
+			else
+				res.send({"state": "online"});
+		});
+	} else if(os.type() == "Linux") {
 		if(req.params[0] == "mouse") {
 			if(req.param("move")) {
 				var pos = req.param("move").split(",");
@@ -110,19 +149,23 @@ exports.execute = function(req, res) {
 
 //				execute_string = "xdotool mousedown " + btn;
 		
-				X.QueryPointer(X.display.screen[0].root, function(pointer) {
-					X.Test.FakeInput(X.Test.ButtonPress, btn, 0, X.display.screen[0].root,
-						parseInt(pointer[2]), parseInt(pointer[3]));
-				});
+				if(btn != 0) { // Current x11 has a bug that it crashes if btn id is 0
+					X.QueryPointer(X.display.screen[0].root, function(pointer) {
+						X.Test.FakeInput(X.Test.ButtonPress, btn, 0, X.display.screen[0].root,
+							parseInt(pointer[2]), parseInt(pointer[3]));
+					});
+				}
 			} else if(req.param("up")) {
 				var btn = req.param("up");
 		
 //				execute_string = "xdotool mouseup " + btn;
 
-				X.QueryPointer(X.display.screen[0].root, function(pointer) {
-					X.Test.FakeInput(X.Test.ButtonRelease, btn, 0, X.display.screen[0].root,
-						parseInt(pointer[2]), parseInt(pointer[3]));
-				});
+				if(btn != 0) { // Current x11 has a bug that it crashes if btn id is 0
+					X.QueryPointer(X.display.screen[0].root, function(pointer) {
+						X.Test.FakeInput(X.Test.ButtonRelease, btn, 0, X.display.screen[0].root,
+							parseInt(pointer[2]), parseInt(pointer[3]));
+					});
+				}
 			}
 		} else if(req.params[0] == "keyboard") {
 			if((req.param("key")) || (req.param("down"))) {
@@ -169,56 +212,18 @@ exports.execute = function(req, res) {
 				}
 			}
 		}
-	
-		res.send({status: "online"});			
+
+		res.send({state: "online"});			
 /*
 		var child = exec(execute_string, function(error, stdout, stderr) {
 			res.header('Content-Type', 'text/javascript');
 
 			if(error !== null) {
-				res.send({status: "offline"});
+				res.send({state: "offline"});
 			} else {
-				res.send({status: "online"});
+				res.send({state: "online"});
 			}
 		});*/
-	} else if(os == "OSX") {
-		var script_string = "";
-		
-//		tell application "System Events" to keystroke "o"
-
-//  with {shift down}
-
-		
-		if(req.params[0] == "mouse") {
-			if(req.param("move")) {
-				var pos = req.param("move").split(",");
-
-				script_string = "set mypoint to (get position of the mouse)\n";
-				
-				script_string += "move mouse {(item 1 of mypoint) + " + pos[0] + 
-					", (item 2 of mypoint) + " + pos[1] + "}\n";
-			} else if(req.param("down")) {
-				// Do nothing...
-			} else if(req.param("up")) {
-				var btn = req.param("up");
-				
-				var buttons = ["primary", "middle", "secondary"];
-
-				script_string = "set mypoint to (get position of the mouse)\n";
-		
-				script_string += "click mouse {(item 1 of mypoint), (item 2 of mypoint)}" + 
-					" using " + buttons[btn - 1] + " button\n";
-			}
-		}
-
-		applescript.execString(script_string, function(error, result) {
-			res.header('Content-Type', 'text/javascript');
-			
-			if(error)
-				res.send({"state": "offline"});
-			else
-				res.send({"state": "online"});
-		});
 	}
 };
 

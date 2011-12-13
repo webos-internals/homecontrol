@@ -19,6 +19,9 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.7"},
+					{content: "<ul><li>Fixed the bugs on both client and server</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.6"},
 					{content: "<ul><li>Couple bug fixes for music players</li>" + 
 						"<li>Added possibility to turn controllers on/off</li>" +

@@ -34,68 +34,38 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var storedInputVolume = 0; // Go around OS X having no mute for input
 
-var os = null;
+var os = require("os");
 
 var exec = require('child_process').exec;
 
 var applescript = require("applescript");
 
 exports.setup = function(cb) {
-	var child = exec("pactl --help", function(error, stdout, stderr) {
-		if(error) {
-			var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
-				if(error) {
-					cb(false);
-				} else {
-					os = "OSX";
-					
-					cb("sound", "Mac OS X", "System Sound");
-				}
-			});				
-		} else {
-			os = "Linux";
-			
-			cb("sound", "PulseAudio", "System Sound");
-		}
-	});
+	if(os.type() == "Darwin") {
+		var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
+			if(error) {
+				cb(false);
+			} else {
+				cb("sound", "Mac OS X", "System Sound");
+			}
+		});				
+	} else if(os.type() == "Linux") {
+		var child = exec("pactl --help", function(error, stdout, stderr) {
+			if(error) {
+				cb(false);
+			} else {
+				cb("sound", "PulseAudio", "System Sound");
+			}
+		});
+	} else {
+		cb(false);
+	}
 };
 
 exports.execute = function(req, res) {
 	console.log("Executing sound command: " + req.params[0]);
 	
-	if(os == "Linux") {
-		var execute_string = "";
-		
-		if(req.params[0] == "input") {
-			if(req.param("mute"))
-				execute_string += './data/bin/pulseaudio-control.sh input mute ' + req.param("mute") + ';';
-			
-			if(req.param("volume"))
-				execute_string += './data/bin/pulseaudio-control.sh input volume ' + req.param("volume") + ';';
-		} else if(req.params[0] == "output") {
-			if(req.param("mute"))
-				execute_string += './data/bin/pulseaudio-control.sh output mute ' + req.param("mute") + ';';
-			
-			if(req.param("volume"))
-				execute_string += './data/bin/pulseaudio-control.sh output volume ' + req.param("volume") + ';';
-		}
-		
-		execute_string += './data/bin/pulseaudio-control.sh status';
-		
-		var child = exec(execute_string, function(error, stdout, stderr) {
-			res.header('Content-Type', 'text/javascript');
-			
-			if(error !== null) {
-				res.send({"state": "unknown", "input": {"volume": 0, "mute": true}, 
-					"output": {"volume": 0, "mute": true}});
-			} else {
-				var status = stdout.replace("\n", "").split(",");
-				
-				res.send({"state": "online", "input": {"volume": parseInt(status[0]), "mute": (status[1] == "true")}, 
-					"output": {"volume": parseInt(status[2]), "mute": (status[3] == "true")}});
-			}
-		});		
-	} else if(os == "OSX") {
+	if(os.type() == "Darwin") {
 		var script_string = "";
 		
 		if(req.params[0] == "input") {
@@ -145,6 +115,38 @@ exports.execute = function(req, res) {
 					"output": {"volume": result[0].split(":")[1], "mute": (result[3].split(":")[1] == "true")}});
 			}
 		});
+	} else if(os.type() == "Linux") {
+		var execute_string = "";
+		
+		if(req.params[0] == "input") {
+			if(req.param("mute"))
+				execute_string += './data/bin/pulseaudio-control.sh input mute ' + req.param("mute") + ';';
+			
+			if(req.param("volume"))
+				execute_string += './data/bin/pulseaudio-control.sh input volume ' + req.param("volume") + ';';
+		} else if(req.params[0] == "output") {
+			if(req.param("mute"))
+				execute_string += './data/bin/pulseaudio-control.sh output mute ' + req.param("mute") + ';';
+			
+			if(req.param("volume"))
+				execute_string += './data/bin/pulseaudio-control.sh output volume ' + req.param("volume") + ';';
+		}
+		
+		execute_string += './data/bin/pulseaudio-control.sh status';
+		
+		var child = exec(execute_string, function(error, stdout, stderr) {
+			res.header('Content-Type', 'text/javascript');
+			
+			if(error !== null) {
+				res.send({"state": "unknown", "input": {"volume": 0, "mute": true}, 
+					"output": {"volume": 0, "mute": true}});
+			} else {
+				var status = stdout.replace("\n", "").split(",");
+				
+				res.send({"state": "online", "input": {"volume": parseInt(status[0]), "mute": (status[1] == "true")}, 
+					"output": {"volume": parseInt(status[2]), "mute": (status[3] == "true")}});
+			}
+		});		
 	}	
 };
 

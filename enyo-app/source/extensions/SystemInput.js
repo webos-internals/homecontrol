@@ -360,8 +360,10 @@ enyo.kind({
 	},
 
 	resetMouseButton: function(inSender, inEvent) {	
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mouse?up=" + this._button, 
-			onSuccess: "handleDeviceStatus"});	
+		if(this._button != 0) {
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/mouse?up=" + this._button, 
+				onSuccess: "handleDeviceStatus"});	
+		}
 	},
 	
 	handleMouseMove: function(inSender, inEvent) {
@@ -400,7 +402,7 @@ enyo.kind({
 	},
 	
 	handleDeviceStatus: function(inSender, inResponse) {
-		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
+		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 	
 		if(inResponse) {
 			this.doUpdate("online");

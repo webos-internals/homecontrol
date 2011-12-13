@@ -1,3 +1,5 @@
+#!/usr/bin/node
+
 /*
 
 BSD LICENSED
@@ -33,7 +35,9 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 var addr = "127.0.0.1";
-var port = 3000;
+
+var port_ssd = 1900;
+var port_http = 3000;
 
 var os = require("os");
 var net = require('net');
@@ -49,7 +53,31 @@ var modules = ["app/banshee", "app/frontrow", "app/itunes", "app/mpd",
 
 //
 
+if(process.argv.length > 2) {
+	switch(process.argv[2]) {
+		case "-p":
+			if((!process.argv[3]) || (isNaN(parseInt(process.argv[3])))) {
+				console.log("The given port number is not a valid number!");
+				return;
+			} else {
+				port_http = parseInt(process.argv[3]);
+			}
+
+			if((process.argv[4]) && (!isNaN(parseInt(process.argv[4])))) {
+				port_ssd = parseInt(process.argv[4]);
+			}
+			break;
+	
+		case "-h":
+		default:
+			console.log("Usage: hc-server.js -h | -p <http_port> [<ssd_port>]");
+			return;
+	}	
+}
+
 console.log("Home Control server: starting");
+console.log("Listening on a port: " + port_http);
+console.log("SSD listening port: " + port_ssd);
 
 var socket = net.createConnection(80, 'www.google.com');
 
@@ -65,14 +93,14 @@ socket.on('connect', function() {
 		if(msg.slice(0, 8) == "M-SEARCH") {
 			var message = new Buffer(
 				"HTTP/1.1 200 OK\r\n" +
-				"LOCATION: http://" + addr + ":" + port + "/\r\n" +
+				"LOCATION: http://" + addr + ":" + port_http + "/\r\n" +
 				"SERVER: Home Control\r\n" +
 				"ST: " +
 				"EXT: " +
 				"\r\n"
 			);
 
-			console.log("Sending SSD message: " + addr + ":" + port);
+			console.log("Sending SSD message: " + addr + ":" + port_http);
 
 			var client = dgram.createSocket("udp4");
 
@@ -82,7 +110,7 @@ socket.on('connect', function() {
 		}
 	});
 
-	ssd_srv.bind(1900);
+	ssd_srv.bind(port_ssd);
 
 	try {
 		ssd_srv.addMembership('239.255.255.250');
@@ -118,5 +146,5 @@ for(var i = 0; i < modules.length; i++) {
 	}.bind(this, module, modules[i].slice(0, 3)));
 }
 
-http_srv.listen(port);
+http_srv.listen(port_http);
 
