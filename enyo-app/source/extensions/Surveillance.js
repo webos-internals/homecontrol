@@ -172,7 +172,7 @@ enyo.kind({
 	selected: function(visible) {
 		var device = enyo.fetchDeviceInfo().modelNameAscii.toLowerCase();
 
-		if(visible) {
+		if(visible == true) {
 			this.$.title.setContent(this.title);
 
 			if(device == this.module) {

@@ -159,9 +159,15 @@ enyo.kind({
 	
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
-		
-		if(visible)
+
+		if(visible == true)
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/start?refresh=true"});
+		else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);
+
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/close"});
+		}
 	},
 	
 	checkStatus: function() {

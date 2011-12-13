@@ -11,7 +11,6 @@ enyo.kind({
 	_sensors: [],
 	_selected: 0,
 	_timeout: null,
-	_visible: false,
 	
 	events: {
 		onUpdate: ""
@@ -69,26 +68,28 @@ enyo.kind({
 		if((localStorage) && (localStorage["sensors"])) {
 			this._config = enyo.json.parse(localStorage["sensors"]);
 		}
-		
-		this.updateStatus();
+
+		this.updateStatus();		
 	},
 	
 	selected: function(visible) {
-		this._visible = visible;
-	
 		this.$.title.setContent(this.title);
-		
-		this.updateStatus();
+	
+		if(visible == true) {
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
+		} else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);
+		}
 	},
 	
 	updateStatus: function() {
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
+
 		if(this._timeout)
 			clearTimeout(this._timeout);
-		
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
-		
-		if(this._visible)
-			this._timeout = setTimeout(this.selected.bind(this, true), 30000);
+
+		this._timeout = setTimeout(this.updateStatus.bind(this, true), 30000);
 	},
 	
 	showKeyboard: function() {

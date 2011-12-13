@@ -35,6 +35,7 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 var addr = "127.0.0.1";
 var port = 3000;
 
+var os = require("os");
 var net = require('net');
 var dgram = require('dgram');
 var express = require('express');
@@ -97,13 +98,13 @@ var http_srv = express.createServer(
 );
 
 http_srv.get("/modules", function(req, res) {
-	res.send(loaded);
+	res.send({request: req.param("id"), modules: loaded});
 });
 
 for(var i = 0; i < modules.length; i++) {
 	var module = require("./lib/" + modules[i]);
 
-	module.setup(function(module, moduleID, moduleName, moduleCategory) {
+	module.setup(function(module, moduleCategory, moduleID, moduleName, moduleType) {
 		if((moduleID) && (moduleName) && (moduleCategory)) {
 			console.log("Loading " + moduleCategory + " module: " + moduleName);
 
@@ -111,9 +112,10 @@ for(var i = 0; i < modules.length; i++) {
 
 			http_srv.post("/" + moduleID + "/*", module.execute);
 
-			loaded.push({id: moduleID, name: moduleName, category: moduleCategory});
+			loaded.push({category: moduleCategory, platform: os.type().toLowerCase(),
+				id: moduleID, name: moduleName, type: moduleType});
 		}	
-	}.bind(this, module));
+	}.bind(this, module, modules[i].slice(0, 3)));
 }
 
 http_srv.listen(port);

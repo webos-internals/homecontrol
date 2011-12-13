@@ -19,6 +19,12 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.6"},
+					{content: "<ul><li>Couple bug fixes for music players</li>" + 
+						"<li>Added possibility to turn controllers on/off</li>" +
+						"<li>Fixed multi word search for MPD music player</li>" +
+						"<li>New controls / servers configuration logic</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.5"},
 					{content: "<ul><li>Lots of bug fixes for music players</li>" + 
 						"<li>Added progress bar for music players</li></ul>"},

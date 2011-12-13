@@ -114,11 +114,14 @@ enyo.kind({
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
 		
-		if(visible) {
+		if(visible == true) {
 			if(this.module == "vlc")
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/requests/status.xml"});
 			else
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/start"});
+		} else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);
 		}
 	},
 	
@@ -128,6 +131,9 @@ enyo.kind({
 		else
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
 		
+		if(this._timeout)
+			clearTimeout(this._timeout);
+
 		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
 	},
 	

@@ -106,7 +106,7 @@ enyo.kind({
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
 		
-		if(visible) {
+		if(visible == true) {
 			if((this.module == "boxee") || (this.module == "xbmc")) {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetPercentage", 
 					onSuccess: "updatePlayback"});
@@ -114,7 +114,10 @@ enyo.kind({
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/start", 
 					onSuccess: "updatePlayback"});
 			}
-		}
+		} else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);
+		}		
 	},
 	
 	checkStatus: function(poll) {
@@ -125,6 +128,9 @@ enyo.kind({
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status", 
 				onSuccess: "updatePlayback"});
 		}
+
+		if(this._timeout)
+			clearTimeout(this._timeout);
 				
 		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
 	},

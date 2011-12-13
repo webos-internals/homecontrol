@@ -45,11 +45,10 @@ var update = function(cb) {
 	var child = exec(execute_string, function(error, stdout, stderr) {
 		if((error) && (cb))
 			cb(null);
-		else if(cb) {
+		else if(cb)
 			cb("1-wire", "1-Wire", "Status Info");
 			
-			timeout = setTimeout(update, 60000);
-		}
+		timeout = setTimeout(update, 60000);
 	});
 };
 

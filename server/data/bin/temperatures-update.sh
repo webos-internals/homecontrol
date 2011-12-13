@@ -37,6 +37,22 @@
 			-t "temp" N:${2}
 	}
 
+	function graph_database()
+	{
+		/usr/bin/rrdtool graph \
+			./data/graphs/${1}_${2}.png \
+	    -s -1${2} -t "Temperatures of last ${2}" \
+			-z -h 102 -w 269 -a "PNG" --border 0 -E \
+			"DEF:temp=./data/temperatures/${1}.rrd:temp:AVERAGE" \
+			"DEF:min=./data/temperatures/${1}.rrd:temp:MIN" \
+	    "DEF:max=./data/temperatures/${1}.rrd:temp:MAX" \
+			"LINE1:min#FF3333" "LINE1:max#66FF33" "LINE2:temp#0000FF" \
+			"GPRINT:temp:MIN:Min\\: %3.1lf" \
+			"GPRINT:temp:MAX: Max\\: %3.1lf" \
+			"GPRINT:temp:AVERAGE: Avg\\: %3.1lf" \
+			"GPRINT:temp:LAST: Cur\\: %3.1lf\\n" >/dev/null
+	}
+
 # The Main Function
 
 	if [ ! -d /sys/bus/w1/drivers/w1_slave_driver ]; then
@@ -61,6 +77,13 @@
 		echo "- Updating database for ${SID} sensor"
 
 		update_database ${SID} ${T}
+
+		echo "- Creating graphs for ${SID} sensor"
+
+		graph_database ${SID} day
+		graph_database ${SID} week
+		graph_database ${SID} month
+		graph_database ${SID} year
 	done
 
 	exit 0

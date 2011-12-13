@@ -105,8 +105,18 @@ exports.execute = function(req, res) {
 
 			case "library/search":
 				command = "search";
-				args.push("any");
-				args.push(req.param("filter"));
+
+				var words = req.param("filter").split(" ");
+				
+				for(var i = 0; i < words.length; i++) {
+					args.push("any");
+					args.push(words[i]);
+				}
+				
+//				args.push("any");
+//				args = args.concat(req.param("filter").split(" "));
+//				console.log("AAA " + args.length);
+//				args.push(req.param("filter"));
 				break;
 
 			case "library/select":

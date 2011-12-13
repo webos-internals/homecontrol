@@ -11,7 +11,7 @@ case ${1} in
 				;;
 
 			volume)
-				pactl set-source-volume ${SOURCE} $(echo "65536*${3}/100" | bc)
+				pactl set-source-volume ${SOURCE} $((65536*${3}/100"))
 				;;
 		esac
 		;;
@@ -23,15 +23,15 @@ case ${1} in
 				;;
 
 			volume)
-				pactl set-sink-volume ${SINK} $(echo "65536*${3}/100" | bc)
+				pactl set-sink-volume ${SINK} $((65536*${3}/100))
 				;;
 		esac
 		;;
 
 	status)
-		INPUT_VOLUME=$(echo "ibase=16;$(pacmd dump | grep "set-source-volume ${SOURCE} " | cut -d ' ' -f 3 | colrm 1 2 | tr a-f A-F)" | bc)
+		INPUT_HEX="0x$(pacmd dump | grep "set-source-volume ${SOURCE} " | cut -d ' ' -f 3 | colrm 1 2 | tr a-f A-F)"
 
-		INPUT_VOLUME=$(echo "scale=0;100*${INPUT_VOLUME}/65536" | bc)
+		INPUT_VOLUME=$((100*${INPUT_HEX}/65536))
 
 		if [ $(pacmd dump | grep "set-source-mute ${SOURCE} " | cut -d ' ' -f 3) = "yes" ]; then
 			INPUT_MUTE="true"
@@ -39,9 +39,9 @@ case ${1} in
 			INPUT_MUTE="false"
 		fi
 
-		OUTPUT_VOLUME=$(echo "ibase=16;$(pacmd dump | grep "set-sink-volume ${SINK} " | cut -d ' ' -f 3 | colrm 1 2 | tr a-f A-F)" | bc)
+		OUTPUT_HEX="0x$(pacmd dump | grep "set-sink-volume ${SINK} " | cut -d ' ' -f 3 | colrm 1 2 | tr a-f A-F)"
 
-		OUTPUT_VOLUME=$(echo "scale=0;100*${OUTPUT_VOLUME}/65536" | bc)
+		OUTPUT_VOLUME=$((100*${OUTPUT_HEX}/65536))
 
 		if [ $(pacmd dump | grep "set-sink-mute ${SINK} " | cut -d ' ' -f 3) = "yes" ]; then
 			OUTPUT_MUTE="true"

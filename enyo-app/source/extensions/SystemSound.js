@@ -7,6 +7,8 @@ enyo.kind({
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
 	
+	_timeout: null,
+	
 	events: {
 		onUpdate: ""
 	},
@@ -66,12 +68,19 @@ enyo.kind({
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
 		
-		if(visible)
+		if(visible == true) {
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
+		} else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);
+		}
 	},
 	
 	checkStatus: function() {
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
+
+		if(this._timeout)
+			clearTimeout(this._timeout);
 		
 		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
 	},

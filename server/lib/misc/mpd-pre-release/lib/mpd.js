@@ -310,7 +310,7 @@ MPD.prototype.cmd = function (command, args, callback) {
 	if(!callback)
 		callback = args;
 	else
-		request += " " + args.toString().replace(",", " ");
+		request += " " + args.toString().replace(/,/g, " ");
 
 	if(command.length > 0) {
 		if(debug)

@@ -171,4 +171,8 @@
 	margin: -1px 0px -1px -6px;
 }
 
+.custom-divider {
+	background: url(../images/divider.png) left center repeat-x;
+}
+
 

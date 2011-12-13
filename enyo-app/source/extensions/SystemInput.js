@@ -7,6 +7,8 @@ enyo.kind({
 
 	_button: 0,
 
+	_timeout: null,
+
 	_keyboard: false,
 	
 	_function: false,
@@ -121,21 +123,29 @@ enyo.kind({
 		this.$.kbdSuper.hide();		
 		this.$.kbdAlt.hide();
 
-		this.updateStatus(true);
+		this.updateStatus();
 	},
 
-	selected: function() {
+	selected: function(visible) {
 		this.$.title.setContent(this.title);
 
-		this.updateStatus(false);
+		if(visible == true) {
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status", 
+				onSuccess: "handleDeviceStatus"});	
+		} else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);
+		}
 	},
 	
-	updateStatus: function(poll) {
+	updateStatus: function() {
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status", 
 			onSuccess: "handleDeviceStatus"});	
 
-		if(poll)
-			setTimeout(this.updateStatus.bind(this, true), 30000);	
+		if(this._timeout)
+			clearTimeout(this._timeout);
+
+		this._timeout = setTimeout(this.updateStatus.bind(this, true), 30000);	
 	},
 
 	handleFunctionKey: function() {
