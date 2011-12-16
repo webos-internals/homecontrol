@@ -19,6 +19,9 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+//					{kind: "Divider", caption: "0.8.1"},
+//					{content: "<ul><li>Fixed couple small user interface bugs</li></ul>"},
+
 					{kind: "Divider", caption: "0.8.0"},
 					{content: "<ul><li>First public release of Home Control</li></ul>"},
 

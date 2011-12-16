@@ -6,40 +6,40 @@ enyo.kind({
 	name: "MediaCenter",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
-	
+
 	_timeout: null,
 	_keyboard: false,
-	
+
 	events: {
 		onUpdate: ""
 	},
-	
+
 	published: {
 		title: "",
 		module: "",
 		address: ""
 	},
-	
+
 	components: [
 		{name: "actionPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
 			{value: "Play Now"}, {value: "Add to Queue"}
 		]},
-	
+
 		{kind: "PageHeader", layoutKind: "HFlexLayout", components: [
 			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{kind: "Spacer", flex: 1},
 				{name: "title", content: "Media Center", style: "margin-top: 0px;font-weight: bold;"},
 				{kind: "Spacer", flex: 1},
 				{name: "keyboard", kind: "ToolButton", className: "tool-button", icon: "./images/button-kbd.png", 
-					onclick: "toggleKeyboard"}			
+					onclick: "toggleKeyboard"}
 			]},
 			{name: "keyboardHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{name: "keyboardInput", kind: "ToolInput", alwaysLooksFocused: true, flex: 1, 
 					inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
 					style: "margin: -5px 10px -5px 0px;", onkeypress: "handleKeypress"},
 				{kind: "ToolButton", className: "tool-button", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}
-			]}			
-		]}, 
+			]}
+		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
 			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
 				{layoutKind: "VFlexLayout", flex: 1, components: [
@@ -47,24 +47,24 @@ enyo.kind({
 						components: [
 						{layoutKind: "VFlexLayout", pack: "center", flex: 1, className: "divider-content", components: [
 							{layoutKind: "HFlexLayout", className: "divider-container", components: [
-								{name: "controlPlayback", kind: "Slider", flex: 1, className: "control-progress",
+								{name: "controlPlayback", kind: "Slider", flex: 1, className: "control-progress", 
 									onChanging: "updateSlider", onChange: "controlDevice", tapPosition: false},
 							]}
 						]}
 					]},
 					{name: "volumeStatus", kind: "DividerDrawer", caption: "Volume", open: false, components: [
 						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
-							{layoutKind: "HFlexLayout", className: "divider-container", components: [					
+							{layoutKind: "HFlexLayout", className: "divider-container", components: [
 								{name: "controlVolume", kind: "Slider", tapPosition: false, flex: 1, className: "control-volume", 
 									style: "margin-top: -19px;", onChanging: "updateSlider", onChange: "controlDevice"},
 							]}
 						]}
 					]},
 					{layoutKind: "VFlexLayout", flex: 1, pack: "center", className: "divider-content", components: [
-						{layoutKind: "HFlexLayout", className: "divider-container", components: [	
+						{layoutKind: "HFlexLayout", className: "divider-container", components: [
 							{name: "controlMute", kind: "ToolButton", className: "control-mute", icon: "./images/ctl-mute.png", 
-								onclick: "controlDevice"},				
-							{layoutKind: "VFlexLayout", flex: 1, pack: "center", components: [
+								onclick: "controlDevice"},
+							{layoutKind: "VFlexLayout", flex: 1, components: [
 								{layoutKind: "VFlexLayout", pack: "center", className: "control-pad-box", components: [
 									{name: "controlOk", kind: "ToolButton", className: "control-ok", icon: "./images/ctl-ok.png", 
 										onclick: "controlDevice"},
@@ -78,8 +78,8 @@ enyo.kind({
 										onclick: "controlDevice"}
 								]}
 							]},
-							{name: "controlBack", kind: "ToolButton", className: "control-back", icon: "./images/ctl-back.png", 	
-								onclick: "controlDevice"}				
+							{name: "controlBack", kind: "ToolButton", className: "control-back", icon: "./images/ctl-back.png", 
+								onclick: "controlDevice"}
 						]}
 					]}
 				]}
@@ -101,10 +101,10 @@ enyo.kind({
 			{name: "controlNext", kind: "ToolButton", icon: "./images/ctl-next.png", className: "control-last", 
 				onclick: "controlDevice"},
 		]},
-		
-		{name: "serverRequest", kind: "WebService", timeout: 3000, onFailure: "unknownError"}		
+
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onFailure: "unknownError"}
 	],
-	
+
 	rendered: function() {
 		this.inherited(arguments);
 
@@ -123,10 +123,10 @@ enyo.kind({
 
 		this.checkStatus();
 	},
-	
+
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
-		
+
 		if(visible == true) {
 			if((this.module == "boxee") || (this.module == "xbmc")) {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetPercentage", 
@@ -138,9 +138,9 @@ enyo.kind({
 		} else if(visible == null) {
 			if(this._timeout)
 				clearTimeout(this._timeout);
-		}		
+		}
 	},
-	
+
 	checkStatus: function(poll) {
 		if((this.module == "boxee") || (this.module == "xbmc")) {
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetPercentage", 
@@ -152,47 +152,47 @@ enyo.kind({
 
 		if(this._timeout)
 			clearTimeout(this._timeout);
-				
-		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
+
+		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);
 	},
-	
+
 	updateSlider: function(inSender, inEvent) {
 		if(inSender.name == "controlPlayback")
 			this.$.playbackStatus.setCaption("Playback (" + this.$.controlPlayback.getPosition() + "%)");
 		else if(inSender.name == "controlVolume")
 			this.$.volumeStatus.setCaption("Volume (" + this.$.controlVolume.getPosition() + "%)");
 	},
-	
+
 	toggleKeyboard: function() {
 		if(this._keyboard) {
 			this._keyboard = false;
-			
+
 			this.$.keyboardHeader.hide();
 			this.$.normalHeader.show();
 		} else {
 			this._keyboard = true;
-			
+
 			this.$.normalHeader.hide();
 			this.$.keyboardHeader.show();
 			this.$.keyboardInput.forceFocus();
 		}
-	},	
-	
+	},
+
 	handleKeypress: function(inSender, inEvent) {
 		this.$.keyboardInput.setValue("");
-		
-		var action = "SendKey(" + (61696 + inEvent.keyCode) + ")";		
-		
+
+		var action = "SendKey(" + (61696 + inEvent.keyCode) + ")";
+
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=" + action, 
-			onSuccess: "updateStatus"});		
+			onSuccess: "updateStatus"});
 	},
-	
+
 	controlDevice: function(inSender, inEvent) {
 		var action = "status";
 
 		if((this.module == "boxee") || (this.module == "xbmc")) {
 			if(inSender.name == "controlPlayPause")
-				action = "Pause";		
+				action = "Pause";
 			else if(inSender.name == "controlNext")
 				action = "PlayNext";
 			else if(inSender.name == "controlPrev")
@@ -217,19 +217,19 @@ enyo.kind({
 				action = "SendKey(275)";
 			else if(inSender.name == "controlPlayback") {
 				this.$.playbackStatus.setCaption("Playback");
-			
+
 				action = "SeekPercentage(" + this.$.controlPlayback.getPosition() + ")";
 			} else if(inSender.name == "controlVolume") {
 				this.$.volumeStatus.setCaption("Volume");
-			
+
 				action = "SetVolume(" + this.$.controlVolume.getPosition() + ")";
 			}
-		
+
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=" + action, 
 				onSuccess: "updateStatus"});
 		} else {
 			if(inSender.name == "controlPlayPause")
-				action = "play-pause";		
+				action = "play-pause";
 			else if(inSender.name == "controlNext")
 				action = "next";
 			else if(inSender.name == "controlPrev")
@@ -252,25 +252,25 @@ enyo.kind({
 				action = "mute";
 			else if(inSender.name == "controlBack")
 				action = "back";
-		
+
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action, 
 				onSuccess: "updateStatus"});
 		}
 	},
-	
+
 	updateStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
-		
+
 		if(inResponse)
 			this.doUpdate("online");
 		else
 			this.doUpdate("offline");
-	},	
-	
+	},
+
 	updateVolume: function(inSender, inResponse) {
 		if(inResponse) {
 			var position = inResponse.replace(/<.*?>/g, '');
-			
+
 			if(position != "Error")
 				this.$.controlVolume.setPosition(position);
 		}
@@ -285,9 +285,9 @@ enyo.kind({
 			if((this.module == "boxee") || (this.module == "xbmc")) {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/xbmcCmds/xbmcHttp?command=GetVolume", 
 					onSuccess: "updateVolume"});
-			
+
 				var position = inResponse.replace(/<.*?>/g, '');
-			
+
 				if(position != "Error")
 					this.$.controlPayback.setPosition(position);
 			}
@@ -295,10 +295,10 @@ enyo.kind({
 			this.doUpdate("offline");
 		}
 	},
-	
+
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		this.doUpdate("offline");
 	}
 });

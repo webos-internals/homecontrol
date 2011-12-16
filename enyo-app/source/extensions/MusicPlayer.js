@@ -20,23 +20,23 @@ enyo.kind({
 
 	_list: null,
 	_position: null,
-	
+
 	_queue: null,
 	_current: null,
 	_selected: null,
 	_results: null,
 	_playlists: null,
-	
+
 	events: {
 		onUpdate: ""
 	},
-	
+
 	published: {
 		title: "",
 		module: "",
 		address: ""
 	},
-	
+
 	components: [
 		{name: "queuePopup", kind: "PopupSelect", onSelect: "executeAction", items: [
 			{value: "Play This Song"}, {value: "Remove from Queue"}
@@ -53,7 +53,7 @@ enyo.kind({
 		{name: "resultsPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
 			{value: "Play Song Now"} , {value: "Add Song to Queue"}
 		]},
-		
+
 		{kind: "PageHeader", layoutKind: "HFlexLayout", components: [
 			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{kind: "Spacer", flex: 1},
@@ -67,16 +67,16 @@ enyo.kind({
 					inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
 					style: "margin: -5px 10px -5px 0px;", onchange: "searchMusic"},
 				{kind: "ToolButton", className: "tool-button", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}
-			]}					
+			]}
 		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
 			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
 				{layoutKind: "VFlexLayout", flex: 1, components: [
 					{name: "musicStateInfo", kind: "DividerDrawer", caption: "Offline", className: "divider", open: true, components: [
 						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
-							{name: "musicCurrentSong", content: "Not playing...", className: "current-info",
+							{name: "musicCurrentSong", content: "Not playing...", className: "current-info", 
 								style: "text-overflow: ellipsis;", onclick: "toggleProgress"},
-							{name: "musicProgressBar", kind: "Slider", tapPosition: false, className: "control-progress",
+							{name: "musicProgressBar", kind: "Slider", tapPosition: false, className: "control-progress", 
 								onChanging: "updateProgress", onChange: "controlMusic"}
 						]}
 					]},
@@ -95,7 +95,7 @@ enyo.kind({
 					{name: "musicExtraControls", kind: "DividerDrawer", open: false, caption: "Controls", 
 						onOpenChanged: "toggleControls", components: [
 						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
-							{name: "musicRepeatRandom", layoutKind: "HFlexLayout", pack: "center", className: "divider-container",
+							{name: "musicRepeatRandom", layoutKind: "HFlexLayout", pack: "center", className: "divider-container", 
 								style: "margin: -6px auto 6px auto;", components: [
 								{name: "musicRepeatToggle", kind: "ToggleButton", onLabel: "Repeat", offLabel: "Repeat", 
 									className: "control-repeat", style: "width: 70px;", onChange: "controlMusic"},
@@ -137,26 +137,26 @@ enyo.kind({
 				onclick: "controlMusic"},
 			{kind: "Spacer"},
 		]},
-		
+
 		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "updateStatus", onFailure: "unknownError"}
 	],
-	
+
 	rendered: function() {
 		this.inherited(arguments);
-		
+
 		this.$.keyboardHeader.hide();
 
 		this.$.musicProgressBar.hide();
-		
+
 		this.$.musicEmptyList.hide();
 		this.$.musicSeekBwd.hide();
 		this.$.musicSeekFwd.hide();
 
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status?refresh=true"});
-		
+
 		this._timeout = setTimeout(this.checkStatus.bind(this), 5000);
 	},
-	
+
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
 
@@ -169,7 +169,7 @@ enyo.kind({
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/close"});
 		}
 	},
-	
+
 	checkStatus: function() {
 		if(this._list == "queue")
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/playqueue/list?action=info"});
@@ -179,17 +179,17 @@ enyo.kind({
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/playlists/list?id=*"});
 		else
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status?refresh=false"});
-		
+
 		if(this._timeout)
 			clearTimeout(this._timeout);
-		
+
 		this._timeout = setTimeout(this.checkStatus.bind(this), 5000);
 	},
 
 	toggleList: function(inSender) {
 		if(this._opening) {
 			this._opening = false;
-				
+
 			return;
 		}
 
@@ -208,7 +208,7 @@ enyo.kind({
 			this._opening = true;
 
 			this.$.musicListDivider.setOpen(false);
-		}		
+		}
 	},
 
 	toggleControls: function(inSender) {
@@ -231,11 +231,11 @@ enyo.kind({
 			this.$.musicStateInfo.setCaption(enyo.cap(this._state));
 
 			this.$.musicProgressBar.hide();
-			this.$.musicCurrentSong.show();			
+			this.$.musicCurrentSong.show();
 		} else if((this._position) && ((this._state == "playing") || (this._state == "paused"))) {
 			var dM = Math.floor(this._position.duration / 60);
 			var dS = this._position.duration - (dM * 60);
-			
+
 			if(dS < 10) dS = "0" + dS;
 
 			var eM = Math.floor(this._position.elapsed / 60);
@@ -244,13 +244,13 @@ enyo.kind({
 			if(eS < 10) eS = "0" + eS;
 
 			this.$.musicStateInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);
-		
-			this.$.musicCurrentSong.hide();			
+
+			this.$.musicCurrentSong.hide();
 			this.$.musicProgressBar.show();
 
 			if(this._timer)
 				clearTimeout(this._timer);
-			
+
 			this._timer = setTimeout(this.toggleProgress.bind(this), 5000);
 		}
 	},
@@ -258,7 +258,7 @@ enyo.kind({
 	toggleKeyboard: function() {
 		if(this._keyboard) {
 			this._keyboard = false;
-			
+
 			this.$.keyboardHeader.hide();
 			this.$.normalHeader.show();
 
@@ -272,7 +272,7 @@ enyo.kind({
 			}
 		} else {
 			this._keyboard = true;
-			
+
 			this.$.normalHeader.hide();
 			this.$.keyboardHeader.show();
 			this.$.keyboardInput.forceFocus();
@@ -280,8 +280,8 @@ enyo.kind({
 			if((this._results) && (this._list != "results"))
 				this.updateList("results");
 		}
-	},	
-	
+	},
+
 	setupListItem: function(inSender, inIndex) {
 		if((this._list) && (this["_" + this._list]) && (this["_" + this._list].items) && 
 			(inIndex >= 0) && (inIndex < this["_" + this._list].items.length))
@@ -298,7 +298,7 @@ enyo.kind({
 					info = "Unknown Type";
 			} else {
 				var title = this["_" + this._list].items[inIndex].title;
-			
+
 				if((!title) || (title.length == 0))
 					title = "Unknown Title";
 
@@ -313,7 +313,7 @@ enyo.kind({
 					info += " - " + this["_" + this._list].items[inIndex].album
 				}
 			}
-				
+
 			if(((this._list == "queue") || (this._list == "current")) && 
 				(this["_" + this._list].items[inIndex].id == this._playing))
 			{
@@ -321,31 +321,31 @@ enyo.kind({
 			} else {
 				this.$.listItemTitle.applyStyle("font-weight", "normal");
 			}
-		
+
 			this.$.listItemTitle.setContent(title);
 			this.$.listItemSubtitle.setContent(info);
-			
+
 			return true;
 		}
 	},
-	
+
 	selectAction: function(inSender, inEvent) {
 		if(this.$.musicListDivider.open) {
 			this._clicked = inEvent.rowIndex;
-		
+
 			if((this._list == "results") && (!this._queue))
 				this.$.resultsPopup.items.splice(1);
-		
+
 			this.$[this._list + "Popup"].openAtEvent(inEvent);
 		}
 	},
-	
+
 	executeAction: function(inSender, inSelected) {
 		if(this._list == "queue") {
 			if(inSelected.getValue() == "Play This Song") {
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + 
 					this.module + "/playqueue/select?id=" + this._queue.items[this._clicked].id});
-				
+
 				this._playing = this._queue.items[this._clicked].id;
 
 				this.$.musicListView.refresh();
@@ -354,7 +354,7 @@ enyo.kind({
 					this.module + "/playqueue/remove?id=" + this._queue.items[this._clicked].id});
 
 				this._queue.items.splice(this._clicked, 1);
-				
+
 				this.$.musicListView.refresh();
 			}
 		} else if(this._list == "current") {
@@ -382,20 +382,20 @@ enyo.kind({
 					this.module + "/playqueue/append?id=" + this._results.items[this._clicked].id});
 			}
 		}
-	}, 
-	
+	},
+
 	updateList: function(inList) {
 		this._list = inList;
 
 		this.$.musicListDivider.setCaption(this["_" + this._list].name);
-			
+
 		this.$.musicListView.refresh();
 
 		this.$.musicListView.punt();
 
 		this.checkStatus();
 	},
-	
+
 	updateVolume: function(inSender, inEvent) {
 		this.$.musicMuteToggle.setOnLabel(this.$.musicVolumeSlider.getPosition());
 	},
@@ -408,7 +408,7 @@ enyo.kind({
 
 		var dM = Math.floor(this._position.duration / 60);
 		var dS = this._position.duration - (dM * 60);
-		
+
 		if(dS < 10) dS = "0" + dS;
 
 		var eM = Math.floor((p * this._position.duration / 100) / 60);
@@ -416,19 +416,19 @@ enyo.kind({
 
 		if(eS < 10) eS = "0" + eS;
 
-		this.$.musicStateInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);	
+		this.$.musicStateInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);
 	},
-	
+
 	searchMusic: function() {
 		var text = this.$.keyboardInput.getValue();
 
 		if(text.length > 0)
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/library/search?filter=" + text});			
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/library/search?filter=" + text});
 	},
-	
+
 	controlMusic: function(inSender, inEvent) {
 		var action = "status";
-		
+
 		if(inSender.name == "musicPlayPause") {
 			if(this._state == "playing")
 				action = "playback/state?action=pause";
@@ -453,40 +453,40 @@ enyo.kind({
 				action = "output/mute?state=false";
 		} else if(inSender.name == "musicProgressBar") {
 			this.toggleProgress();
-		
+
 			var p = this.$.musicProgressBar.getPosition();
-			
+
 			var position = Math.floor(p * this._position.duration / 100);
-		
+
 			action = "playback/seek?position=" + position;
 		} else if(inSender.name == "musicVolumeSlider")
 			action = "output/volume?level=" + this.$.musicVolumeSlider.getPosition();
-		
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});	
+
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});
 	},
-	
+
 	updateStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		if((inResponse) && (inResponse.state)) {
 			this._state = inResponse.state;
-			
+
 			this.doUpdate(inResponse.state);
-			
+
 			if(inResponse.state == "playing") {
 				if(!this.$.musicProgressBar.showing)
 					this.$.musicStateInfo.setCaption("Playing");
-			
+
 				this.$.musicPlayPause.setIcon("./images/ctl-pause.png");
 			} else if(inResponse.state == "paused") {
 				if(!this.$.musicProgressBar.showing)
 					this.$.musicStateInfo.setCaption("Paused");
-			
+
 				this.$.musicPlayPause.setIcon("./images/ctl-play.png");
 			} else if(inResponse.state == "stopped") {
 				if(!this.$.musicProgressBar.showing)
 					this.$.musicStateInfo.setCaption("Stopped");
-			
+
 				this.$.musicPlayPause.setIcon("./images/ctl-play.png");
 			}
 
@@ -495,12 +495,12 @@ enyo.kind({
 					(this._playing != inResponse.current.id))
 				{
 					this._playing = inResponse.current.id;
-					
+
 					this.$.musicListView.refresh();
 				}
-			
+
 				this._playing = inResponse.current.id;
-			
+
 				if(inResponse.state == "stopped") {
 					this.$.musicCurrentSong.applyStyle("text-overflow", "ellipsis");
 					this.$.musicCurrentSong.applyStyle("overflow-x", "none");
@@ -509,7 +509,7 @@ enyo.kind({
 				} else {
 					this.$.musicCurrentSong.applyStyle("text-overflow", "none");
 					this.$.musicCurrentSong.applyStyle("overflow-x", "-webkit-marquee");
-				
+
 					if(!inResponse.current.title)
 						this.$.musicCurrentSong.setContent("Unknown Song");
 					else if(!inResponse.current.artist)
@@ -518,18 +518,18 @@ enyo.kind({
 						this.$.musicCurrentSong.setContent(unescape(inResponse.current.artist) + 
 							" - " + unescape(inResponse.current.title));
 					}
-				}	
+				}
 			} else {
 				this.$.musicStateInfo.hide();
-				
+
 				this.$.musicPlayPause.setIcon("./images/ctl-playpause.png");
 			}
 
 			if(inResponse.position != undefined) {
 				this._position = inResponse.position;
-				
+
 				var p = Math.floor(100 * this._position.elapsed / this._position.duration);
-		
+
 				this.$.musicProgressBar.setPosition(p);
 
 				if(this.$.musicExtraControls.open == true) {
@@ -542,12 +542,12 @@ enyo.kind({
 					}
 				}
 			}
-			
+
 			if(inResponse.repeat != undefined)
 				this.$.musicRepeatToggle.setState(inResponse.repeat);
 			else
 				this.$.musicRepeatRandom.hide();
-			
+
 			if(inResponse.random != undefined)
 				this.$.musicRandomToggle.setState(inResponse.random);
 			else
@@ -570,14 +570,14 @@ enyo.kind({
 
 				if(inResponse.views.playlists != undefined) {
 					this._playlists = inResponse.views.playlists;
-				
+
 					if(!this._list)
 						this._list = "playlists";
 				}
 
 				if(this._list) {
 					this.$.musicListDivider.setCaption(this["_" + this._list].name);
-				
+
 					this.$.musicListView.refresh();
 				}
 
@@ -591,29 +591,29 @@ enyo.kind({
 				this.$.musicListDivider.hide();
 				this.$.musicListViews.hide();
 			}
-						
-			if(inResponse.search != undefined) {			
+
+			if(inResponse.search != undefined) {
 				if(inResponse.search.items != undefined) {
 					this._results = inResponse.search;
-				
+
 					if(this._keyboard == true) {
 						this._list = "results";
 
 						this.$.musicListDivider.setCaption(this._results.name);
-		
+
 						this.$.musicListView.refresh();
 					}
 				}
 			} else
 				this.$.search.hide();
-						
+
 			if(inResponse.volume != undefined) {
 				this._volume = inResponse.volume;
-				
+
 				this.$.musicMuteToggle.setOnLabel(inResponse.volume);
-				
+
 				this.$.musicVolumeSlider.setPosition(inResponse.volume);
-				
+
 				if(inResponse.mute == true)
 					this.$.musicMuteToggle.setState(false);
 				else
@@ -623,17 +623,17 @@ enyo.kind({
 			}
 		} else {
 			this.doUpdate("offline");
-			
+
 			this.$.musicStateInfo.setCaption("Offline");
 		}
 	},
-	
+
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		this.doUpdate("offline");
-		
+
 		this.$.musicStateInfo.setCaption("Offline");
-	}	
+	}
 });
 

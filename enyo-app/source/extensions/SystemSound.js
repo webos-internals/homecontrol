@@ -6,19 +6,19 @@ enyo.kind({
 	name: "SystemSound",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
-	
+
 	_timeout: null,
-	
+
 	events: {
 		onUpdate: ""
 	},
-	
+
 	published: {
 		title: "",
 		module: "",
 		address: ""
 	},
-	
+
 	components: [
 		{kind: "PageHeader", layoutKind: "HFlexLayout", components: [
 			{name: "normalHeader", layoutKind: "HFlexLayout", flex: 1, components: [
@@ -62,19 +62,19 @@ enyo.kind({
 		]},
 		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: [
 		]},
-		
+
 		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "updateStatus", onFailure: "unknownError"}
 	],
-	
+
 	rendered: function() {
 		this.inherited(arguments);
-		
+
 		this.checkStatus();
 	},
-	
+
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
-		
+
 		if(visible == true) {
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
 		} else if(visible == null) {
@@ -82,62 +82,62 @@ enyo.kind({
 				clearTimeout(this._timeout);
 		}
 	},
-	
+
 	checkStatus: function() {
 		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
 
 		if(this._timeout)
 			clearTimeout(this._timeout);
-		
-		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
+
+		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);
 	},
 
 	updateInput: function(inSender, inEvent) {
 		this.$.inputMuteToggle.setOnLabel(this.$.inputVolumeSlider.getPosition());
 	},
-	
+
 	updateOutput: function(inSender, inEvent) {
 		this.$.outputMuteToggle.setOnLabel(this.$.outputVolumeSlider.getPosition());
 	},
-	
+
 	controlSound: function(inSender, inEvent) {
 		var action = "status";
-		
-		if((inSender.name == "inputMuteToggle") ||
+
+		if((inSender.name == "inputMuteToggle") || 
 			(inSender.name == "inputVolumeSlider"))
 		{
 			action = "input?";
-		
+
 			if(inSender.name == "inputMuteToggle")
 				action += "mute=" + !this.$.inputMuteToggle.getState();
 			else if(inSender.name == "inputVolumeSlider")
 				action += "volume=" + this.$.inputVolumeSlider.getPosition();
 		}
-		else if((inSender.name == "outputMuteToggle") ||
+		else if((inSender.name == "outputMuteToggle") || 
 			(inSender.name == "outputVolumeSlider"))
 		{
 			action = "output?";
-		
+
 			if(inSender.name == "outputMuteToggle")
 				action += "mute=" + !this.$.outputMuteToggle.getState();
 			else if(inSender.name == "outputVolumeSlider")
 				action += "volume=" + this.$.outputVolumeSlider.getPosition();
 		}
-				
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});	
+
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});
 	},
-	
+
 	updateStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		if((inResponse) && (inResponse.state)) {
 			this.doUpdate(inResponse.state);
-			
+
 			if(inResponse.input != undefined) {
 				this.$.inputMuteToggle.setOnLabel(inResponse.input.volume);
-				
+
 				this.$.inputVolumeSlider.setPosition(inResponse.input.volume);
-				
+
 				if(inResponse.input.mute == true)
 					this.$.inputMuteToggle.setState(false);
 				else
@@ -149,9 +149,9 @@ enyo.kind({
 
 			if(inResponse.output != undefined) {
 				this.$.outputMuteToggle.setOnLabel(inResponse.output.volume);
-				
+
 				this.$.outputVolumeSlider.setPosition(inResponse.output.volume);
-				
+
 				if(inResponse.output.mute == true)
 					this.$.outputMuteToggle.setState(false);
 				else
@@ -164,11 +164,11 @@ enyo.kind({
 			this.doUpdate("offline");
 		}
 	},
-	
+
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		this.doUpdate("offline");
-	}	
+	}
 });
 

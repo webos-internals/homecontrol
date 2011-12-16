@@ -6,7 +6,7 @@ enyo.kind({
 	name: "VideoPlayer",
 	kind: enyo.Control,
 	layoutKind: "VFlexLayout",
-	
+
 	_state: "stopped",
 
 	_clicked: 0,
@@ -16,23 +16,23 @@ enyo.kind({
 	_timer: null,
 	_timeout: null,
 	_opening: false,
-	
+
 	_list: null,
-	
+
 	_current: null,
 	_library: null,
 	_position: null,
-	
+
 	events: {
 		onUpdate: ""
 	},
-	
+
 	published: {
 		title:"",
 		module: "",
 		address: ""
 	},
-	
+
 	components: [
 		{name: "currentPopup", kind: "PopupSelect", onSelect: "executeAction", items: [
 			{value: "Play This Video"}
@@ -109,7 +109,7 @@ enyo.kind({
 					]}
 				]}
 			]}
-		]},		
+		]},
 		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: [
 			{kind: "Spacer"},
 			{name: "videoSkipPrev", kind: "ToolButton", icon: "./images/ctl-prev.png", className: "control-first", 
@@ -133,10 +133,10 @@ enyo.kind({
 
 		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "updateStatus", onFailure: "unknownError"}
 	],
-	
+
 	rendered: function() {
 		this.inherited(arguments);
-		
+
 		this.$.videoStateInfo.hide();
 		this.$.videoVolBtnControls.hide();
 		this.$.videoProgressBar.hide();
@@ -145,15 +145,15 @@ enyo.kind({
 		this.$.videoSkipNext.hide();
 		this.$.videoToggleMute.hide();
 		this.$.videoToggleSeparator.hide();
-		
+
 		this.$.videoToggleSize.setCaption("Toggle Fullscreen");
-		
+
 		this.checkStatus();
 	},
-	
+
 	selected: function(visible) {
 		this.$.title.setContent(this.title);
-		
+
 		if(visible == true) {
 			if(this.module == "vlc")
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/requests/status.xml"});
@@ -167,23 +167,23 @@ enyo.kind({
 				this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/close"});
 		}
 	},
-	
+
 	checkStatus: function() {
 		if(this.module == "vlc")
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/requests/status.xml"});
 		else
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/status"});
-		
+
 		if(this._timeout)
 			clearTimeout(this._timeout);
 
-		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);	
+		this._timeout = setTimeout(this.checkStatus.bind(this, true), 5000);
 	},
-	
+
 	selectAction: function(inSender, inEvent) {
 		if(this.$.videoListDivider.open) {
 			this._clicked = inEvent.rowIndex;
-		
+
 			this.$[this._list + "Popup"].openAtEvent(inEvent);
 		}
 	},
@@ -191,14 +191,14 @@ enyo.kind({
 	executeAction: function(inSender, inSelected) {
 		if(this.module == "vlc") {
 			this.executeActionVLC(inSender, inSelected);
-		}			
-	}, 
+		}
+	},
 
 	updateList: function(inList) {
 		this._list = inList;
 
 		this.$.videoListDivider.setCaption(this["_" + this._list].name);
-			
+
 		this.$.videoListView.refresh();
 
 		this.$.videoListView.punt();
@@ -218,7 +218,7 @@ enyo.kind({
 
 		var dM = Math.floor(this._position.duration / 60);
 		var dS = this._position.duration - (dM * 60);
-		
+
 		if(dS < 10) dS = "0" + dS;
 
 		var eM = Math.floor((p * this._position.duration / 100) / 60);
@@ -226,7 +226,7 @@ enyo.kind({
 
 		if(eS < 10) eS = "0" + eS;
 
-		this.$.videoStatusInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);	
+		this.$.videoStatusInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);
 	},
 
 	toggleProgress: function(inSender) {
@@ -234,11 +234,11 @@ enyo.kind({
 			this.$.videoStatusInfo.setCaption(enyo.cap(this._state));
 
 			this.$.videoProgressBar.hide();
-			this.$.videoCurrentVideo.show();			
+			this.$.videoCurrentVideo.show();
 		} else if((this._position) && ((this._state == "playing") || (this._state == "paused"))) {
 			var dM = Math.floor(this._position.duration / 60);
 			var dS = this._position.duration - (dM * 60);
-			
+
 			if(dS < 10) dS = "0" + dS;
 
 			var eM = Math.floor(this._position.elapsed / 60);
@@ -247,13 +247,13 @@ enyo.kind({
 			if(eS < 10) eS = "0" + eS;
 
 			this.$.videoStatusInfo.setCaption(eM + ":" + eS + " / " + dM + ":" + dS);
-		
-			this.$.videoCurrentVideo.hide();			
+
+			this.$.videoCurrentVideo.hide();
 			this.$.videoProgressBar.show();
 
 			if(this._timer)
 				clearTimeout(this._timer);
-			
+
 			this._timer = setTimeout(this.toggleProgress.bind(this), 5000);
 		}
 	},
@@ -261,7 +261,7 @@ enyo.kind({
 	toggleList: function(inSender) {
 		if(this._opening) {
 			this._opening = false;
-				
+
 			return;
 		}
 
@@ -274,7 +274,7 @@ enyo.kind({
 			this._opening = true;
 
 			this.$.videoListDivider.setOpen(false);
-		}		
+		}
 	},
 
 	toggleControls: function(inSender) {
@@ -293,20 +293,20 @@ enyo.kind({
 	},
 
 	setupListItem: function(inSender, inIndex) {
-		if((this._list) && (this["_" + this._list]) && (this["_" + this._list].items) &&
+		if((this._list) && (this["_" + this._list]) && (this["_" + this._list].items) && 
 			(inIndex >= 0) && (inIndex < this["_" + this._list].items.length))
-		{		
+		{
 			if(this["_" + this._list].items[inIndex].id == this._playing)
 				this.$.listItemTitle.applyStyle("font-weight", "bold");
 			else
 				this.$.listItemTitle.applyStyle("font-weight", "normal");
 
 			this.$.listItemTitle.setContent(this["_" + this._list].items[inIndex].name);
-			
+
 			return true;
 		}
 	},
-	
+
 	controlVideo: function(inSender, inEvent) {
 		if(this.module == "vlc") {
 			this.controlVideoVLC(inSender, inEvent);
@@ -347,32 +347,32 @@ enyo.kind({
 				action = "output/volume?value=" + this.$.videoVolumeSlider.getPosition();
 			else if(inSender.name == "videoProgressBar") {
 				this.toggleProgress();
-		
+
 				var p = this.$.videoProgressBar.getPosition();
-			
+
 				var position = Math.floor(p * this._position.duration / 100);
-		
+
 				action = "playback/seek?position=" + position;
 			}
-						
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});	
+
+			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});
 		}
 	},
-	
+
 	updateStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		if(this.module == "vlc") {
 			this.updateStatusVLC(inSender, inResponse);
 		} else {
 			if((inResponse) && (inResponse.state)) {
 				this._state = inResponse.state;
-				
+
 				this.doUpdate(inResponse.state);
-				
+
 				this.$.videoStateInfo.setCaption(enyo.cap(inResponse.state));
 				this.$.videoStatusInfo.setCaption(enyo.cap(inResponse.state));
-				
+
 				if(inResponse.state == "running") {
 					this.$.videoPlayPause.setIcon("./images/ctl-playpause.png");
 				} else if(inResponse.state == "playing") {
@@ -380,7 +380,7 @@ enyo.kind({
 				} else if(inResponse.state == "paused") {
 					this.$.videoPlayPause.setIcon("./images/ctl-play.png");
 				}
-				
+
 				if(inResponse.current != undefined) {
 					this.$.videoStateInfo.hide();
 					this.$.videoStatusInfo.show();
@@ -395,7 +395,7 @@ enyo.kind({
 						this.$.videoCurrentVideo.applyStyle("overflow-x", "-webkit-marquee");
 					} else {
 						this.$.videoCurrentVideo.applyStyle("text-overflow", "ellipsis");
-						this.$.videoCurrentVideo.applyStyle("overflow-x", "none");		
+						this.$.videoCurrentVideo.applyStyle("overflow-x", "none");
 
 						this.$.videoCurrentVideo.setContent("Not playing...");
 					}
@@ -403,15 +403,15 @@ enyo.kind({
 					this.$.videoStateInfo.show();
 					this.$.videoStatusInfo.hide();
 				}
-				
+
 				if(inResponse.position != undefined) {
 					this._position = inResponse.position;
 
 					var p = Math.floor(100 * this._position.elapsed / this._position.duration);
-		
+
 					this.$.videoProgressBar.setPosition(p);
 				}
-				
+
 				if(inResponse.volume != undefined) {
 					this.$.videoVolBtnControls.hide();
 					this.$.videoVolumeControls.show();
@@ -422,9 +422,9 @@ enyo.kind({
 					this.$.videoToggleSize.setCaption("Toggle Fullscreen");
 
 					this.$.videoMuteToggle.setOnLabel(inResponse.volume);
-					
+
 					this.$.videoVolumeSlider.setPosition(inResponse.volume);
-					
+
 					if(inResponse.mute == true)
 						this.$.videoMuteToggle.setState(false);
 					else
@@ -432,10 +432,10 @@ enyo.kind({
 				} else {
 					this.$.videoVolBtnControls.show();
 					this.$.videoVolumeControls.hide();
-					
+
 					this.$.videoToggleMute.show();
 					this.$.videoToggleSeparator.show();
-					
+
 					this.$.videoToggleSize.setCaption("Fullscreen");
 				}
 
@@ -445,7 +445,7 @@ enyo.kind({
 					this.$.videoToggleSize.hide();
 					this.$.videoToggleSeparator.hide();
 				}
-				
+
 				if(inResponse.views !== undefined) {
 					this.$.videoEmptyList.hide();
 					this.$.videoListDivider.show();
@@ -457,22 +457,22 @@ enyo.kind({
 				}
 			} else {
 				this.doUpdate("offline");
-				
-				this.$.videoStateInfo.setCaption("Offline");						
-				this.$.videoStatusInfo.setCaption("Offline");			
+
+				this.$.videoStateInfo.setCaption("Offline");
+				this.$.videoStatusInfo.setCaption("Offline");
 			}
 		}
 	},
 
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-		
+
 		this.doUpdate("offline");
-		
-		this.$.videoStateInfo.setCaption("Offline");						
+
+		this.$.videoStateInfo.setCaption("Offline");
 		this.$.videoStatusInfo.setCaption("Offline");
 	},
-	
+
 //
 // Direct VLC support
 //
@@ -499,16 +499,16 @@ enyo.kind({
 				action = "volume&val=" + (this._volume * 256 / 100);
 		} else if(inSender.name == "videoProgressBar") {
 			this.toggleProgress();
-		
+
 			var p = this.$.videoProgressBar.getPosition();
-			
+
 			var position = Math.floor(p * this._position.duration / 100);
-		
+
 			action = "seek&val=" + position;
 		} else if(inSender.name == "videoVolumeSlider") {
 			action = "volume&val=" + (this.$.videoVolumeSlider.getPosition() * 256 / 100);
 		}
-		
+
 		this.$.vlcRequest.call({}, {url: "http://" + this.address + "/requests/status.xml?command=" + action});
 	},
 
@@ -517,13 +517,13 @@ enyo.kind({
 			var id = this["_" + this._list].items[this._clicked].id;
 
 			this.$.vlcRequest.call({}, {url: "http://" + this.address + "/requests/status.xml?command=pl_play&id=" + id});
-			
+
 			this._playing = id;
 
 			this.$.videoListView.refresh();
 		}
 	},
-	
+
 	updateStatusVLC: function(inSender, inResponse) {
 		var regexp = new RegExp("<state>([\\s\\S]*?)<\\/state>");
 
@@ -531,74 +531,74 @@ enyo.kind({
 
 		if(inResponse)
 			state = regexp.exec(inResponse);
-		
+
 		if(state.length > 0) {
 			this._state = state[1].replace("stop", "stopped");
-		
+
 			this.doUpdate(state[1].replace("stop", "stopped"));
-		
+
 			this.$.videoPlayPause.setIcon("./images/ctl-playpause.png");
-		
+
 			this.$.videoStatusInfo.setCaption(enyo.cap(state[1].replace("stop", "stopped")));
-		
+
 			if(state[1] != "stop") {
 				var regexp = new RegExp('<title><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/title>');
-		
+
 				var info = regexp.exec(inResponse);
-		
+
 				if((info) && (info.length > 0)) {
 					this.$.videoCurrentVideo.setContent(info[1]);
-					
+
 					this.$.videoCurrentVideo.applyStyle("text-overflow", "none");
 					this.$.videoCurrentVideo.applyStyle("overflow-x", "-webkit-marquee");
-				} else 
+				} else
 					this.$.videoCurrentVideo.setContent("Unknown Video");
 			} else {
 				this.$.videoCurrentVideo.applyStyle("text-overflow", "ellipsis");
-				this.$.videoCurrentVideo.applyStyle("overflow-x", "none");		
+				this.$.videoCurrentVideo.applyStyle("overflow-x", "none");
 
 				this.$.videoCurrentVideo.setContent("Not playing...");
 			}
-		
+
 			var regexp = new RegExp("<volume>([\\s\\S]*?)<\\/volume>");
-		
+
 			var volume = regexp.exec(inResponse);
-		
+
 			if((volume.length < 2) || (volume[1] == 0)) {
 				this.$.videoMuteToggle.setOnLabel("0");
-			
+
 				this.$.videoMuteToggle.setState(false);
 				this.$.videoVolumeSlider.setPosition(0);
 			} else {
 				this._volume = Math.round(volume[1] / 256 * 100);
-			
+
 				this.$.videoMuteToggle.setOnLabel(this._volume);
-			
+
 				this.$.videoMuteToggle.setState(true);
 				this.$.videoVolumeSlider.setPosition(this._volume);
 			}
-			
-			var regexp = new RegExp("<length>([\\s\\S]*?)<\\/length>");			
-			
+
+			var regexp = new RegExp("<length>([\\s\\S]*?)<\\/length>");
+
 			var duration = regexp.exec(inResponse);
-			
-			if(duration.length == 2) {			
-				var regexp = new RegExp("<time>([\\s\\S]*?)<\\/time>");			
-			
+
+			if(duration.length == 2) {
+				var regexp = new RegExp("<time>([\\s\\S]*?)<\\/time>");
+
 				var elapsed = regexp.exec(inResponse);
-				
+
 				if(elapsed.length == 2) {
 					this._position = {duration: duration[1], elapsed: elapsed[1]};
 
 					var p = Math.floor(100 * this._position.elapsed / this._position.duration);
-		
+
 					this.$.videoProgressBar.setPosition(p);
-				}					
+				}
 			}
 		} else {
 			this.doUpdate("offline");
 
-			this.$.videoStatusInfo.setCaption("Offline");	
+			this.$.videoStatusInfo.setCaption("Offline");
 		}
 
 		this.$.vlcRequest.call({}, {url: "http://" + this.address + "/requests/playlist.xml", 
@@ -632,11 +632,11 @@ enyo.kind({
 					{
 						var videoId = leafs[j].attributes["id"].nodeValue;
 						var videoName = leafs[j].attributes["name"].nodeValue || "Unknown";
-		
+
 						this._current.items.push({id: videoId, name: videoName});
 					}
 				}
-				
+
 				if(!this._list)
 					this._list = "current";
 			} else if(results[i].attributes["name"].nodeValue == "Media Library") {
@@ -656,7 +656,7 @@ enyo.kind({
 					{
 						var videoId = leafs[j].attributes["id"].nodeValue;
 						var videoName = leafs[j].attributes["name"].nodeValue || "Unknown";
-		
+
 						this._library.items.push({id: videoId, name: videoName});
 					}
 				}
@@ -668,7 +668,7 @@ enyo.kind({
 
 		if(this._list) {
 			this.$.videoListDivider.setCaption(this["_" + this._list].name);
-		
+
 			this.$.videoListView.refresh();
 		}
 
@@ -677,6 +677,6 @@ enyo.kind({
 
 			this.$.videoListDivider.setOpen(true);
 		}
-	}	
+	}
 });
 

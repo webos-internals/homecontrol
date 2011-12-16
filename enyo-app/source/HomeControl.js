@@ -16,13 +16,14 @@ enyo.kind({
 	
 	_controllers: [],
 
-// * Status Info: for showing 1-wire status info (ready for 1.0 for phones)
+// * Status Info: for showing 1-wire status info (ready for 1.0)
 // - Surveillance: support for video/snapshots (ready for 0.7)
 // - System Input: system mouse and keyboard controls (ready for 0.7)
-// * System Sound: master sound and speaker controls (ready for 1.0 for phones)
-// * Media Center: media boxes with d-pad controls (ready for 1.0 for phones)
-// * Music Player: music player applications (ready for 1.0 for phones)
-// * Video Player: video player applications (ready for 1.0 for phones)
+// * System Sound: master sound and speaker controls (ready for 1.0)
+// * Media Center: media boxes with d-pad controls (ready for 1.0)
+// * Music Player: music player applications (ready for 1.0)
+// * Video Player: video player applications (ready for 1.0)
+
 /*
 	{caption: "Status Info - 1-Wire", value: "StatusInfo:1-wire:hc"},
 	{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco:dev"},
