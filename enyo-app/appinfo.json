@@ -1,7 +1,7 @@
 {
 	"title": "Home Control",
 	"id": "org.webosinternals.homecontrol",
-	"version": "0.7.8",
+	"version": "0.7.9",
 	"uiRevision": "2",
 	"type": "web",
 	"main": "index.html",

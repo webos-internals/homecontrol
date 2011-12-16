@@ -8,6 +8,8 @@ enyo.kind({
 	_sensors: [],
 	
 	_selected: 0,
+   
+   _timeout: null,
     
     _shot: undefined,
     _timestamps: [],
@@ -43,71 +45,75 @@ enyo.kind({
 				{name: "title", content: "Surveillance", style: "margin-top: 0px;font-weight: bold;"},
 		]},
 
-	   {layoutKind: "VFlexLayout", flex: 1, components: [
-   	   {layoutKind: "VFlexLayout", flex: 1, components: [
-				{name: "client", layoutKind: "VFlexLayout", components: [
-					{name: "captureStatus", kind: "Divider", caption: "Offline", open: true},
-					{name: "imageView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-							{name: "imageObject", kind: "CustomCanvas", style: "display: none;"},
-							{name: "clientImage", layoutKind: "HFlexLayout", components: [
-								{name: "image", kind: "Image", autoSize: true, src: "", style: "max-width: 290px;"}
-							]},						
-							{name: "serverImage", layoutKind: "VFlexLayout", components: [
-								{layoutKind: "HFlexLayout", components: [
-									{name: "image1", kind: "Image", autoSize: true, src: "", style: "max-width: 140px;margin-right: 5px;"},
-									{name: "image2", kind: "Image", autoSize: true, src: "", style: "max-width: 140px;margin-left: 5px;"}
-								]},						
-								{layoutKind: "HFlexLayout", components: [
-									{content: "Difference:", flex: 1, style: "text-effect: bold;"},
-									{name: "difference", content: "-"}
+		{layoutKind: "VFlexLayout", flex: 1, components: [
+			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
+				{layoutKind: "VFlexLayout", flex: 1, components: [
+					{name: "client", layoutKind: "VFlexLayout", flex: 1, components: [
+						{name: "captureStatus", kind: "Divider", caption: "Offline", open: true},
+						{name: "imageView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+							{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+								{name: "imageObject", kind: "CustomCanvas", style: "display: none;"},
+								{name: "clientImage", layoutKind: "HFlexLayout", components: [
+									{name: "image", kind: "Image", autoSize: true, src: "", style: "max-width: 225px;"}
+								]},
+								{name: "clientText", style: "font-size: 14px;text-align: justify;", content: "No surveillance data available. " +
+									"To get surveillance images you need to turn on surveillance on your TouchPad."},
+								{name: "serverImage", layoutKind: "VFlexLayout", components: [
+									{layoutKind: "HFlexLayout", components: [
+										{name: "image1", kind: "Image", autoSize: true, src: "", style: "max-width: 140px;margin-right: 5px;"},
+										{name: "image2", kind: "Image", autoSize: true, src: "", style: "max-width: 140px;margin-left: 5px;"}
+									]},						
+									{layoutKind: "HFlexLayout", components: [
+										{content: "Difference:", flex: 1, style: "text-effect: bold;"},
+										{name: "difference", content: "-"}
+									]}
 								]}
 							]}
-						]}
+						]},
+						{name: "videoView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+							{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+								{name: "videoObject", kind: "Video", src: "",
+									 showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"}
+							 ]}
+						]}				
 					]},
-					{name: "videoView", layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-							{name: "videoObject", kind: "Video", src: "",
-								 showControls: false, width: "320px", height: "480px", style: "position: absolute; left: 64px; top: 84px;"}
-						 ]}
-					]}				
-				]},
 
-				{name: "server", layoutKind: "VFlexLayout", flex: 1, components: [
-					{kind: "Divider", caption: "Alert Settings", open: true},
-					{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-							{layoutKind: "HFlexLayout", pack: "center", components: [
-								{content: "Alert Threshold:", flex: 1, style: "text-effect: bold;"},
-								{kind: "ListSelector", value: 100, onChange: "itemChanged", items: [
-									{caption: "High (1000)", value: 1000},
-									{caption: "Medium (500)", value: 500},
-									{caption: "Low (100)", value: 100},
-								]},
-							]},				
-							{layoutKind: "HFlexLayout", components: [
-								{kind: "ToolInput", hint: "Email address for alerts...", flex: 1, alwaysLooksFocused: true, onchange: "inputChange"}
-							]}
-						]}
-					]},
-					{kind: "Divider", caption: "Capture Settings", open: true},
-					{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
-						{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
-							{layoutKind: "HFlexLayout", pack: "center", components: [
-								{content: "Frequency:", flex: 1, style: "text-effect: bold;"},
-								{kind: "ListSelector", value: 5, onChange: "itemChanged", items: [
-									{caption: "High (5s)", value: 5},
-									{caption: "Medium (15s)", value: 15},
-									{caption: "Low (30s)", value: 30},
+					{name: "server", layoutKind: "VFlexLayout", flex: 1, components: [
+						{kind: "Divider", caption: "Alert Settings", open: true},
+						{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+							{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+								{layoutKind: "HFlexLayout", pack: "center", components: [
+									{content: "Alert Threshold:", flex: 1, style: "text-effect: bold;"},
+									{kind: "ListSelector", value: 100, onChange: "itemChanged", items: [
+										{caption: "High (1000)", value: 1000},
+										{caption: "Medium (500)", value: 500},
+										{caption: "Low (100)", value: 100},
+									]},
+								]},				
+								{layoutKind: "HFlexLayout", components: [
+									{kind: "ToolInput", hint: "Email address for alerts...", flex: 1, alwaysLooksFocused: true, onchange: "inputChange"}
 								]}
-							]},
-							{layoutKind: "HFlexLayout", pack: "center", components: [
-								{content: "Sensitivity:", flex: 1, style: "text-effect: bold;"},
-								{kind: "ListSelector", value: 50, onChange: "itemChanged", items: [
-									{caption: "High (200)", value: 200},
-									{caption: "Medium (100)", value: 100},
-									{caption: "Low (50)", value: 50},
+							]}
+						]},
+						{kind: "Divider", caption: "Capture Settings", open: true},
+						{layoutKind: "VFlexLayout", style: "padding: 5px 15px;", components: [
+							{layoutKind: "VFlexLayout", style: "max-width: 290px;margin: 5px auto 0px auto;", components: [
+								{layoutKind: "HFlexLayout", pack: "center", components: [
+									{content: "Frequency:", flex: 1, style: "text-effect: bold;"},
+									{kind: "ListSelector", value: 5, onChange: "itemChanged", items: [
+										{caption: "High (5s)", value: 5},
+										{caption: "Medium (15s)", value: 15},
+										{caption: "Low (30s)", value: 30},
+									]}
 								]},
+								{layoutKind: "HFlexLayout", pack: "center", components: [
+									{content: "Sensitivity:", flex: 1, style: "text-effect: bold;"},
+									{kind: "ListSelector", value: 50, onChange: "itemChanged", items: [
+										{caption: "High (200)", value: 200},
+										{caption: "Medium (100)", value: 100},
+										{caption: "Low (50)", value: 50},
+									]},
+								]}
 							]}
 						]}
 					]}
@@ -125,47 +131,52 @@ enyo.kind({
           onSuccess: "gotAccounts", onFailure: "handleServerError"
       },
 
-		{name: "mediaCapture", kind: "enyo.MediaCapture", onInitialized: "loadMediaCap", onLoaded: "mediaCapLoaded", 
-			onImageCaptureComplete: "imageCaptured", onError: "handleServerError"},
+//		{name: "mediaCapture", kind: "enyo.MediaCapture", onInitialized: "loadMediaCap", onLoaded: "mediaCapLoaded", 
+//			onImageCaptureComplete: "imageCaptured", onError: "handleServerError"},
 			
 		{name : "uploadFile", kind : "PalmService", service : "palm://com.palm.downloadmanager/", method : "upload",
 			onFailure : "handleServerError"},
 			
-		{name: "serverRequest", kind: "WebService", onFailure: "handleServerError"}
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onFailure: "handleServerError"}
 	],
 	
 	rendered: function() {
 		var device = enyo.fetchDeviceInfo().modelNameAscii.toLowerCase();
 
-		if(this.module == "touchpad")
+		this.$.clientText.hide();
+
+		if(this.module == "surveillance") {
 			this.$.videoObject.hide();
-		else
-			this.$.imageView.hide();		
 
-		if(device != this.module) {
-			this.$.server.hide();
+//			if(device != "touchpad") {
+				var date = new Date();
 
-			this.$.serverImage.hide();
+				this.$.server.hide();
+
+				this.$.serverImage.hide();
 			
-			this.$.image.setSrc("http://" + this.address + "/surveillance/latest");
-
-			this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status", onSuccess: "handleStatus"});
-		} else {
-			this.$.clientImage.hide();
+				this.checkStatus();
+/*			} else {
+				this.$.clientImage.hide();
 			
-			this.$.imageObject.rendered();
+				this.$.imageObject.rendered();
 		
-			this.img1 = new Image();
-			this.img2 = new Image();
+				this.img1 = new Image();
+				this.img2 = new Image();
 
-			this.img1.onload = null;
-			this.img2.onload = function() {
-				if(this.img1 != null) {
-					var difference = this.compareImages();
+				this.img1.onload = null;
+				this.img2.onload = function() {
+					if(this.img1 != null) {
+						var difference = this.compareImages();
 
-					this.$.difference.setContent(difference);
-				}
-			}.bind(this);
+						this.$.difference.setContent(difference);
+					}
+				}.bind(this);
+			}			*/
+		} else {
+			this.$.imageView.hide();	
+			
+			this.$.server.hide();				
 		}
 	},
     
@@ -175,7 +186,9 @@ enyo.kind({
 		if(visible == true) {
 			this.$.title.setContent(this.title);
 
-			if(device == this.module) {
+			if((device == "touchpad") && (this.module == "surveillance")) {
+				return;
+				
 				this._shot = undefined;
 			
 				this.$.mediaCapture.initialize();			
@@ -184,20 +197,44 @@ enyo.kind({
 
 				this.playVideo();
 			} else {
-				this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status", onSuccess: "handleStatus"});
+				this.checkStatus();
 			}			
-		} else {
+		} else if(visible == false) {
         this.pauseVideo();
+		} else if(visible == null) {
+			if(this._timeout)
+				clearTimeout(this._timeout);			
 		}
+	},
+
+	checkStatus: function() {
+		var date = new Date();
+
+		this.$.image.setSrc("http://" + this.address + "/surveillance/latest?timestamp=" + date.getTime());
+
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status", onSuccess: "handleStatus"});
+		
+		if(this._timeout)
+			clearTimeout(this._timeout);
+
+		this._timeout = setTimeout(this.checkStatus.bind(this), 5000);
 	},
 
 	handleStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
 
 		if(inResponse) {
-			this.$.captureStatus.setCaption(enyo.cap(inResponse.status));
+			this.$.captureStatus.setCaption(enyo.cap(inResponse.state));
 	
-   	 	this.doUpdate(inResponse.status);			
+   	 	this.doUpdate(inResponse.state);
+   	 	
+   	 	if(inResponse.state == "idle") {
+				this.$.clientText.show();
+				this.$.clientImage.hide();				
+			} else {
+				this.$.clientText.hide();			
+				this.$.clientImage.show();				
+			}				
    	 } else {
 			this.$.captureStatus.setCaption("Offline");
 	
@@ -379,7 +416,7 @@ enyo.kind({
     handleServerError: function(inSender, inResponse) {
 		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
 
-    	this.doUpdate("error");
+    	this.doUpdate("offline");
     }
 });
 

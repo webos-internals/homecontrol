@@ -46,7 +46,7 @@ exports.setup = function(cb, os) {
 			if(!error) {
 				applescript = require("applescript");			
 			
-				currentStatus = new VideoPlayerStatus(true, true, true, false, false, null);		
+				currentStatus = new VideoPlayerStatus(true, true, true, true, false, null);		
 					
 				cb("quicktime", "QuickTime", "Video Player");
 			}
@@ -78,10 +78,6 @@ exports.execute = function(cb, url, addr) {
 			break;
 
 		case "playback/skip":
-//			if(url.arguments("action") == "prev")
-//				script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';				
-//			else if(url.arguments("action") == "next")
-//				script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';				
 			break;
 
 		case "playback/seek":
@@ -89,6 +85,9 @@ exports.execute = function(cb, url, addr) {
 				script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';
 			else if(url.arguments("action") == "bwd")
 				script_string = 'tell application "QuickTime Player" to step backward document frontmost\n';
+			else if(!isNaN(parseInt(url.arguments("position"))))
+				script_string = 'tell application "QuickTime Player" to set current time of document frontmost to ' +
+					parseInt(url.arguments("position")) + '\n';			
 			break;
 
 		case "viewmode/fullscreen":
@@ -108,7 +107,7 @@ exports.execute = function(cb, url, addr) {
 	}
 
 	script_string += 'tell application "QuickTime Player" to get ' +
-		'{playing, name, presenting, audio volume, muted} of document frontmost';
+		'{playing, name, presenting, audio volume, muted, current time, duration} of document frontmost';
 
 	applescript.execString(script_string, function(error, result) {
 		if(error) {
@@ -126,6 +125,9 @@ exports.execute = function(cb, url, addr) {
 
 		currentStatus.mute = (result[4] == "true");
 		currentStatus.volume = Math.round(result[3] * 100);
+
+		currentStatus.position.elapsed = result[5];
+		currentStatus.position.duration = result[6];
 		
 		currentStatus.fullscreen = (result[2] == "true");
 

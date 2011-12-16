@@ -20,9 +20,9 @@ enyo.kind({
 // - Surveillance: support for video/snapshots (ready for 0.7)
 // - System Input: system mouse and keyboard controls (ready for 0.7)
 // * System Sound: master sound and speaker controls (ready for 1.0 for phones)
-// - Media Center: media boxes with d-pad controls (ready for 1.0??? cleanup at least needed)
+// * Media Center: media boxes with d-pad controls (ready for 1.0 for phones)
 // * Music Player: music player applications (ready for 1.0 for phones)
-// - Video Player: video player applications (ready for 0.7)
+// * Video Player: video player applications (ready for 1.0 for phones)
 /*
 	{caption: "Status Info - 1-Wire", value: "StatusInfo:1-wire:hc"},
 	{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco:dev"},
@@ -59,7 +59,7 @@ enyo.kind({
 
 		{kind: "AppMenu", components: [
 //			{caption: "Show Servers", onclick: "showAllServers"},
-			{caption: "Auto Discover", onclick: "autoDiscover"},
+/*			{caption: "Auto Discover", onclick: "autoDiscover"},*/
 			{caption: "Add Server", onclick: "addNewServer"},
 			{caption: "Help", onclick: "showHelpInfo"}
 		]},
@@ -100,7 +100,7 @@ enyo.kind({
 				style: "margin: 5px;text-align: justify;"},
 
 			{layoutKind: "VFlexLayout", components: [
-				{kind: "Button", flex: 1, caption: "Auto Discover", onclick: "autoDiscover"},
+/*				{kind: "Button", flex: 1, caption: "Auto Discover", onclick: "autoDiscover"},*/
 				{kind: "Button", flex: 1, caption: "Add Manually", onclick: "addNewServer"}
 			]}
 		]},	
@@ -217,6 +217,12 @@ enyo.kind({
 		// TODO: poista joskus!!!
 			
 			for(var i = 0; i < this._config.length; i++) {
+				if(this._config[i].extension == "TouchPadCam") {
+					this._config.splice(i--, 1);
+					
+					continue;
+				}
+			
 				if(this._config[i].extension == "HomeTheater")
 					this._config[i].extension = "MediaCenter";
 

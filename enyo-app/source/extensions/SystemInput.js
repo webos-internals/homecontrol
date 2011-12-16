@@ -79,41 +79,46 @@ enyo.kind({
 			]}
 		]}, 
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{kind: "Divider", caption: "Keyboard"},
-			{layoutKind: "VFlexLayout", style: "padding: 5px 15px;margin-top: -5px;", components: [
-				{layoutKind: "HFlexLayout", style: "max-width: 320px; margin: auto auto;", components: [	
-					{name: "keyboardInput", kind: "ToolInput", alwaysLooksFocused: true, flex: 1, 
-						inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
-						style: "margin: 0px 0px 0px 0px;", onfocus: "showKbdButtons",
-						onblur: "hideKbdButtons", onkeydown: "handleKeyDown", onkeyup: "handleKeyUp"},
-					{name: "functionKey", caption: "FN", kind: "Button", className: "enyo-button-dark", 
-						style: "margin: 0px 0px 0px 10px;", onclick: "handleFunctionKey"}
-				]}
-			]},
-			{kind: "Divider", caption: "Mouse", style: "margin-top: -5px;"},
-			{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
-				{layoutKind: "VFlexLayout", flex: 1, style: "max-width: 320px; margin: auto auto;", components: [	
-					{layoutKind: "VFlexLayout", flex: 1, style: "margin: 5px 0px 5px 0px;border-radius: 20px;border-style: groove;",	
-						onmousedown: "resetMouseEvent", onmouseup: "resetMouseButton", onmousemove: "handleMouseMove"},
+			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
+				{layoutKind: "VFlexLayout", flex: 1, components: [
+					{kind: "Divider", caption: "Keyboard"},
+					{layoutKind: "VFlexLayout", className: "divider-content", components: [
+						{layoutKind: "HFlexLayout", className: "divider-container", components: [	
+							{name: "keyboardInput", kind: "ToolInput", alwaysLooksFocused: true, flex: 1, 
+								inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
+								style: "margin: 0px 0px 0px 0px;", onfocus: "showKbdButtons",
+								onblur: "hideKbdButtons", onkeydown: "handleKeyDown", onkeyup: "handleKeyUp"},
+							{name: "functionKey", caption: "FN", kind: "Button", className: "enyo-button-dark", 
+								style: "margin: 0px 0px 0px 10px;", onclick: "handleFunctionKey"}
+						]}
+					]},
+					{kind: "Divider", caption: "Mouse", style: "margin-top: -5px;"},
+					{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
+						{layoutKind: "VFlexLayout", flex: 1, className: "divider-container", components: [	
+							{layoutKind: "VFlexLayout", flex: 1, className: "control-pad-mouse", 
+								onmousedown: "resetMouseEvent", onmouseup: "resetMouseButton", 
+								onmousemove: "handleMouseMove"},
+						]}
+					]}
 				]}
 			]}
 		]},
 		{kind: "Toolbar", className: "enyo-toolbar-light", components: [
-			{name: "mouseLeft", caption: " ", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-left: 15px;", 
-				onmousedown: "handleMouseDown", onmouseup: "handleMouseUp"},
+			{name: "mouseLeft", caption: " ", kind: "Button", flex: 1, className: "enyo-button-dark", 
+				style: "margin-left: 15px;", onmousedown: "handleMouseDown", onmouseup: "handleMouseUp"},
 			{name: "mouseMiddle", caption: " ", kind: "Button", flex: 1, className: "enyo-button-dark", 
 				onmousedown: "handleMouseDown", onmouseup: "handleMouseUp"},
-			{name: "mouseRight", caption: " ", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-right: 15px;", 
-				onmousedown: "handleMouseDown", onmouseup: "handleMouseUp"},
-			{name: "kbdCtrl", caption: "Ctrl", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-left: 15px;", 
-				onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"},				
+			{name: "mouseRight", caption: " ", kind: "Button", flex: 1, className: "enyo-button-dark", 
+				style: "margin-right: 15px;", onmousedown: "handleMouseDown", onmouseup: "handleMouseUp"},
+			{name: "kbdCtrl", caption: "Ctrl", kind: "Button", flex: 1, className: "enyo-button-dark", 
+				style: "margin-left: 15px;", onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"},				
 			{name: "kbdSuper", caption: "Super", kind: "Button", flex: 2, className: "enyo-button-dark", 
 				onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"},
-			{name: "kbdAlt", caption: "Alt", kind: "Button", flex: 1, className: "enyo-button-dark", style: "margin-right: 15px;", 
-				onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"}
+			{name: "kbdAlt", caption: "Alt", kind: "Button", flex: 1, className: "enyo-button-dark", 
+				style: "margin-right: 15px;", onmousedown: "cancelKbdBlur", onmouseup: "handleButtonState"}
 		]},
 		
-		{name: "serverRequest", kind: "WebService", onFailure: "handleServerError"}		
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onFailure: "handleServerError"}		
 	],
 
 	rendered: function() {
@@ -404,16 +409,16 @@ enyo.kind({
 	handleDeviceStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 	
-		if(inResponse) {
+		if(inResponse)
 			this.doUpdate("online");
-		} else
+		else
 			this.doUpdate("offline");
 	},	
 
 	handleServerError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 
-		this.doUpdate("error");
+		this.doUpdate("offline");
 	}
 });
 

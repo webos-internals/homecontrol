@@ -17,6 +17,7 @@ var crypto = require('crypto');
   playback/state?action=play/pause
   playback/skip?action=prev/next
   playback/seek?action=fwd/bwd
+  playback/seek?position=(seconds)
   playback/select?id=songitem
 - playmode/consume?state=true/false
 - playmode/single?state=true/false
@@ -330,7 +331,7 @@ exports.systemInputStatus = SystemInputStatus = function() {
 
 	// Public functions
 
-	this.getStatus = function(adddress, state) {
+	this.getStatus = function(address, state) {
 		var status = {"state": state};
 
 		return status;
@@ -364,7 +365,7 @@ exports.systemSoundStatus = SystemSoundStatus = function(inputCtl, outputCtl) {
 
 	// Public functions
 
-	this.getStatus = function(adddress, state) {
+	this.getStatus = function(address, state) {
 		var status = {"state": state};
 		
 		if(this.input != undefined)
@@ -392,9 +393,15 @@ exports.systemSoundStatus = SystemSoundStatus = function(inputCtl, outputCtl) {
 exports.systemSurveillanceStatus = SystemSurveillanceStatus = function() {
 	// Public data
 
+	this.file = "capture-test.jpg"; // null;
+
 	// Public functions
 
-	this.getStatus = function(adddress, state) {
+	this.getFile = function(address) {
+		return "./data/surveillance/" + this.file;
+	},
+
+	this.getStatus = function(address, state) {
 		var status = {"state": state};
 
 		return status;

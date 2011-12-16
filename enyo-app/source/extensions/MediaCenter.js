@@ -30,58 +30,79 @@ enyo.kind({
 				{kind: "Spacer", flex: 1},
 				{name: "title", content: "Media Center", style: "margin-top: 0px;font-weight: bold;"},
 				{kind: "Spacer", flex: 1},
-				{name: "keyboard", kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}			
+				{name: "keyboard", kind: "ToolButton", className: "tool-button", icon: "./images/button-kbd.png", 
+					onclick: "toggleKeyboard"}			
 			]},
 			{name: "keyboardHeader", layoutKind: "HFlexLayout", flex: 1, components: [
 				{name: "keyboardInput", kind: "ToolInput", alwaysLooksFocused: true, flex: 1, 
-					inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, style: "margin: -5px 10px -5px 0px;", onkeypress: "handleKeypress"},
-				{kind: "ToolButton", style: "margin: -13px -10px;", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}
+					inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
+					style: "margin: -5px 10px -5px 0px;", onkeypress: "handleKeypress"},
+				{kind: "ToolButton", className: "tool-button", icon: "./images/button-kbd.png", onclick: "toggleKeyboard"}
 			]}			
 		]}, 
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{name: "playbackStatus", kind: "DividerDrawer", open: false, caption: "Playback", components: [
-				{layoutKind: "VFlexLayout", pack: "center", flex: 1, style: "padding: 5px 15px;", components: [
-					{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [
-						{name: "controlPlayback", kind: "Slider", flex: 1, onChanging: "updateSlider", onChange: "controlDevice", tapPosition: false, style: "margin: -15px 0px -10px 0px;"},
-					]}
-				]}
-			]},
-			{name: "volumeStatus", kind: "DividerDrawer", caption: "Volume", open: false, style: "margin-top: -5px;", components: [
-				{layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
-					{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [					
-						{name: "controlVolume", kind: "Slider", flex: 1, onChanging: "updateSlider", onChange: "controlDevice", tapPosition: false, style: "margin: -15px 0px -10px 0px;"},
-					]}
-				]}
-			]},
-			{layoutKind: "VFlexLayout", flex: 1, pack: "center", components: [
-				{layoutKind: "HFlexLayout", style: "max-width: 320px; margin: auto auto;", components: [	
-					{name: "controlMute", kind: "ToolButton", className: "control-mute", icon: "./images/ctl-mute.png", onclick: "controlDevice"},				
-					{layoutKind: "VFlexLayout", flex: 1, pack: "center", components: [
-						{layoutKind: "VFlexLayout", pack: "center", style: "margin: -10px auto 5px auto;max-height: 150px; max-width: 150px;position:relative;", components: [
-							{name: "controlOk", kind: "ToolButton", className: "control-ok", icon: "./images/ctl-ok.png", onclick: "controlDevice"},
-							{name: "controlUp", kind: "ToolButton", className: "control-up", icon: "./images/ctl-up.png", onclick: "controlDevice"},
-							{name: "controlLeft", kind: "ToolButton", className: "control-left", icon: "./images/ctl-left.png", onclick: "controlDevice"},
-							{name: "controlRight", kind: "ToolButton", className: "control-right", icon: "./images/ctl-right.png", onclick: "controlDevice"},
-							{name: "controlDown", kind: "ToolButton", className: "control-down", icon: "./images/ctl-down.png", onclick: "controlDevice"}
+			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
+				{layoutKind: "VFlexLayout", flex: 1, components: [
+					{name: "playbackStatus", kind: "DividerDrawer", open: false, caption: "Playback", className: "divider", 
+						components: [
+						{layoutKind: "VFlexLayout", pack: "center", flex: 1, className: "divider-content", components: [
+							{layoutKind: "HFlexLayout", className: "divider-container", components: [
+								{name: "controlPlayback", kind: "Slider", flex: 1, className: "control-progress",
+									onChanging: "updateSlider", onChange: "controlDevice", tapPosition: false},
+							]}
 						]}
 					]},
-					{name: "controlBack", kind: "ToolButton", className: "control-back", icon: "./images/ctl-back.png", onclick: "controlDevice"}				
+					{name: "volumeStatus", kind: "DividerDrawer", caption: "Volume", open: false, components: [
+						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
+							{layoutKind: "HFlexLayout", className: "divider-container", components: [					
+								{name: "controlVolume", kind: "Slider", tapPosition: false, flex: 1, className: "control-volume", 
+									style: "margin-top: -19px;", onChanging: "updateSlider", onChange: "controlDevice"},
+							]}
+						]}
+					]},
+					{layoutKind: "VFlexLayout", flex: 1, pack: "center", className: "divider-content", components: [
+						{layoutKind: "HFlexLayout", className: "divider-container", components: [	
+							{name: "controlMute", kind: "ToolButton", className: "control-mute", icon: "./images/ctl-mute.png", 
+								onclick: "controlDevice"},				
+							{layoutKind: "VFlexLayout", flex: 1, pack: "center", components: [
+								{layoutKind: "VFlexLayout", pack: "center", className: "control-pad-box", components: [
+									{name: "controlOk", kind: "ToolButton", className: "control-ok", icon: "./images/ctl-ok.png", 
+										onclick: "controlDevice"},
+									{name: "controlUp", kind: "ToolButton", className: "control-up", icon: "./images/ctl-up.png", 
+										onclick: "controlDevice"},
+									{name: "controlLeft", kind: "ToolButton", className: "control-left", icon: "./images/ctl-left.png", 
+										onclick: "controlDevice"},
+									{name: "controlRight", kind: "ToolButton", className: "control-right", icon: "./images/ctl-right.png", 
+										onclick: "controlDevice"},
+									{name: "controlDown", kind: "ToolButton", className: "control-down", icon: "./images/ctl-down.png", 
+										onclick: "controlDevice"}
+								]}
+							]},
+							{name: "controlBack", kind: "ToolButton", className: "control-back", icon: "./images/ctl-back.png", 	
+								onclick: "controlDevice"}				
+						]}
+					]}
 				]}
 			]}
 		]},
 		{kind: "Toolbar", className: "enyo-toolbar-light", components: [
-			{name: "controlPrev", kind: "ToolButton", icon: "./images/ctl-prev.png", style: "margin: -1px -6px -1px 0px;", onclick: "controlDevice"},
+			{name: "controlPrev", kind: "ToolButton", icon: "./images/ctl-prev.png", className: "control-first", 
+				onclick: "controlDevice"},
 			{kind: "Spacer"},
-			{name: "controlRwd", kind: "ToolButton", icon: "./images/ctl-bwd.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
+			{name: "controlRwd", kind: "ToolButton", icon: "./images/ctl-bwd.png", className: "control-middle", 
+				onclick: "controlDevice"},
 			{kind: "Spacer"},
-			{name: "controlPlayPause", kind: "ToolButton", icon: "./images/ctl-playpause.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
+			{name: "controlPlayPause", kind: "ToolButton", icon: "./images/ctl-playpause.png", className: "control-middle", 
+				onclick: "controlDevice"},
 			{kind: "Spacer"},
-			{name: "controlFwd", kind: "ToolButton", icon: "./images/ctl-fwd.png", style: "margin: -1px 0px -1px 0px;", onclick: "controlDevice"},
+			{name: "controlFwd", kind: "ToolButton", icon: "./images/ctl-fwd.png", className: "control-middle", 
+				onclick: "controlDevice"},
 			{kind: "Spacer"},
-			{name: "controlNext", kind: "ToolButton", icon: "./images/ctl-next.png", style: "margin: -1px 0px -1px -6px;", onclick: "controlDevice"},
+			{name: "controlNext", kind: "ToolButton", icon: "./images/ctl-next.png", className: "control-last", 
+				onclick: "controlDevice"},
 		]},
 		
-		{name: "serverRequest", kind: "WebService", onFailure: "unknownError"}		
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onFailure: "unknownError"}		
 	],
 	
 	rendered: function() {
@@ -240,9 +261,9 @@ enyo.kind({
 	updateStatus: function(inSender, inResponse) {
 		enyo.error("DEBUG: " + enyo.json.stringify(inResponse));
 		
-		if(inResponse) {
+		if(inResponse)
 			this.doUpdate("online");
-		} else
+		else
 			this.doUpdate("offline");
 	},	
 	
@@ -269,17 +290,16 @@ enyo.kind({
 			
 				if(position != "Error")
 					this.$.controlPayback.setPosition(position);
-			} else {
-
 			}
-		} else
+		} else {
 			this.doUpdate("offline");
+		}
 	},
 	
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 		
-		this.doUpdate("error");
+		this.doUpdate("offline");
 	}
 });
 

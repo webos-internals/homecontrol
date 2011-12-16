@@ -266,8 +266,8 @@ exports.execute = function(cb, url, addr) {
 						args.push(parseInt(time[0]) - 10);
 					else if(url.arguments("action") == "fwd")
 						args.push(parseInt(time[0]) + 10);
-					else if(!isNaN(parseInt(url.arguments("action"))))
-						args.push(parseInt(url.arguments("action")));
+					else if(!isNaN(parseInt(url.arguments("position"))))
+						args.push(parseInt(url.arguments("position")));
 					break;
 
 				case "start":
@@ -321,7 +321,7 @@ exports.execute = function(cb, url, addr) {
 						if(status.volume > 0) {
 							currentStatus.mute = false;
 							currentStatus.volume = status.volume;
-						} else if(currentStatus.state == "playing") {
+						} else if(state == "playing") {
 							currentStatus.mute = true;
 						}
 					}

@@ -42,26 +42,30 @@ enyo.kind({
 			{name: "title", content: "Status Info", style: "margin-top: 0px;font-weight: bold;"}
 		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{kind: "Divider", caption: "Temperatures"},
-			{name: "temperatures", kind: "VirtualRepeater", onSetupRow: "setupSensor", components: [
-				{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
-					{layoutKind: "HFlexLayout", className: "divider-container", onclick: "selectAction", components: [
-						{name: "sensorName", content: "", flex: 1, style: "text-transform: capitalize;"},
-						{name: "sensorTemp", content: ""}
-					]},
-					{layoutKind: "HFlexLayout", className: "divider-container", components: [
-						{content: "Min:", flex: 1, className: "enyo-label", style: "color: gray;"},
-						{name: "sensorMin", content: "", className: "enyo-label", style: "color: gray;"},
-						{kind: "Spacer"},
-						{content: "Max:", flex: 1, className: "enyo-label", style: "color: gray;"},
-						{name: "sensorMax", content: "", className: "enyo-label", style: "color: gray;"}
+			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
+				{layoutKind: "VFlexLayout", flex: 1, components: [
+					{kind: "Divider", caption: "Temperatures"},
+					{name: "temperatures", kind: "VirtualRepeater", onSetupRow: "setupSensor", components: [
+						{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
+							{layoutKind: "HFlexLayout", className: "divider-container", onclick: "selectAction", components: [
+								{name: "sensorName", content: "", flex: 1, style: "text-transform: capitalize;"},
+								{name: "sensorTemp", content: ""}
+							]},
+							{layoutKind: "HFlexLayout", className: "divider-container", components: [
+								{content: "Min:", flex: 1, className: "enyo-label", style: "color: gray;"},
+								{name: "sensorMin", content: "", className: "enyo-label", style: "color: gray;"},
+								{kind: "Spacer"},
+								{content: "Max:", flex: 1, className: "enyo-label", style: "color: gray;"},
+								{name: "sensorMax", content: "", className: "enyo-label", style: "color: gray;"}
+							]}
+						]}
 					]}
 				]}
 			]}
 		]},
 		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: []},
 		
-		{name: "serverRequest", kind: "WebService", onSuccess: "handleTemperatures", onFailure: "handleServerError"}
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "handleTemperatures", onFailure: "handleServerError"}
 	],
 	
 	rendered: function() {
@@ -174,7 +178,7 @@ enyo.kind({
 		
 		this._sensors = [];
 		
-		this.doUpdate("error");
+		this.doUpdate("offline");
 	}
 });
 

@@ -44,20 +44,20 @@ var util = require('util');
 exports.setup = function(cb, os) {
 	currentStatus = new SystemSurveillanceStatus();
 
-	cb("surveillance", "Surveillance", "TouchPad Cam");
+	cb("surveillance", "TouchPad Cam", "Surveillance");
 };
 
 exports.execute = function(cb, url, addr) {
 	console.log("Executing surveillance command: " + url.command);
 
 	if(url.command == "status") {
-		cb("surveillance", "online", currentStatus);
-	} else if(url.command == "latest") {
-		if(timestamp)
-			res.sendfile('./data/surveillance/capture-' + timestamp + ".jpg"); 
+		if(currentStatus.file)
+			cb("surveillance", "online", currentStatus);
 		else
-			res.send("No captures...");
-	} else if((url.command == "upload") && (req.method.toLowerCase() == 'get')) {
+			cb("surveillance", "idle", currentStatus);
+	} else if(url.command == "latest") {
+		cb("surveillance", null, currentStatus);
+/*	} else if((url.command == "upload") && (req.method.toLowerCase() == 'get')) {
 	  res.send('<form method="post" enctype="multipart/form-data">' +
    		'<p>Image: <input type="file" name="image" /></p>' +
 		   '<p><input type="submit" value="Upload" /></p>' +
@@ -89,6 +89,7 @@ exports.execute = function(cb, url, addr) {
 		} else {
 			cb("surveillance", "error", currentStatus);
 		}
+		*/
 	}
 
 	return;

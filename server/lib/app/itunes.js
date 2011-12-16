@@ -152,10 +152,10 @@ exports.execute = function(cb, url, addr) {
     				'set player position to currSkip\n' +
 					'end if\n' +
 					'end tell\n';
-			} else if(!isNaN(parseInt(url.arguments("action")))) {
+			} else if(!isNaN(parseInt(url.arguments("position")))) {
 				script_string = 'tell application "iTunes"\n' +
 					'if player state is playing then\n' +
-    				'set player position to ' + url.arguments("action") + '\n' + 
+    				'set player position to ' + url.arguments("position") + '\n' + 
 					'end if\n' + 'end tell\n';
 			}
 			break;

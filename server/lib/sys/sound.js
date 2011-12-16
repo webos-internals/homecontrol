@@ -137,16 +137,20 @@ exports.execute = function(cb, url, addr) {
 		
 		if(url.command == "input") {
 			if(url.arguments("mute"))
-				execute_string += './data/bin/pulseaudio-control.sh input mute ' + url.arguments("mute") + ';';
+				execute_string += __dirname + '/../../data/bin/pulseaudio-control.sh input mute ' + 
+					url.arguments("mute") + ';';
 			
 			if(url.arguments("volume"))
-				execute_string += './data/bin/pulseaudio-control.sh input volume ' + url.arguments("volume") + ';';
+				execute_string += __dirname + '/../../data/bin/pulseaudio-control.sh input volume ' + 
+					url.arguments("volume") + ';';
 		} else if(url.command == "output") {
 			if(url.arguments("mute"))
-				execute_string += './data/bin/pulseaudio-control.sh output mute ' + url.arguments("mute") + ';';
+				execute_string += __dirname + '/../../data/bin/pulseaudio-control.sh output mute ' + 
+					url.arguments("mute") + ';';
 			
 			if(url.arguments("volume"))
-				execute_string += './data/bin/pulseaudio-control.sh output volume ' + url.arguments("volume") + ';';
+				execute_string += __dirname + '/../../data/bin/pulseaudio-control.sh output volume ' + 
+					url.arguments("volume") + ';';
 		}
 
 		execute_string += __dirname + '/../../data/bin/pulseaudio-control.sh status';

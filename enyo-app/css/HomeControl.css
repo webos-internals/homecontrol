@@ -58,6 +58,19 @@
 	-webkit-marquee-increment: small;
 }
 
+.control-pad-box {
+	margin: -10px auto 5px auto;
+	max-height: 150px; 
+	max-width: 150px;
+	position:relative;
+}
+
+.control-pad-mouse {
+	margin: 5px 0px 5px 0px; 
+	border-radius: 20px; 
+	border-style: groove;"
+}
+
 .control-up .enyo-button-icon {
 	position: absolute;
 	top: 0px;

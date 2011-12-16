@@ -138,7 +138,7 @@ enyo.kind({
 			{kind: "Spacer"},
 		]},
 		
-		{name: "serverRequest", kind: "WebService", onSuccess: "updateStatus", onFailure: "unknownError"}
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "updateStatus", onFailure: "unknownError"}
 	],
 	
 	rendered: function() {
@@ -232,7 +232,7 @@ enyo.kind({
 
 			this.$.musicProgressBar.hide();
 			this.$.musicCurrentSong.show();			
-		} else if((this._position) && (this._state == "playing")) {
+		} else if((this._position) && ((this._state == "playing") || (this._state == "paused"))) {
 			var dM = Math.floor(this._position.duration / 60);
 			var dS = this._position.duration - (dM * 60);
 			
@@ -458,7 +458,7 @@ enyo.kind({
 			
 			var position = Math.floor(p * this._position.duration / 100);
 		
-			action = "playback/seek?action=" + position;
+			action = "playback/seek?position=" + position;
 		} else if(inSender.name == "musicVolumeSlider")
 			action = "output/volume?level=" + this.$.musicVolumeSlider.getPosition();
 		
@@ -631,9 +631,9 @@ enyo.kind({
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 		
-		this.doUpdate("error");
+		this.doUpdate("offline");
 		
-		this.$.musicStateInfo.setCaption("Error");
+		this.$.musicStateInfo.setCaption("Offline");
 	}	
 });
 

@@ -28,38 +28,42 @@ enyo.kind({
 			]}
 		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
-			{kind: "Spacer", flex: 1},
-			{name: "inputDivider", kind: "Divider", caption: "Input"},
-			{name: "inputControls", layoutKind: "VFlexLayout", className: "divider-content", components: [
-				{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
-					{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
-					{name: "inputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
-						className: "control-mute", style: "width: 70px;", onChange: "controlSound"}
-				]},
-				{layoutKind: "HFlexLayout", className: "divider-container", components: [
-					{name: "inputVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
-						className: "control-volume", onChanging: "updateInput", onChange: "controlSound"}
+			{kind: "Scroller", autoVertical: true, autoHorizontal: false, horizontal: false, flex: 1, components: [
+				{layoutKind: "VFlexLayout", flex: 1, components: [
+					{kind: "Spacer", flex: 1},
+					{name: "inputDivider", kind: "Divider", caption: "Input"},
+					{name: "inputControls", layoutKind: "VFlexLayout", className: "divider-content", components: [
+						{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
+							{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
+							{name: "inputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
+								className: "control-mute", style: "width: 70px;", onChange: "controlSound"}
+						]},
+						{layoutKind: "HFlexLayout", className: "divider-container", components: [
+							{name: "inputVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
+								className: "control-volume", onChanging: "updateInput", onChange: "controlSound"}
+						]}
+					]},
+					{kind: "Spacer", flex: 1},
+					{name: "outputDivider", kind: "Divider", caption: "Output"},
+					{name: "outputControls", layoutKind: "VFlexLayout", className: "divider-content", components: [
+						{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
+							{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
+							{name: "outputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
+								className: "control-mute", style: "width: 70px;", onChange: "controlSound"}
+						]},
+						{layoutKind: "HFlexLayout", className: "divider-container", components: [
+							{name: "outputVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
+								className: "control-volume", onChanging: "updateOutput", onChange: "controlSound"}
+						]}
+					]},
+					{kind: "Spacer", flex: 1}
 				]}
-			]},
-			{kind: "Spacer", flex: 1},
-			{name: "outputDivider", kind: "Divider", caption: "Output"},
-			{name: "outputControls", layoutKind: "VFlexLayout", className: "divider-content", components: [
-				{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
-					{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
-					{name: "outputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
-						className: "control-mute", style: "width: 70px;", onChange: "controlSound"}
-				]},
-				{layoutKind: "HFlexLayout", className: "divider-container", components: [
-					{name: "outputVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
-						className: "control-volume", onChanging: "updateOutput", onChange: "controlSound"}
-				]}
-			]},
-			{kind: "Spacer", flex: 1}
+			]}
 		]},
 		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: [
 		]},
 		
-		{name: "serverRequest", kind: "WebService", onSuccess: "updateStatus", onFailure: "unknownError"}
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "updateStatus", onFailure: "unknownError"}
 	],
 	
 	rendered: function() {
@@ -164,7 +168,7 @@ enyo.kind({
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 		
-		this.doUpdate("error");
+		this.doUpdate("offline");
 	}	
 });
 

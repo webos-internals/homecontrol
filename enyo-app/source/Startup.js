@@ -19,8 +19,14 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.9"},
+					{content: "<ul><li>Fixed mute toggling in MPD controller</li>" +
+						"<li>Added progress bar support for QuickTime Player</li>" +
+						"<li>Added request timeouts to get rid of false statuses</li>" +
+						"<li>Fixed path for pulseaudio control script</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.8"},
-					{content: "<ul><li>Added better controls for Totem</li></ul>" +
+					{content: "<ul><li>Added better controls for Totem</li>" +
 						"<li>Added playlist and media library views for VLC</li>" +
 						"<li>Lots of small bug fixes and code cleanups</li></ul>"},
 

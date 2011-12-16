@@ -51,7 +51,7 @@ var loaded = [];
 
 var modules = ["app/banshee", "app/frontrow", "app/itunes", "app/mpd", 
 	"app/quicktime", "app/rhythmbox", "app/totem",
-	"sys/1-wire", "sys/input", "sys/sound"/*, "sys/surveillance"*/];
+	"sys/1-wire", "sys/input", "sys/sound", "sys/surveillance"];
 
 //
 // HANDLE ARGUMENTS
@@ -169,7 +169,10 @@ for(var i = 0; i < modules.length; i++) {
 					if(req.param("refresh" == "true"))
 						statusObject.reset(addr);
 					
-					res.send(statusObject.getStatus(addr, moduleState));
+					if(!moduleState)
+						res.sendfile(statusObject.getFile(addr));
+					else if(moduleState)
+						res.send(statusObject.getStatus(addr, moduleState));
 				}, url, addr);
 			}.bind(this, module.execute));
 
@@ -188,7 +191,10 @@ for(var i = 0; i < modules.length; i++) {
 					if(req.param("refresh" == "true"))
 						statusObject.reset(addr);
 
-					res.send(statusObject.getStatus(addr, moduleState));
+					if(!moduleState)
+						res.sendfile(statusObject.getFile(addr));
+					else if(moduleState)
+						res.send(statusObject.getStatus(addr, moduleState));
 				}, url, addr);
 			}.bind(this, module.execute));
 

@@ -67,8 +67,7 @@ enyo.kind({
 						{name: "videoListView", kind: "VirtualList", flex: 1, onSetupRow: "setupListItem", components: [
 							{kind: "Item", tapHighlight: true, style: "margin: 0px;padding: 0px;", onclick: "selectAction", components: [
 								{layoutKind: "VFlexLayout", flex: 1, className: "list-view-item", components: [
-									{name: "listItemTitle", content: "", flex: 1, className: "list-view-title"},
-									{name: "listItemSubtitle", content: "", flex: 1, className: "list-view-subtitle"}
+									{name: "listItemTitle", content: "", flex: 1, className: "list-view-title"}
 								]}
 							]}
 						]}
@@ -130,9 +129,9 @@ enyo.kind({
 			{kind: "Spacer"},
 		]},
 
-		{name: "vlcRequest", kind: "WebService", handleAs: "text", onFailure: "unknownError"},
+		{name: "vlcRequest", kind: "WebService", timeout: 5000, handleAs: "text", onFailure: "unknownError"},
 
-		{name: "serverRequest", kind: "WebService", onSuccess: "updateStatus", onFailure: "unknownError"}
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "updateStatus", onFailure: "unknownError"}
 	],
 	
 	rendered: function() {
@@ -236,7 +235,7 @@ enyo.kind({
 
 			this.$.videoProgressBar.hide();
 			this.$.videoCurrentVideo.show();			
-		} else if((this._position) && (this._state == "playing")) {
+		} else if((this._position) && ((this._state == "playing") || (this._state == "paused"))) {
 			var dM = Math.floor(this._position.duration / 60);
 			var dS = this._position.duration - (dM * 60);
 			
@@ -303,7 +302,6 @@ enyo.kind({
 				this.$.listItemTitle.applyStyle("font-weight", "normal");
 
 			this.$.listItemTitle.setContent(this["_" + this._list].items[inIndex].name);
-			this.$.listItemSubtitle.setContent("");
 			
 			return true;
 		}
@@ -347,7 +345,16 @@ enyo.kind({
 				action = "output/volume?action=down";
 			else if(inSender.name == "videoVolumeSlider")
 				action = "output/volume?value=" + this.$.videoVolumeSlider.getPosition();
+			else if(inSender.name == "videoProgressBar") {
+				this.toggleProgress();
+		
+				var p = this.$.videoProgressBar.getPosition();
 			
+				var position = Math.floor(p * this._position.duration / 100);
+		
+				action = "playback/seek?position=" + position;
+			}
+						
 			this.$.serverRequest.call({}, {url: "http://" + this.address + "/" + this.module + "/" + action});	
 		}
 	},
@@ -395,6 +402,14 @@ enyo.kind({
 				} else {
 					this.$.videoStateInfo.show();
 					this.$.videoStatusInfo.hide();
+				}
+				
+				if(inResponse.position != undefined) {
+					this._position = inResponse.position;
+
+					var p = Math.floor(100 * this._position.elapsed / this._position.duration);
+		
+					this.$.videoProgressBar.setPosition(p);
 				}
 				
 				if(inResponse.volume != undefined) {
@@ -452,10 +467,10 @@ enyo.kind({
 	unknownError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
 		
-		this.doUpdate("error");
+		this.doUpdate("offline");
 		
-		this.$.videoStateInfo.setCaption("Error");						
-		this.$.videoStatusInfo.setCaption("Error");
+		this.$.videoStateInfo.setCaption("Offline");						
+		this.$.videoStatusInfo.setCaption("Offline");
 	},
 	
 //

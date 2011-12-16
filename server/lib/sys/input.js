@@ -48,7 +48,7 @@ var applescript = null;
 
 var fs = require('fs');
 
-var keycodes = require('../x11-keycodes.js').keycodes;
+var keycodes = require('../misc/x11-keycodes.js').keycodes;
 
 exports.setup = function(cb, os) {
 /*	if(os == "darwin") {
