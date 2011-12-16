@@ -137,7 +137,7 @@ enyo.kind({
 		{name : "uploadFile", kind : "PalmService", service : "palm://com.palm.downloadmanager/", method : "upload",
 			onFailure : "handleServerError"},
 			
-		{name: "serverRequest", kind: "WebService", timeout: 3000, onFailure: "handleServerError"}
+		{name: "serverRequest", kind: "WebService", timeout: 3000, onSuccess: "handleStatus", onFailure: "handleServerError"}
 	],
 	
 	rendered: function() {
@@ -145,7 +145,11 @@ enyo.kind({
 
 		this.$.clientText.hide();
 
-		if(this.module == "surveillance") {
+		if(this.module == "cisco") {
+			this.$.imageView.hide();	
+			
+			this.$.server.hide();				
+		} else {
 			this.$.videoObject.hide();
 
 //			if(device != "touchpad") {
@@ -173,10 +177,6 @@ enyo.kind({
 					}
 				}.bind(this);
 			}			*/
-		} else {
-			this.$.imageView.hide();	
-			
-			this.$.server.hide();				
 		}
 	},
     
@@ -186,22 +186,28 @@ enyo.kind({
 		if(visible == true) {
 			this.$.title.setContent(this.title);
 
-			if((device == "touchpad") && (this.module == "surveillance")) {
-				return;
-				
-				this._shot = undefined;
-			
-				this.$.mediaCapture.initialize();			
-			} else if(this.module == "cisco") {
+			if(this.module == "cisco") {
 				this.pauseVideo();
 
 				this.playVideo();
 			} else {
-				this.checkStatus();
+				if(device == "touchpad") {
+					return;
+				
+					this._shot = undefined;
+			
+					this.$.mediaCapture.initialize();			
+				} else {
+					this.checkStatus();
+				}
 			}			
 		} else if(visible == false) {
-        this.pauseVideo();
+			if(this.module == "cisco")
+	        this.pauseVideo();
 		} else if(visible == null) {
+			if(this.module == "cisco")
+	        this.pauseVideo();
+
 			if(this._timeout)
 				clearTimeout(this._timeout);			
 		}
@@ -212,7 +218,7 @@ enyo.kind({
 
 		this.$.image.setSrc("http://" + this.address + "/surveillance/latest?timestamp=" + date.getTime());
 
-		this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status", onSuccess: "handleStatus"});
+		this.$.serverRequest.call({}, {url: "http://" + this.address + "/surveillance/status"});
 		
 		if(this._timeout)
 			clearTimeout(this._timeout);

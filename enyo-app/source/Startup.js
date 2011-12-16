@@ -19,6 +19,9 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.8.0"},
+					{content: "<ul><li>First public release of Home Control</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.9"},
 					{content: "<ul><li>Fixed mute toggling in MPD controller</li>" +
 						"<li>Added progress bar support for QuickTime Player</li>" +

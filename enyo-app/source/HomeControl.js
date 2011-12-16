@@ -115,7 +115,8 @@ enyo.kind({
 				{caption: "Home Control Server", value: "HC"},
 				{caption: "Boxee App / Device", value: "Boxee"},
 				{caption: "XBMC App / Device", value: "XBMC"},
-				{caption: "VLC Video Player", value: "VLC"}
+				{caption: "VLC Video Player", value: "VLC"},
+				{caption: "Cisco IP Camera", value: "Cisco"}
 			]},
 			{layoutKind: "HFlexLayout", components: [
 				{content: "Server / Device", style: "font-size: 16px;color: gray;"},
@@ -598,6 +599,8 @@ enyo.kind({
 			this.addControllerOption("app", "any", "xbmc", "XBMC", "Media Center", inServer.addr);
 		else if(inServer.type == "Boxee")
 			this.addControllerOption("app", "any", "boxee", "Boxee", "Media Center", inServer.addr);
+		else if(inServer.type == "Cisco")
+			this.addControllerOption("app", "any", "cisco", "Cisco IP Cam", "Surveillance", inServer.addr);
 	},
 
 	addControllerOption: function(inCategory, inPlatform, inID, inName, inType, inAddr) {
