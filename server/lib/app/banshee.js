@@ -34,43 +34,37 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var currentStatus = null; 
 
-var limitedInterface = false;
-
 var exec = require('child_process').exec;
 
-var hcdata = require('../data-types.js');
+exports.setup = function(cb, os) {
+	if(os == "linux") {
+		var child = exec("banshee --help", function(error, stdout, stderr) {
+			if(!error) {
+				currentStatus = new MusicPlayerStatus(true, false, true, false, false, null);
 
-exports.setup = function(cb) {
-	var child = exec("banshee --help", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else {
-			limitedInterface = true;
-
-			currentStatus = new MusicPlayerStatus(true, false, true, false, false, null);
-
-			cb("banshee", "Banshee", "Music Player");
-		}
-	});
+				cb("banshee", "Banshee", "Music Player");
+				
+				return;
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing banshee command: " + req.params[0]);
+exports.execute = function(cb, url, addr) {
+	console.log("Executing banshee command: " + url.command);
 
-	res.header('Content-Type', 'text/javascript');
-
-	if(req.params[0] != "close")
+	if(url.command != "close")
 		var execute_string = "pgrep banshee";
 	else
 		var execute_string = "pkill banshee";
 
 	var child = exec(execute_string, function(error, stdout, stderr) {
-		if((stdout.length > 0) || (req.params[0] == "start")) {
+		if((stdout.length > 0) || (url.command == "start")) {
 			var execute_string = "";
 		
-			switch(req.params[0]) {
+			switch(url.command) {
 				case "output/mute":
-					if(req.param("state") == "true") {
+					if(url.arguments("state") == "true") {
 						var execute_string = "banshee --no-present --set-volume=0;";
 					} else {
 						var execute_string = "banshee --no-present --set-volume=" + 
@@ -80,17 +74,17 @@ exports.execute = function(req, res) {
 
 				case "output/volume":
 					var execute_string = "banshee --no-present --set-volume=" + 
-						req.param("level") + ";";
+						url.arguments("level") + ";";
 					break;
 
 				case "playback/state":
-					var execute_string = "banshee --no-present --" + req.param("action") + ";";
+					var execute_string = "banshee --no-present --" + url.arguments("action") + ";";
 					break;
 
 				case "playback/skip":
-					if(req.param("action") == "prev")
+					if(url.arguments("action") == "prev")
 						var execute_string = "banshee --no-present --previous;";
-					else if(req.param("action") == "next")
+					else if(url.arguments("action") == "next")
 						var execute_string = "banshee --no-present --next;";
 					break;
 
@@ -106,17 +100,17 @@ exports.execute = function(req, res) {
 				var execute_string = "";
 
 				if(error) {
-					res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+					cb("banshee", "error", currentStatus);
 					
 					return;
 				}
 
-				if(req.params[0] == "playback/seek") {
+				if(url.command == "playback/seek") {
 					var pos = stdout.split(":")[1];
 				
-					if(req.param("action") == "bwd")
+					if(url.arguments("action") == "bwd")
 						var execute_string = "banshee --no-present --set-position=" + (pos - 10);
-					else if(req.param("action") == "fwd")
+					else if(url.arguments("action") == "fwd")
 						var execute_string = "banshee --no-present --set-position=" + (pos + 10);
 				}
 
@@ -128,7 +122,7 @@ exports.execute = function(req, res) {
 
 				var child = exec(execute_string, function(error, stdout, stderr) {
 					if(error) {
-						res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+						cb("banshee", "error", currentStatus);
 					
 						return;
 					}
@@ -149,18 +143,22 @@ exports.execute = function(req, res) {
 						currentStatus.mute = true;
 
 					if((state[1] != "playing") || (state[1] != "paused")) {
-						res.send(currentStatus.getStatus(req.socket.address().address, "stopped"));
+						cb("banshee", "stopped", currentStatus);
 					} else {
 						currentStatus.current.artist = artist[1];
 						currentStatus.current.album = album[1];
 						currentStatus.current.title = title[1];
 
-						res.send(currentStatus.getStatus(req.socket.address().address, state[1]));
+						cb("banshee", state[1], currentStatus);
 					}
+						
+					return;
 				});
 			});
 		} else {
-			res.send(currentStatus.getStatus(req.socket.address().address, "closed"));		
+			cb("banshee", "closed", currentStatus);
+			
+			return;
 		}
 	});
 };

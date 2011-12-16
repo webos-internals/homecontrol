@@ -32,64 +32,39 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-var currentStatus = null; 
+var debug = false;
 
-var limitedInterface = false;
+var currentStatus = null; 
 
 var exec = require('child_process').exec;
 
-var hcdata = require('../data-types.js');
+exports.setup = function(cb, os) {
+	if(os == "linux") {
+		var child = exec("rhythmbox-client --help", function(error, stdout, stderr) {				
+			if(!error) {
+				currentStatus = new MusicPlayerStatus(true, false, true, false, false, null);
 
-exports.setup = function(cb) {
-	var child = exec("rhythmbox --help", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else {
-//			var child = exec("dbus-send --help", function(error, stdout, stderr) {
-//				if(error) {
-					var child = exec("rhythmbox-client --help", function(error, stdout, stderr) {				
-						if(error)
-							cb(null);
-						else {
-							limitedInterface = true;
-	
-							currentStatus = new MusicPlayerStatus(true, false, true, false, false, null);
-
-							cb("rhythmbox", "Rhythmbox", "Music Player");
-						}
-					});
-/*				} else {
-					currentStatus = new MusicPlayerStatus(true, false, true, false, false, null);
-
-					cb("rhythmbox", "Rhythmbox", "Music Player");
-				}
-			});
-*/
-		}
-	});
+				cb("rhythmbox", "Rhythmbox", "Music Player");
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing rhythmbox command: " + req.params[0]);
-	
-	res.header('Content-Type', 'text/javascript');
+exports.execute = function(cb, url, addr) {
+	console.log("Executing rhythmbox command: " + url.command);
 
-	//dbus-send --print-reply --dest=org.gnome.Rhythmbox /org/gnome/Rhythmbox/PlaylistManager org.gnome.Rhythmbox.PlaylistManager.getPlaylists
-	//			var execute_string = "rhythmbox-client --play-uri=" + req.param("url") + ";";
-	//			var execute_string = "rhythmbox-client --enqueue \"" + req.param("url") + "\";";*/
-
-	if(req.params[0] != "close")
+	if(url.command != "close")
 		var execute_string = "pgrep rhythmbox";
 	else
 		var execute_string = "rhythmbox-client --quit";
 
 	var child = exec(execute_string, function(error, stdout, stderr) {
-		if((stdout.length > 0) || (req.params[0] == "start")) {
+		if((stdout.length > 0) || (url.command == "start")) {
 			var execute_string = "";
 		
-			switch(req.params[0]) {
+			switch(url.command) {
 				case "output/mute":
-					if(req.param("state") == "true") {
+					if(url.arguments("state") == "true") {
 						var execute_string = "rhythmbox-client --mute;";
 					} else {
 						// Go around a bug in rhythmbox-client by setting volume
@@ -101,17 +76,17 @@ exports.execute = function(req, res) {
 
 				case "output/volume":
 					var execute_string = "rhythmbox-client --unmute; rhythmbox-client --set-volume " + 
-						(req.param("level") / 100) + ";";
+						(url.arguments("level") / 100) + ";";
 					break;
 
 				case "playback/state":
-					var execute_string = "rhythmbox-client --" + req.param("action") + ";";
+					var execute_string = "rhythmbox-client --" + url.arguments("action") + ";";
 					break;
 
 				case "playback/skip":
-					if(req.param("action") == "prev")
+					if(url.arguments("action") == "prev")
 						var execute_string = "rhythmbox-client --previous;";
-					else if(req.param("action") == "next")
+					else if(url.arguments("action") == "next")
 						var execute_string = "rhythmbox-client --next;";
 					break;
 
@@ -128,7 +103,7 @@ exports.execute = function(req, res) {
 		
 			var child = exec(execute_string, function(error, stdout, stderr) {
 				if(error) {
-					res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+					cb("rhythmbox", "error", currentStatus);
 					
 					return;
 				}
@@ -150,35 +125,39 @@ exports.execute = function(req, res) {
 				}
 			
 				if(status[0].slice(0, 11) == "Not playing") {
-					res.send(currentStatus.getStatus(req.socket.address().address, "stopped"));
+					cb("rhythmbox", "stopped", currentStatus);
 				} else {
 					currentStatus.current.artist = escape(status[0]);
 					currentStatus.current.album = escape(status[1]);
 					currentStatus.current.title = escape(status[2]);
 
 					var execute_string = "dbus-send --print-reply --dest=org.gnome.Rhythmbox /org/gnome/Rhythmbox/Player org.gnome.Rhythmbox.Player.getPlaying";
-	
+
 					var child = exec(execute_string, function(error, stdout, stderr) {
 						var playing = stdout.replace(/\n/g, "").split(" ");
 
 						if((error) || (!playing) || (playing.length < 10)) {
-							if(req.param("action") == "play")
-								res.send(currentStatus.getStatus(req.socket.address().address, "playing"));
+							if(url.arguments("action") == "play")
+								cb("rhythmbox", "playing", currentStatus);
 							else
-								res.send(currentStatus.getStatus(req.socket.address().address, "paused"));
-							
+								cb("rhythmbox", "paused", currentStatus);
+						
 							return;
 						}
 
 						if(playing[9] == "true")
-							res.send(currentStatus.getStatus(req.socket.address().address, "playing"));
+							cb("rhythmbox", "playing", currentStatus);						
 						else
-							res.send(currentStatus.getStatus(req.socket.address().address, "paused"));
+							cb("rhythmbox", "paused", currentStatus);
 					});
 				}
+				
+				return;
 			});
 		} else {
-			res.send(currentStatus.getStatus(req.socket.address().address, "closed"));		
+			cb("rhythmbox", "closed", currentStatus);
+			
+			return;
 		}
 	});
 };

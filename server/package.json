@@ -1,6 +1,6 @@
 {
   "name": "hc-server",
-  "version": "0.7.7",
+  "version": "0.7.8",
   "author": "Janne Julkunen <scorpio.iix@gmail.com>",
   "description": "Server application for Home Control client application (for webOS).",
   "keywords": [ "Home Control", "webOS" ],
@@ -9,7 +9,8 @@
   "dependencies": {
     "applescript": "0.x.x",
     "connect-form": "0.x.x",
-    "express": "2.x.x"
+    "express": "2.x.x",
+		"x11": "0.0.4"
   },
   "engines": { "node": "*" },
   "main": "hc-server"

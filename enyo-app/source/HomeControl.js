@@ -16,13 +16,13 @@ enyo.kind({
 	
 	_controllers: [],
 
-// * Status Info: for showing 1-wire status info (ready for 0.7)
-// * Surveillance: support for video/snapshots (ready for 0.7)
-// * System Input: system mouse and keyboard controls (ready for 0.7)
-// * System Sound: master sound and speaker controls (ready for 0.7)
-// * Media Center: media boxes with d-pad controls (ready for 0.7)
-// * Music Player: music player applications (ready for 1.0)
-// * Video Player: video player applications (ready for 0.7)
+// * Status Info: for showing 1-wire status info (ready for 1.0 for phones)
+// - Surveillance: support for video/snapshots (ready for 0.7)
+// - System Input: system mouse and keyboard controls (ready for 0.7)
+// * System Sound: master sound and speaker controls (ready for 1.0 for phones)
+// - Media Center: media boxes with d-pad controls (ready for 1.0??? cleanup at least needed)
+// * Music Player: music player applications (ready for 1.0 for phones)
+// - Video Player: video player applications (ready for 0.7)
 /*
 	{caption: "Status Info - 1-Wire", value: "StatusInfo:1-wire:hc"},
 	{caption: "Surveillance - Cisco IP Cam", value: "Surveillance:cisco:dev"},
@@ -59,7 +59,7 @@ enyo.kind({
 
 		{kind: "AppMenu", components: [
 //			{caption: "Show Servers", onclick: "showAllServers"},
-//			{caption: "Auto Discover", onclick: "autoDiscover"},
+			{caption: "Auto Discover", onclick: "autoDiscover"},
 			{caption: "Add Server", onclick: "addNewServer"},
 			{caption: "Help", onclick: "showHelpInfo"}
 		]},
@@ -405,7 +405,12 @@ enyo.kind({
 			this.$["extensionView" + inSender.view].selected(null);
 
 			this.$["extensionIcon" + inSender.view].applyStyle("opacity", "0.5");
+
+			this.$["extensionStatus" + inSender.view].setContent("off");
 		} else {
+			if(this._off["extensionView" + inSender.view])
+				this.$["extensionStatus" + inSender.view].setContent("on");
+
 			this._off["extensionView" + inSender.view] = false;
 			
 			if(this._selected != -1)
@@ -558,7 +563,7 @@ enyo.kind({
 	
 		this._config.push({extension: controller[0], module: controller[1], icon: "./images/icon-" + 
 			controller[0].toLowerCase() +".png", title: this.$.controllerName.getValue(), 
-			address: this.$.controllerAddr.getValue(), status: "offline"});
+			address: this.$.controllerAddr.getValue(), status: "on"});
 
 		localStorage["controllers"] = enyo.json.stringify(this._config);
 			
@@ -574,7 +579,8 @@ enyo.kind({
 
 		this.$["extensionView" + inSender.view].destroy();
 
-		this.$["altExtensionView" + inSender.view].destroy();
+		if(this._ui == "full")
+			this.$["altExtensionView" + inSender.view].destroy();
 	},
 	
 	addControllerServer: function(inServer) {

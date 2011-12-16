@@ -28,30 +28,33 @@ enyo.kind({
 			]}
 		]},
 		{layoutKind: "VFlexLayout", flex: 1, components: [
+			{kind: "Spacer", flex: 1},
 			{name: "inputDivider", kind: "Divider", caption: "Input"},
-			{name: "inputControls", layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
-				{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", align: "center", components: [
+			{name: "inputControls", layoutKind: "VFlexLayout", className: "divider-content", components: [
+				{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
 					{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
-					{name: "inputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", className: "control-mute", 
-						style: "width: 70px;", onChange: "controlSound"}
+					{name: "inputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
+						className: "control-mute", style: "width: 70px;", onChange: "controlSound"}
 				]},
-				{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [
+				{layoutKind: "HFlexLayout", className: "divider-container", components: [
 					{name: "inputVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
-						onChanging: "updateInput", onChange: "controlSound", style: "margin: -3px 0px -8px 0px;"}
+						className: "control-volume", onChanging: "updateInput", onChange: "controlSound"}
 				]}
 			]},
+			{kind: "Spacer", flex: 1},
 			{name: "outputDivider", kind: "Divider", caption: "Output"},
-			{name: "outputControls", layoutKind: "VFlexLayout", flex: 1, style: "padding: 5px 15px;", components: [
-				{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", align: "center", components: [
+			{name: "outputControls", layoutKind: "VFlexLayout", className: "divider-content", components: [
+				{layoutKind: "HFlexLayout", className: "divider-container", align: "center", components: [
 					{content: "Volume:", flex: 1, style: "font-weight: bold;font-size: 18px;"},
-					{name: "outputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", className: "control-mute", 
-						style: "width: 70px;", onChange: "controlSound"}
+					{name: "outputMuteToggle", kind: "ToggleButton", onLabel: "50", offLabel: "Mute", 
+						className: "control-mute", style: "width: 70px;", onChange: "controlSound"}
 				]},
-				{layoutKind: "HFlexLayout", style: "max-width: 290px;margin: auto auto;", components: [
+				{layoutKind: "HFlexLayout", className: "divider-container", components: [
 					{name: "outputVolumeSlider", kind: "Slider", tapPosition: false, flex: 1, 
-						onChanging: "updateOutput", onChange: "controlSound", style: "margin: -3px 0px -8px 0px;"}
+						className: "control-volume", onChanging: "updateOutput", onChange: "controlSound"}
 				]}
-			]}
+			]},
+			{kind: "Spacer", flex: 1}
 		]},
 		{kind: "Toolbar", pack: "center", className: "enyo-toolbar-light", components: [
 		]},

@@ -45,12 +45,16 @@ var dgram = require('dgram');
 var express = require('express');
 var form = require('connect-form');
 
+var hcdata = require('./lib/data-types.js');
+
 var loaded = [];
 
 var modules = ["app/banshee", "app/frontrow", "app/itunes", "app/mpd", 
 	"app/quicktime", "app/rhythmbox", "app/totem",
-	"sys/1-wire", "sys/input", "sys/sound", "sys/surveillance"];
+	"sys/1-wire", "sys/input", "sys/sound"/*, "sys/surveillance"*/];
 
+//
+// HANDLE ARGUMENTS
 //
 
 if(process.argv.length > 2) {
@@ -78,6 +82,10 @@ if(process.argv.length > 2) {
 console.log("Home Control server: starting");
 console.log("Listening on a port: " + port_http);
 console.log("SSD listening port: " + port_ssd);
+
+//
+// CREATE SSD SERVER
+//
 
 var socket = net.createConnection(80, 'www.google.com');
 
@@ -121,6 +129,10 @@ socket.on('connect', function() {
 	socket.end();
 });
 
+//
+// CREATE HTTP SERVER
+//
+
 var http_srv = express.createServer(
 	form({ keepExtensions: true })
 );
@@ -129,21 +141,61 @@ http_srv.get("/modules", function(req, res) {
 	res.send({request: req.param("id"), modules: loaded});
 });
 
+//
+// SETUP HTTP MODULES
+//
+
 for(var i = 0; i < modules.length; i++) {
+	var osType = os.type().toLowerCase();
+
 	var module = require("./lib/" + modules[i]);
 
 	module.setup(function(module, moduleCategory, moduleID, moduleName, moduleType) {
 		if((moduleID) && (moduleName) && (moduleCategory)) {
 			console.log("Loading " + moduleCategory + " module: " + moduleName);
 
-			http_srv.get("/" + moduleID + "/*", module.execute);
+			http_srv.get("/" + moduleID + "/*", function(moduleExecute, req, res) {
+				// Make sure that the request is still a live
 
-			http_srv.post("/" + moduleID + "/*", module.execute);
+				try { var addr = req.socket.address().address; } catch(error) { return; }
 
-			loaded.push({category: moduleCategory, platform: os.type().toLowerCase(),
-				id: moduleID, name: moduleName, type: moduleType});
+				var url = {command: req.params[0], arguments: function(arg) {
+					return req.param(arg);
+				}};
+
+				moduleExecute(function(moduleID, moduleState, statusObject) {
+					res.header('Content-Type', 'text/javascript');
+
+					if(req.param("refresh" == "true"))
+						statusObject.reset(addr);
+					
+					res.send(statusObject.getStatus(addr, moduleState));
+				}, url, addr);
+			}.bind(this, module.execute));
+
+			http_srv.post("/" + moduleID + "/*", function(moduleExecute, req, res) {
+				// Make sure that the request is still a live
+
+				try { var addr = req.socket.address().address; } catch(error) { return; }
+
+				var url = {command: req.params[0], arguments: function(arg) {
+					return req.param(arg);
+				}};
+
+				moduleExecute(function(moduleID, moduleState, statusObject) {
+					res.header('Content-Type', 'text/javascript');
+
+					if(req.param("refresh" == "true"))
+						statusObject.reset(addr);
+
+					res.send(statusObject.getStatus(addr, moduleState));
+				}, url, addr);
+			}.bind(this, module.execute));
+
+			loaded.push({id: moduleID, name: moduleName, type: moduleType,
+				category: moduleCategory, platform: osType});
 		}	
-	}.bind(this, module, modules[i].slice(0, 3)));
+	}.bind(this, module, modules[i].slice(0, 3)), osType);
 }
 
 http_srv.listen(port_http);

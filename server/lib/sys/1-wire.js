@@ -32,54 +32,69 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+var debug = false;
+
 var timeout = null;
+
+var currentStatus = null;
 
 var exec = require('child_process').exec;
 
-var update = function(cb) {
-	if(!cb)
-		console.log("Reading 1-wire sensors");
+var update = function() {
+	console.log("Reading 1-wire sensors");
 	
-	var execute_string = "./data/bin/temperatures-update.sh";
+	var child = exec(__dirname + "/../../data/bin/temperatures-update.sh", 
 	
-	var child = exec(execute_string, function(error, stdout, stderr) {
-		if((error) && (cb))
-			cb(null);
-		else if(cb)
-			cb("1-wire", "1-Wire", "Status Info");
-			
-		timeout = setTimeout(update, 60000);
+	function(error, stdout, stderr) {
+		if(!error)
+			timeout = setTimeout(update, 60000);
 	});
 };
 
-exports.setup = function(cb) {
-	return update(cb);
+exports.setup = function(cb, os) {
+	if(os == "linux") {
+		var child = exec(__dirname + "/../../data/bin/temperatures-update.sh", 
+
+		function(error, stdout, stderr) {
+			if(!error) {
+				currentStatus = new System1WireStatus(true);		
+		
+				cb("1-wire", "1-Wire", "Status Info");
+			
+				timeout = setTimeout(update, 60000);
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing 1-wire command: " + req.params[0]);
+exports.execute = function(cb, url, addr) {
+	console.log("Executing 1-wire command: " + url.command);
 	
-	var execute_string = "./data/bin/temperatures-fetch.sh";
+	var execute_string = __dirname + "/../../data/bin/temperatures-fetch.sh";
 	
 	var child = exec(execute_string, function(error, stdout, stderr) {
-		if(error !== null) {
-			res.send('null');
-		} else {
-			var sensors = new Array();
+		if(error) {
+			cb("1-wire", "error", currentStatus);
 			
-			var info = stdout.split('\n');
-			
-			for(var i = 0; i < info.length; i++) {
-				var tmp = info[i].split(" ");
-				
-				if(tmp.length == 4) {
-					sensors.push({"sensor": tmp[0], "current": tmp[1], 
-						"lowest": tmp[2], "highest": tmp[3]});
-				}
-			}
-			
-			res.send({"sensors": sensors});
+			return;
 		}
+		
+		currentStatus.sensors = [];
+		
+		var info = stdout.split('\n');
+		
+		for(var i = 0; i < info.length; i++) {
+			var tmp = info[i].split(" ");
+			
+			if(tmp.length == 4) {
+				currentStatus.sensors.push({"sensor": tmp[0], "current": tmp[1], 
+					"lowest": tmp[2], "highest": tmp[3]});
+			}
+		}
+		
+		cb("1-wire", "online", currentStatus);
+
+		return;
 	});			
 };
 

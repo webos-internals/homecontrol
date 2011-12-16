@@ -32,6 +32,14 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+var debug = false;
+
+var osType = null;
+
+var modifiers = {};
+
+var currenStatus = null;
+
 var X = null;
 
 var x11 = null;
@@ -39,24 +47,21 @@ var x11 = null;
 var applescript = null;
 
 var fs = require('fs');
-var os = require("os");
 
 var keycodes = require('../x11-keycodes.js').keycodes;
 
-var modifiers = {};
-
-exports.setup = function(cb) {
-	if(os.type() == "Darwin") {
+exports.setup = function(cb, os) {
+/*	if(os == "darwin") {
 		var applescript = require("applescript");
 
 		cb("input", "Mac OS X", "System Input");
-	} else if(os.type() == "Linux") {
-//		var child = exec("xdotool --help", function(error, stdout, stderr) {
-
+	} else 
+*/	
+	if(os == "linux") {
 		try { 
 			stats = fs.lstatSync("/tmp/.X0-lock"); 
 
-			x11 = require('../misc/x11-pre-release');
+			x11 = require('x11');
 
 			x11.createClient(function(display) {
 				if((display) && (display.client) && (display.client.display) && 
@@ -78,42 +83,43 @@ exports.setup = function(cb) {
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
 
+						osType = "linux";
+
+						currentStatus = new SystemInputStatus();
+
 						cb("input", "Linux X11", "System Input");
 					});
-				} else {
-					cb(false);
 				}
 			});		
 		} catch (error) {
-			cb(false);
+			if(debug)
+				console.log("Error: Unable to connect to X!");
 		}
-	} else {
-		cb(false);
 	}	
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing input command: " + req.params[0]);
-
-	if(os.type() == "Darwin") {
+exports.execute = function(cb, url, addr) {
+	console.log("Executing input command: " + url.command);
+/*
+	if(osType == "darwin") {
 		var script_string = "";
 		
 //		tell application "System Events" to keystroke "o"
 
 //  with {shift down}
 
-		if(req.params[0] == "mouse") {
-			if(req.param("move")) {
-				var pos = req.param("move").split(",");
+		if(url.command == "mouse") {
+			if(url.arguments("move")) {
+				var pos = url.arguments("move").split(",");
 
 				script_string = "set mypoint to (get position of the mouse)\n";
 				
 				script_string += "move mouse {(item 1 of mypoint) + " + pos[0] + 
 					", (item 2 of mypoint) + " + pos[1] + "}\n";
-			} else if(req.param("down")) {
+			} else if(url.arguments("down")) {
 				// Do nothing...
-			} else if(req.param("up")) {
-				var btn = req.param("up");
+			} else if(url.arguments("up")) {
+				var btn = url.arguments("up");
 				
 				var buttons = ["primary", "middle", "secondary"];
 
@@ -125,41 +131,41 @@ exports.execute = function(req, res) {
 		}
 
 		applescript.execString(script_string, function(error, result) {
-			res.header('Content-Type', 'text/javascript');
-			
-			if(error)
-				res.send({"state": "offline"});
-			else
-				res.send({"state": "online"});
-		});
-	} else if(os.type() == "Linux") {
-		if(req.params[0] == "mouse") {
-			if(req.param("move")) {
-				var pos = req.param("move").split(",");
+			if(error) {
+				cb("input", "error", currentStatus);
+				
+				return;
+			}
 
-//				execute_string = "xdotool mousemove_relative -- " + pos[0] + " " + pos[1];
+			cb("input", "online", currentStatus);
+			
+			return;
+		});
+	} else 
+	*/
+	
+	if(osType == "linux") {
+		if(url.command == "mouse") {
+			if(url.arguments("move")) {
+				var pos = url.arguments("move").split(",");
 
 				X.QueryPointer(X.display.screen[0].root, function(pointer) {
 					X.WarpPointer(0,X.display.screen[0].root, 0, 0, 0, 0, 
 						(parseInt(pointer[2]) + parseInt(pos[0])), 
 						(parseInt(pointer[3]) + parseInt(pos[1])));
 				});
-			} else if(req.param("down")) {
-				var btn = req.param("down");
+			} else if(url.arguments("down")) {
+				var btn = url.arguments("down");
 
-//				execute_string = "xdotool mousedown " + btn;
-		
 				if(btn != 0) { // Current x11 has a bug that it crashes if btn id is 0
 					X.QueryPointer(X.display.screen[0].root, function(pointer) {
 						X.Test.FakeInput(X.Test.ButtonPress, btn, 0, X.display.screen[0].root,
 							parseInt(pointer[2]), parseInt(pointer[3]));
 					});
 				}
-			} else if(req.param("up")) {
-				var btn = req.param("up");
+			} else if(url.arguments("up")) {
+				var btn = url.arguments("up");
 		
-//				execute_string = "xdotool mouseup " + btn;
-
 				if(btn != 0) { // Current x11 has a bug that it crashes if btn id is 0
 					X.QueryPointer(X.display.screen[0].root, function(pointer) {
 						X.Test.FakeInput(X.Test.ButtonRelease, btn, 0, X.display.screen[0].root,
@@ -167,11 +173,9 @@ exports.execute = function(req, res) {
 					});
 				}
 			}
-		} else if(req.params[0] == "keyboard") {
-			if((req.param("key")) || (req.param("down"))) {
-				var key = req.param("key") || req.param("down");
-
-//				execute_string += "xdotool keydown " + key + "; ";
+		} else if(url.command == "keyboard") {
+			if((url.arguments("key")) || (url.arguments("down"))) {
+				var key = url.arguments("key") || url.arguments("down");
 
 				if(keycodes[key]) {
 					if(key == "Shift_L")
@@ -190,10 +194,8 @@ exports.execute = function(req, res) {
 				}
 			}
 
-			if((req.param("key")) || (req.param("up"))) {
-				var key = req.param("key") || req.param("up");
-
-//				execute_string += "xdotool keyup " + key + "; ";
+			if((url.arguments("key")) || (url.arguments("up"))) {
+				var key = url.arguments("key") || url.arguments("up");
 
 				if(keycodes[key]) {
 					if(key == "Shift_L")
@@ -213,17 +215,9 @@ exports.execute = function(req, res) {
 			}
 		}
 
-		res.send({state: "online"});			
-/*
-		var child = exec(execute_string, function(error, stdout, stderr) {
-			res.header('Content-Type', 'text/javascript');
-
-			if(error !== null) {
-				res.send({state: "offline"});
-			} else {
-				res.send({state: "online"});
-			}
-		});*/
+		cb("input", "online", currentStatus);
+		
+		return;
 	}
 };
 

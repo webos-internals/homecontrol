@@ -37,62 +37,60 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 //			i.e. server should make sure that all changed statuses are in the 
 //			status info which is send as a response
 
+var debug = false;
+
+var currentStatus = null;
+
 var mpd = null;
 
 var exec = require('child_process').exec;
 
-var hcdata = require('../data-types.js');
+exports.setup = function(cb, os) {
+	if(os == "linux") {
+		var child = exec("mpd --help", function(error, stdout, stderr) {
+			if(!error) {
+				require("../misc/mpd-pre-release");
 
-var currentStatus = new MusicPlayerStatus(true, true, true, true, true, 
-	["playlists", "playqueue", "selected"]);
+				mpd = new MPD();
 
-exports.setup = function(cb) {
-	var child = exec("mpd --help", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else {
-			require("../misc/mpd-pre-release");
+				mpd.addListener("error", function (error) {
+					if(debug)
+					  console.log("Got mpd error: " + error.toString());    
+				});
 
-			mpd = new MPD();
+	 			currentStatus = new MusicPlayerStatus(true, true, true, true, true, 
+					["playlists", "playqueue", "selected"]);
 
-			mpd.addListener("error", function (error) {
-			  console.log("Got mpd error: " + error.toString());    
-			});
-
-			cb("mpd", "MPD", "Music Player");
-		}
-	});
+				cb("mpd", "MPD", "Music Player");
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing mpd command: " + req.params[0]);
-
-	res.header('Content-Type', 'text/javascript');
+exports.execute = function(cb, url, addr) {
+	console.log("Executing mpd command: " + url.command);
 
 	mpd.connect(function (error) {
 		if(error) {
-			res.send(currentStatus.getStatus(req.socket.address().address, "closed"));
+			cb("mpd", "closed", currentStatus);
 			
 			return;
 		}
 		
 		var command = "", args = [];
 
-		switch(req.params[0]) {
+		switch(url.command) {
 			case "start":
 			case "close":
 			case "status":
-				if(req.param("refresh")) {
-					currentStatus.reset(req.socket.address().address);
-
+				if(url.arguments("refresh"))
 					command = "playlistinfo";
-				}
 				break;
 
 			case "output/mute":
 				command = "setvol";
 
-				if(req.param("state") == "true")
+				if(url.arguments("state") == "true")
 					args.push(0);
 				else
 					args.push(currentStatus.volume);
@@ -100,13 +98,13 @@ exports.execute = function(req, res) {
 
 			case "output/volume":
 				command = "setvol";
-				args.push(req.param("level"));
+				args.push(url.arguments("level"));
 				break;
 
 			case "library/search":
 				command = "search";
 
-				var words = req.param("filter").split(" ");
+				var words = url.arguments("filter").split(" ");
 				
 				for(var i = 0; i < words.length; i++) {
 					args.push("any");
@@ -114,24 +112,24 @@ exports.execute = function(req, res) {
 				}
 				
 //				args.push("any");
-//				args = args.concat(req.param("filter").split(" "));
+//				args = args.concat(url.arguments("filter").split(" "));
 //				console.log("AAA " + args.length);
-//				args.push(req.param("filter"));
+//				args.push(url.arguments("filter"));
 				break;
 
 			case "library/select":
 				command = "addid";
-				args.push('"' + req.param("id") + '"');
+				args.push('"' + url.arguments("id") + '"');
 				break;
 
 			case "playback/state":
-				command = req.param("action");
+				command = url.arguments("action");
 				break;
 
 			case "playback/skip":
-				if(req.param("action") == "prev")
+				if(url.arguments("action") == "prev")
 					command = "previous";
-				else if(req.param("action") == "next")
+				else if(url.arguments("action") == "next")
 					command = "next";
 				break;
 
@@ -142,7 +140,7 @@ exports.execute = function(req, res) {
 			case "playmode/random":
 				command = "random";
 
-				if(req.param("state") == "true")
+				if(url.arguments("state") == "true")
 					args.push(1);
 				else
 					args.push(0);
@@ -151,18 +149,18 @@ exports.execute = function(req, res) {
 			case "playmode/repeat":
 				command = "repeat";
 
-				if(req.param("state") == "true")
+				if(url.arguments("state") == "true")
 					args.push(1);
 				else
 					args.push(0);
 				break;
 
 			case "playlists/list":
-				if(req.param("id") == "*")
+				if(url.arguments("id") == "*")
 					command = "listplaylists";
 				else {
 					command = "listplaylistinfo";
-					args.push(req.param("id"));
+					args.push(url.arguments("id"));
 				}
 				break;
 
@@ -171,40 +169,39 @@ exports.execute = function(req, res) {
 				break;
 
 			case "playqueue/list":
-				if(req.param("action") == "info")
+				if(url.arguments("action") == "info")
 					command = "playlistinfo";
-				else if(req.param("action") == "clear")
+				else if(url.arguments("action") == "clear")
 					command = "clear";
 				break;
 
 			case "playqueue/append":
 				command = "add";
-				args.push(req.param("id"));
+				args.push(url.arguments("id"));
 				break;
 
 			case "playqueue/remove":
 				command = "deleteid";
-				args.push(req.param("id"));
+				args.push(url.arguments("id"));
 				break;
 
 			case "playqueue/select":
 				command = "playid";
-				args.push(req.param("id"));
+				args.push(url.arguments("id"));
 				break;
 
 			default:
-				res.send({});
 				return;
 		}
 
 		mpd.cmd(command, args, function (error, result) {
 			if((error) && (command != "")) {
-				res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+				cb("mpd", "error", currentStatus);
 				
 				return;
 			}
 			
-			switch(req.params[0]) {
+			switch(url.command) {
 				case "library/select":
 					command = "playid";
 					args = [result.id];
@@ -214,7 +211,7 @@ exports.execute = function(req, res) {
 					currentStatus.views.playqueue.items = [];
 
 					command = "load";
-					args = [req.param("id")];
+					args = [url.arguments("id")];
 					break;
 
 				case "library/search":
@@ -232,7 +229,7 @@ exports.execute = function(req, res) {
 					break;
 
 				case "playlists/list":
-					if(req.param("id") == "*") {
+					if(url.arguments("id") == "*") {
 						command = ""; args = [];
 
 						currentStatus.views.playlists.items = [];
@@ -246,7 +243,7 @@ exports.execute = function(req, res) {
 					} else {
 						command = ""; args = [];
 
-						currentStatus.views.selected.name = req.param("id");
+						currentStatus.views.selected.name = url.arguments("id");
 						currentStatus.views.selected.items = [];
 
 						for(var i = 0; i < result.length; i++) {
@@ -265,12 +262,12 @@ exports.execute = function(req, res) {
 					command = "seekid";
 					args = [result.songid];
 					
-					if(req.param("action") == "bwd")
+					if(url.arguments("action") == "bwd")
 						args.push(parseInt(time[0]) - 10);
-					else if(req.param("action") == "fwd")
+					else if(url.arguments("action") == "fwd")
 						args.push(parseInt(time[0]) + 10);
-					else if(!isNaN(parseInt(req.param("action"))))
-						args.push(parseInt(req.param("action")));
+					else if(!isNaN(parseInt(url.arguments("action"))))
+						args.push(parseInt(url.arguments("action")));
 					break;
 
 				case "start":
@@ -299,14 +296,14 @@ exports.execute = function(req, res) {
 		
 			mpd.cmd(command, args, function (error, result) {
 				if((error) && (command != "")) {
-					res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+					cb("mpd", "error", currentStatus);
 
 					return;
 				}
 
 				mpd.cmd("status", [], function (error, status) {
 					if(error) {
-						res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+						cb("mpd", "error", currentStatus);
 
 						return;
 					}
@@ -320,7 +317,7 @@ exports.execute = function(req, res) {
 
 					// Go around having no mute / unmute (0 = mute)
 				
-					if(req.params[0] != "playback/state") {
+					if(url.command != "playback/state") {
 						if(status.volume > 0) {
 							currentStatus.mute = false;
 							currentStatus.volume = status.volume;
@@ -353,7 +350,7 @@ exports.execute = function(req, res) {
 					
 					mpd.cmd("currentsong", [], function (error, current) {
 						if(error) {
-							res.send(currentStatus.getStatus(req.socket.address().address, "error"));
+							cb("mpd", "error", currentStatus);
 
 							return;
 						}
@@ -366,9 +363,11 @@ exports.execute = function(req, res) {
 				
 						currentStatus.current.title = current.name || current.title;
 
-						res.send(currentStatus.getStatus(req.socket.address().address, state));
+						cb("mpd", state, currentStatus);
 				
 						mpd.disconnect();
+						
+						return;
 					});
 				});
 			});

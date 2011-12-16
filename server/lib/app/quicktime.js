@@ -32,47 +32,79 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+var debug = false;
+
+var currentStatus = null; 
+
+var applescript = null;
+
 var exec = require('child_process').exec;
 
-var applescript = require("applescript");
-
-exports.setup = function(cb) {
-	var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else
-			cb("quicktime", "QuickTime", "Video Player");
-	});
+exports.setup = function(cb, os) {
+	if(os == "darwin") {
+		var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
+			if(!error) {
+				applescript = require("applescript");			
+			
+				currentStatus = new VideoPlayerStatus(true, true, true, false, false, null);		
+					
+				cb("quicktime", "QuickTime", "Video Player");
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing quicktime command: " + req.params[0]);
+exports.execute = function(cb, url, addr) {
+	console.log("Executing quicktime command: " + url.command);
 
 	var script_string = "";
 
-	if(req.params[0] == "play") {
-		var script_string = 'tell application "QuickTime Player" to play document frontmost\n';
-	} else if(req.params[0] == "pause") {
-		var script_string = 'tell application "QuickTime Player" to pause document frontmost\n';
-	} else if(req.params[0] == "seek") {
-		if(req.param("action") == "fwd")
-			var script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';
-		else if(req.param("action") == "bwd")
-			var script_string = 'tell application "QuickTime Player" to step backward document frontmost\n';
-	} else if(req.params[0] == "fullscreen") {
-		var script_string = 'tell application "QuickTime Player"\n';
+	switch(url.command) {
+		case "output/mute":
+			var script_string = 'tell application "QuickTime Player" to set muted of document frontmost to ' + 
+				url.arguments("state") + '\n';
+			break;
+
+		case "output/volume":
+			var script_string = 'tell application "QuickTime Player" to set audio volume of document frontmost to ' + 
+				(url.arguments("value") / 100) + "\n";
+			break;
 		
-		script_string += 'if presenting of document frontmost is true\n';
+		case "playback/state":
+			if(url.arguments("action") == "play")	
+				var script_string = 'tell application "QuickTime Player" to play document frontmost\n';
+			else if(url.arguments("action") == "pause")	
+				var script_string = 'tell application "QuickTime Player" to pause document frontmost\n';
+			break;
+
+		case "playback/skip":
+//			if(url.arguments("action") == "prev")
+//				script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';				
+//			else if(url.arguments("action") == "next")
+//				script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';				
+			break;
+
+		case "playback/seek":
+			if(url.arguments("action") == "fwd")
+				script_string = 'tell application "QuickTime Player" to step forward document frontmost\n';
+			else if(url.arguments("action") == "bwd")
+				script_string = 'tell application "QuickTime Player" to step backward document frontmost\n';
+			break;
+
+		case "viewmode/fullscreen":
+			if(url.arguments("action") == "toggle") {
+				script_string = 'tell application "QuickTime Player"\n';
 		
-		script_string += 'set present of document frontmost to false\nelse\n';
+				script_string += 'if presenting of document frontmost is true\n';
 		
-		script_string += 'set present of document frontmost to true\nend if\nend tell\n';
-	} else if(req.params[0] == "mute") {
-		var script_string = 'tell application "QuickTime Player" to set muted of document frontmost to ' + 
-			req.param("state") + '\n';
-	} else if(req.params[0] == "volume") {
-		var script_string = 'tell application "QuickTime Player" to set audio volume of document frontmost to ' + 
-			(req.param("value") / 100) + "\n";
+				script_string += 'set present of document frontmost to false\nelse\n';
+		
+				script_string += 'set present of document frontmost to true\nend if\nend tell\n';
+			}
+			break;
+	
+		default:
+			break;
 	}
 
 	script_string += 'tell application "QuickTime Player" to get ' +
@@ -80,16 +112,26 @@ exports.execute = function(req, res) {
 
 	applescript.execString(script_string, function(error, result) {
 		if(error) {
-			res.send({"state": "stopped", "fullscreen": false, "volume": 0, "mute": true});
-		} else {
-			var state = "paused";
+			cb("quicktime", "stopped", currentStatus);
 			
-			if(result[0] == "true")
-				state = "playing";
-			
-			res.send({"state": state, "title": result[1], "fullscreen": (result[2] == "true"), 
-				"volume": Math.round(result[3] * 100), "mute": (result[4] == "true")});
+			return;
 		}
+		
+		var state = "paused";
+		
+		if(result[0] == "true")
+			state = "playing";
+		
+		currentStatus.current.title = result[1];
+
+		currentStatus.mute = (result[4] == "true");
+		currentStatus.volume = Math.round(result[3] * 100);
+		
+		currentStatus.fullscreen = (result[2] == "true");
+
+		cb("quicktime", state, currentStatus);
+
+		return;
 	});
 };
 

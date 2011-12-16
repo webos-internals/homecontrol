@@ -86,8 +86,8 @@ enyo.kind({
 						inputClassName: "keyboard-input", autoCapitalize: "lowercase", autoWordComplete: false, 
 						style: "margin: 0px 0px 0px 0px;", onfocus: "showKbdButtons",
 						onblur: "hideKbdButtons", onkeydown: "handleKeyDown", onkeyup: "handleKeyUp"},
-					{name: "functionKey", caption: "FN", kind: "Button", className: "control-key enyo-button-dark", 
-						style: "margin-left: 10px;margin-right: 0px;", onclick: "handleFunctionKey"}
+					{name: "functionKey", caption: "FN", kind: "Button", className: "enyo-button-dark", 
+						style: "margin: 0px 0px 0px 10px;", onclick: "handleFunctionKey"}
 				]}
 			]},
 			{kind: "Divider", caption: "Mouse", style: "margin-top: -5px;"},
@@ -411,6 +411,8 @@ enyo.kind({
 	},	
 
 	handleServerError: function(inSender, inResponse) {
+		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
+
 		this.doUpdate("error");
 	}
 });

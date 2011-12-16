@@ -52,7 +52,7 @@
 	max-height: 24px; 
 	white-space: nowrap; 
 	margin: -8px 0px 7px 0px;
-	overflow:hidden;
+	overflow: hidden;
 	-webkit-marquee-direction: left;
 	-webkit-marquee-speed: fast;
 	-webkit-marquee-increment: small;
@@ -154,9 +154,17 @@
 }
 
 .control-key.enyo-button-dark {
-	padding: 0px 8px 1px 8px;
+	padding: 0px 8px 2px 8px;
 	line-height: 20px;
 	min-height: 16px;
+	margin: -5px 0px 6px 0px;	
+}
+
+.control-key-half.enyo-button-dark {
+	padding: 0px 8px 2px 8px;
+	line-height: 20px;
+	min-height: 16px;
+	margin: 2px -1px;
 }
 
 .control-first {

@@ -32,31 +32,37 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-var fs = require('fs');
-var util = require('util');
+var debug = false;
 
 var timestamp = null;
 
-exports.setup = function(cb) {
+var currentStatus = null;
+
+var fs = require('fs');
+var util = require('util');
+
+exports.setup = function(cb, os) {
+	currentStatus = new SystemSurveillanceStatus();
+
 	cb("surveillance", "Surveillance", "TouchPad Cam");
 };
 
-exports.execute = function(req, res, next) {
-	console.log("Executing surveillance command: " + req.params[0]);
+exports.execute = function(cb, url, addr) {
+	console.log("Executing surveillance command: " + url.command);
 
-	if(req.params[0] == "status") {
-		res.send({"status": "online"});	
-	} else if(req.params[0] == "latest") {
+	if(url.command == "status") {
+		cb("surveillance", "online", currentStatus);
+	} else if(url.command == "latest") {
 		if(timestamp)
 			res.sendfile('./data/surveillance/capture-' + timestamp + ".jpg"); 
 		else
 			res.send("No captures...");
-	} else if((req.params[0] == "upload") && (req.method.toLowerCase() == 'get')) {
+	} else if((url.command == "upload") && (req.method.toLowerCase() == 'get')) {
 	  res.send('<form method="post" enctype="multipart/form-data">' +
    		'<p>Image: <input type="file" name="image" /></p>' +
 		   '<p><input type="submit" value="Upload" /></p>' +
 		   '</form>');
-	} else if((req.params[0] == "upload") && (req.method.toLowerCase() == 'post')) {
+	} else if((url.command == "upload") && (req.method.toLowerCase() == 'post')) {
 		var date = new Date();
 	
 		timestamp = date.getTime();
@@ -68,18 +74,22 @@ exports.execute = function(req, res, next) {
 			 } else {
 				ins = fs.createReadStream(files.image.path);
 				ous = fs.createWriteStream('./data/surveillance/capture-' + timestamp + ".jpg");
+				
 				util.pump(ins, ous, function(err) {
 				  if(err) {
 				    next(err);
 				  }
 				});
+				
 				console.log('Uploaded surveillance image: capture-%s.jpg', timestamp);
+				
 				res.send('Uploaded image file: capture-' + timestamp + ".jpg");
 			 }
 		  });
 		} else {
-			res.send('ERROR: No form posted...');
+			cb("surveillance", "error", currentStatus);
 		}
 	}
 
+	return;
 };

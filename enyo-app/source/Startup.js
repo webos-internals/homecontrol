@@ -19,8 +19,13 @@ enyo.kind({
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
+					{kind: "Divider", caption: "0.7.8"},
+					{content: "<ul><li>Added better controls for Totem</li></ul>" +
+						"<li>Added playlist and media library views for VLC</li>" +
+						"<li>Lots of small bug fixes and code cleanups</li></ul>"},
+
 					{kind: "Divider", caption: "0.7.7"},
-					{content: "<ul><li>Fixed the bugs on both client and server</li></ul>"},
+					{content: "<ul><li>Fixed few bugs on both client and server</li></ul>"},
 
 					{kind: "Divider", caption: "0.7.6"},
 					{content: "<ul><li>Couple bug fixes for music players</li>" + 

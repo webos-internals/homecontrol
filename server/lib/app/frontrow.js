@@ -32,61 +32,74 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+var debug = false;
+
+var currentStatus = null;
+
+var applescript = null;
+
 var exec = require('child_process').exec;
 
-var applescript = require("applescript");
-
-exports.setup = function(cb) {
-	var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else
-			cb("frontrow", "Front Row", "Media Center");
-	});
+exports.setup = function(cb, os) {
+	if(os == "darwin") {
+		var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
+			if(!error) {
+				applescript = require("applescript");
+				
+				currentStatus = new MediaCenterStatus();
+				
+				cb("frontrow", "Front Row", "Media Center");
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing frontrow command: " + req.params[0]);
+exports.execute = function(cb, url, addr) {
+	console.log("Executing frontrow command: " + url.command);
 	
 	var script_string = "";
 	
-	if(req.params[0] == "start") {
+	if(url.command == "start") {
 		script_string = 'tell application "System Events" to key code 53 using command down\n';	
-	} else if(req.params[0] == "close") {
+	} else if(url.command == "close") {
 		script_string = 'tell application "System Events" to key code 53 using {command down, option down}\n';	
-	} else if(req.params[0] == "left") {
+	} else if(url.command == "left") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 28)\n';
-	} else if(req.params[0] == "right") {
+	} else if(url.command == "right") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 29)\n';
-	} else if(req.params[0] == "up") {
+	} else if(url.command == "up") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 30)\n';
-	} else if(req.params[0] == "down") {
+	} else if(url.command == "down") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 31)\n';
-	} else if(req.params[0] == "select") {
+	} else if(url.command == "select") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 32)\n';
-	} else if(req.params[0] == "back") {
+	} else if(url.command == "back") {
 		script_string = 'tell application "System Events" to key code 53\n';
-	} else if(req.params[0] == "play-pause") {
+	} else if(url.command == "play-pause") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 32)\n';
-	} else if(req.params[0] == "seek") {
-		if(req.param("action") == "bwd")
+	} else if(url.command == "seek") {
+		if(url.arguments("action") == "bwd")
 			script_string = 'tell application "System Events" to keystroke (ASCII character 28)\n';
-		else if(req.param("action") == "fwd")
+		else if(url.arguments("action") == "fwd")
 			script_string = 'tell application "System Events" to keystroke (ASCII character 29)\n';
-	} else if(req.params[0] == "prev") {
+	} else if(url.command == "prev") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 28) using command down\n';
-	} else if(req.params[0] == "next") {
+	} else if(url.command == "next") {
 		script_string = 'tell application "System Events" to keystroke (ASCII character 29) using command down\n';
-	} else if(req.params[0] == "mute") {
-	} else if(req.params[0] == "volume") {
+	} else if(url.command == "mute") {
+	} else if(url.command == "volume") {
 	}
 	
 	applescript.execString(script_string, function(error, info) {
 		if(error) {
-			res.send({"state": "unknown"});
-		} else {
-			res.send({"state": "online"});
+			cb("frontrow", "error", currentStatus);
+			
+			return;
 		}
+		
+		cb("frontrow", "online", currentStatus);
+
+		return;
 	});
 };
 

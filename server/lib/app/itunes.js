@@ -32,38 +32,39 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+var debug = false;
+
+var currentStatus = null;
+
+var applescript = null;
+
 var exec = require('child_process').exec;
 
-var applescript = require("applescript");
+exports.setup = function(cb, os) {
+	if(os == "darwin") {
+		var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
+			if(!error) {
+				applescript = require("applescript");
 
-var hcdata = require('../data-types.js');
+				currentStatus = new MusicPlayerStatus(true, true, true, true, true,
+					["playlists", "current", "selected"]);
 
-var currentStatus = new MusicPlayerStatus(true, true, true, true, true,
-	["playlists", "current", "selected"]);
-
-exports.setup = function(cb) {
-	var child = exec("osascript -e 'help'", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else
-			cb("itunes", "iTunes", "Music Player");
-	});
+				cb("itunes", "iTunes", "Music Player");
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing itunes command: " + req.params[0]);
+exports.execute = function(cb, url, addr) {
+	console.log("Executing itunes command: " + url.command);
 
-	res.header('Content-Type', 'text/javascript');
-	
 	var script_string = "";
 
-	switch(req.params[0]) {
+	switch(url.command) {
 		case "start":
 		case "close":
 		case "status":
-			if(req.param("refresh")) {
-				currentStatus.reset(req.socket.address().address);
-
+			if(url.arguments("refresh")) {
 				script_string = 'set tracklist to {}\n' + 'tell application "iTunes"\n' + 
 					'if player state is playing then\n' + 
 					'copy name of current playlist to the end of tracklist\n' +
@@ -87,16 +88,16 @@ exports.execute = function(req, res) {
 			break;
 
 		case "output/mute":
-			script_string = 'tell application "iTunes" to set mute to ' + req.param("state") + '\n';
+			script_string = 'tell application "iTunes" to set mute to ' + url.arguments("state") + '\n';
 			break;
 
 		case "output/volume":
-			script_string = 'tell application "iTunes" to set sound volume to ' + req.param("level") + "\n";
+			script_string = 'tell application "iTunes" to set sound volume to ' + url.arguments("level") + "\n";
 			break;
 
 		case "library/search":
 			script_string = 'set searchresults to {}\n' + 'tell application "iTunes"\n' + 
-				'set results to (search playlist "Library" for "' + req.param("filter") + '")\n' + 
+				'set results to (search playlist "Library" for "' + url.arguments("filter") + '")\n' + 
 				'repeat with result in results\n' + 
 				'set trackinfo to {}\n' + 'tell result\n' + 
 				'copy database ID to the end of trackinfo\n' + 
@@ -113,22 +114,22 @@ exports.execute = function(req, res) {
 		case "library/select":
 			script_string = 'tell application "iTunes"\n' + 
 				'set selectedtrack to (first track of library playlist 1 whose database ID is ' +
-				req.param("id") + ')\n' + 'play selectedtrack\n' + 'end tell\n';
+				url.arguments("id") + ')\n' + 'play selectedtrack\n' + 'end tell\n';
 			break;
 
 		case "playback/state":
-			script_string = 'tell application "iTunes" to ' + req.param("action") + '\n';
+			script_string = 'tell application "iTunes" to ' + url.arguments("action") + '\n';
 			break;
 
 		case "playback/skip":
-			if(req.param("action") == "prev")
+			if(url.arguments("action") == "prev")
 				script_string = 'tell application "iTunes" to previous track\n';
-			else if(req.param("action") == "next")
+			else if(url.arguments("action") == "next")
 				script_string = 'tell application "iTunes" to next track\n';
 			break;
 
 		case "playback/seek":
-			if(req.param("action") == "bwd") {
+			if(url.arguments("action") == "bwd") {
 				script_string = 'tell application "iTunes"\n' +
 					'if player state is playing then\n' +
 					'set currTime to get player position\n' +
@@ -139,7 +140,7 @@ exports.execute = function(req, res) {
     				'set player position to currSkip\n' +
 					'end if\n' +
 					'end tell\n';
-			} else if(req.param("action") == "fwd") {
+			} else if(url.arguments("action") == "fwd") {
 				script_string = 'tell application "iTunes"\n' +
 					'if player state is playing then\n' +
 					'set trackTime to duration of current track\n' +
@@ -151,10 +152,10 @@ exports.execute = function(req, res) {
     				'set player position to currSkip\n' +
 					'end if\n' +
 					'end tell\n';
-			} else if(!isNaN(parseInt(req.param("action")))) {
+			} else if(!isNaN(parseInt(url.arguments("action")))) {
 				script_string = 'tell application "iTunes"\n' +
 					'if player state is playing then\n' +
-    				'set player position to ' + req.param("action") + '\n' + 
+    				'set player position to ' + url.arguments("action") + '\n' + 
 					'end if\n' + 'end tell\n';
 			}
 			break;
@@ -163,15 +164,15 @@ exports.execute = function(req, res) {
 			script_string = 'tell application "iTunes"\n' + 
 				'if player state is playing then\n' + 
 				'set selectedtrack to (first track of current playlist whose id is ' +
-				req.param("id") + ')\n' + 'play selectedtrack\n' + 'else\n' +
+				url.arguments("id") + ')\n' + 'play selectedtrack\n' + 'else\n' +
 				'set selectedtrack to (first track of view of front window whose id is ' +
-				req.param("id") + ')\n' + 'play selectedtrack\n' + 'end if\n' + 'end tell\n';
+				url.arguments("id") + ')\n' + 'play selectedtrack\n' + 'end if\n' + 'end tell\n';
 			break;
 
 		case "playmode/random":
 			script_string = 'tell application "iTunes"\n' +
 				'if player state is playing or player state is paused then\n' +
-				'set shuffle of current playlist to ' + req.param("state") + '\n' +
+				'set shuffle of current playlist to ' + url.arguments("state") + '\n' +
 				'end if\nend tell\n';
 			break;
 
@@ -179,7 +180,7 @@ exports.execute = function(req, res) {
 			script_string = 'tell application "iTunes"\n' +
 				'if player state is playing or player state is paused then\n';
 		
-			if(req.param("state") == "true")
+			if(url.arguments("state") == "true")
 				script_string += 'set song repeat of current playlist to all\n';
 			else
 				script_string += 'set song repeat of current playlist to off\n';
@@ -188,12 +189,12 @@ exports.execute = function(req, res) {
 			break;
 
 		case "playlists/list":
-			if(req.param("id") == "*") {
+			if(url.arguments("id") == "*") {
 				script_string = 'set plnames to {}\n' + 'tell application "iTunes"\n' +
 					'repeat with i from 1 to (count of playlists)\n' + 
 					'copy name of playlist i to end of plnames\n' +
 					'end repeat\n' + 'end tell\n' + 'return plnames\n';
-			} else if(req.param("id") == "current") {
+			} else if(url.arguments("id") == "current") {
 				script_string = 'set tracklist to {}\n' + 'tell application "iTunes"\n' + 
 					'if player state is playing then\n' + 
 					'copy name of current playlist to the end of tracklist\n' +
@@ -216,15 +217,15 @@ exports.execute = function(req, res) {
 			} else {
 				script_string = 'set tracklist to {}\n' + 'tell application "iTunes"\n' +
 					'repeat with i from 1 to (count of tracks of playlist "' + 
-					req.param("id") + '")\n' + 
+					url.arguments("id") + '")\n' + 
 					'set trackinfo to {}\n' + 
-					'copy id of track i of playlist "' + req.param("id") + 
+					'copy id of track i of playlist "' + url.arguments("id") + 
 					'" to the end of trackinfo\n' +
-					'copy artist of track i of playlist "' + req.param("id") + 
+					'copy artist of track i of playlist "' + url.arguments("id") + 
 					'" to the end of trackinfo\n' +
-					'copy album of track i of playlist "' + req.param("id") + 
+					'copy album of track i of playlist "' + url.arguments("id") + 
 					'" to the end of trackinfo\n' +
-					'copy name of track i of playlist "' + req.param("id") + 
+					'copy name of track i of playlist "' + url.arguments("id") + 
 					'" to the end of trackinfo\n' +
 					'copy trackinfo to the end of tracklist\n' + 'end repeat\n' + 'end tell\n' + 
 					'return tracklist\n';
@@ -234,9 +235,9 @@ exports.execute = function(req, res) {
 		case "playlists/select":
 			script_string = 'set tracklist to {}\n' + 'tell application "iTunes"\n' + 
 				'set view of front browser window to playlist named "' +
-				req.param("id") + '"\n' + 
+				url.arguments("id") + '"\n' + 
 				'play the playlist named "' + 
-				req.param("id") + '"\n' + 
+				url.arguments("id") + '"\n' + 
 				'if player state is playing then\n' + 
 				'copy name of current playlist to the end of tracklist\n' +
 				'repeat with i from 1 to (count of tracks of current playlist)\n' + 
@@ -255,7 +256,7 @@ exports.execute = function(req, res) {
 
 	applescript.execString(script_string, function(error, result) {
 		if((!error) && (result) && (result.length > 0)) {
-			switch(req.params[0]) {
+			switch(url.command) {
 				case "library/search":
 					currentStatus.search.items = [];
 
@@ -269,7 +270,7 @@ exports.execute = function(req, res) {
 					break;
 				
 				case "playlists/list":
-					if(req.param("id") == "*") {
+					if(url.arguments("id") == "*") {
 						currentStatus.views.playlists.items = [];
 					
 						for(var i = 1; i < result.length; i++) {
@@ -278,7 +279,7 @@ exports.execute = function(req, res) {
 								type: "User Created",
 								id: result[i] });
 						}
-					} else if(req.param("id") == "current") {
+					} else if(url.arguments("id") == "current") {
 						currentStatus.views.current.name = result[0];
 						currentStatus.views.current.items = [];
 
@@ -326,7 +327,7 @@ exports.execute = function(req, res) {
 	
 		applescript.execString(script_string, function(error, info) {
 			if(error) {
-				res.send(currentStatus.getStatus(req.socket.address().address, "unknown"));
+				cb("itunes", "error", currentStatus);
 				
 				return;
 			}
@@ -338,7 +339,7 @@ exports.execute = function(req, res) {
 				currentStatus.current.artist = "";
 				currentStatus.current.title = "";
 
-				res.send(currentStatus.getStatus(req.socket.address().address, "stopped"));
+				cb("itunes", "stopped", currentStatus);
 			} else { 
 				script_string = 'tell application "iTunes" to get song repeat of current playlist & ' +
 					'shuffle of current playlist & {id, artist, name, duration} of current track & ' +
@@ -346,7 +347,7 @@ exports.execute = function(req, res) {
 			
 				applescript.execString(script_string, function(error, status) {
 					if(error) {
-						res.send(currentStatus.getStatus(req.socket.address().address, "stopped"));
+						cb("itunes", "stopped", currentStatus);
 						
 						return;
 					}
@@ -360,10 +361,12 @@ exports.execute = function(req, res) {
 
 					currentStatus.position.duration = Math.floor(status[5]);
 					currentStatus.position.elapsed = status[6];
-					
-					res.send(currentStatus.getStatus(req.socket.address().address, info[0]));
+
+					cb("itunes", info[0], currentStatus);					
 				});
 			}
+			
+			return;
 		});
 	});
 };

@@ -44,12 +44,12 @@ enyo.kind({
 		{layoutKind: "VFlexLayout", flex: 1, components: [
 			{kind: "Divider", caption: "Temperatures"},
 			{name: "temperatures", kind: "VirtualRepeater", onSetupRow: "setupSensor", components: [
-				{layoutKind: "VFlexLayout", flex: 1, style: "margin: auto auto; max-width: 320px;", components: [
-					{layoutKind: "HFlexLayout", style: "padding: 5px 10px;", onclick: "selectAction", components: [
+				{layoutKind: "VFlexLayout", flex: 1, className: "divider-content", components: [
+					{layoutKind: "HFlexLayout", className: "divider-container", onclick: "selectAction", components: [
 						{name: "sensorName", content: "", flex: 1, style: "text-transform: capitalize;"},
 						{name: "sensorTemp", content: ""}
 					]},
-					{layoutKind: "HFlexLayout", style: "padding: 0px 10px;", components: [
+					{layoutKind: "HFlexLayout", className: "divider-container", components: [
 						{content: "Min:", flex: 1, className: "enyo-label", style: "color: gray;"},
 						{name: "sensorMin", content: "", className: "enyo-label", style: "color: gray;"},
 						{kind: "Spacer"},
@@ -157,8 +157,8 @@ enyo.kind({
 		
 		this._sensors = [];
 		
-		if(inResponse) {
-			this.doUpdate("online");
+		if((inResponse) && (inResponse.state)) {
+			this.doUpdate(inResponse.state);
 			
 			if((inResponse.sensors) && (inResponse.sensors.length > 0))
 				this._sensors = inResponse.sensors;

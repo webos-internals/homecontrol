@@ -32,55 +32,182 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+var debug = false;
+
+var currentStatus = null; 
+
+// Go around Totem not having mute functionality
+
+var storedPlaybackVolume = 0; 
+
 var exec = require('child_process').exec;
 
-exports.setup = function(cb) {
-	var child = exec("totem --help", function(error, stdout, stderr) {
-		if(error)
-			cb(null);
-		else
-			cb("totem", "Totem", "Video Player");
-	});
+exports.setup = function(cb, os) {
+	if(os == "linux") {
+		var child = exec("totem --help", function(error, stdout, stderr) {
+			if(!error) {
+				currentStatus = new VideoPlayerStatus(true, true, true, false, false, null);		
+
+				cb("totem", "Totem", "Video Player");
+			}
+		});
+	}
 };
 
-exports.execute = function(req, res) {
-	console.log("Executing totem command: " + req.params[0]);
-	
-	if(req.params[0] != "close")
+exports.execute = function(cb, url, addr) {
+	console.log("Executing totem command: " + url.command);
+
+	if(url.command == "start")
+		var execute_string = "totem;";
+	else if(url.command != "close")
 		var execute_string = "pgrep totem";
 	else
 		var execute_string = "totem --quit";
 	
 	var child = exec(execute_string, function(error, stdout, stderr) {
-		if((stdout.length > 0) || (req.params[0] == "start")) {
+		if((stdout.length > 0) || (url.command == "start")) {
 			var execute_string = "";
 
-			if(req.params[0] == "start") {
-				var execute_string = "totem;";
-			} else if(req.params[0] == "play-pause") {
-				var execute_string = "totem --play-pause;";
-			} else if(req.params[0] == "seek") {
-				var execute_string = "totem --seek-" + req.param("action") + ";";
-			} else if(req.params[0] == "mute") {
-				var execute_string = "totem --mute;";
-			} else if(req.params[0] == "fullscreen") {
-				var execute_string = "totem --fullscreen;";
-			} else if(req.params[0] == "volume") {
-				var execute_string = "totem --volume-" + 
-					req.param("action") + ";";
-			}
-			
-			var child = exec(execute_string, function(error, stdout, stderr) {
-				res.header('Content-Type', 'text/javascript');
+			switch(url.command) {
+				case "output/mute":
+					execute_string = "totem --mute;";
+					break;
+
+				case "output/volume":
+					if(url.arguments("value") != undefined) {
+						execute_string = "dbus-send --print-reply --dest=org.mpris.Totem /Player org.freedesktop.MediaPlayer.VolumeSet int32:" + 
+							url.arguments("value") + ";";
+					} else if(url.arguments("action") != undefined) {
+						execute_string = "totem --volume-" + url.arguments("action") + ";";
+					}
+					break;
 				
-				if(error !== null) {
-					res.send({"state": "unknown"});
-				} else {
-					res.send({"state": "running"});
+				case "playback/state":
+					if(url.arguments("action") == "play")	
+						execute_string = "totem --play;";
+					else if(url.arguments("action") == "pause")	
+						execute_string = "totem --pause;";
+					else if(url.arguments("action") == "toggle")	
+						execute_string = "totem --play-pause;";
+					break;
+
+				case "playback/skip":
+					if(url.arguments("action") == "prev")
+						execute_string = "totem --previous;";
+					else if(url.arguments("action") == "next")
+						execute_string = "totem --next;";
+					break;
+
+				case "playback/seek":
+					execute_string = "totem --seek-" + url.arguments("action") + ";";
+					break;
+
+				case "viewmode/fullscreen":
+					if(url.arguments("action") == "toggle")				
+						execute_string = "totem --fullscreen;";
+					break;
+			
+				default:
+					break;
+			}
+
+			var child = exec(execute_string, function(error, stdout, stderr) {
+				if(error) {
+					currentStatus.sendStatus(req, res, "error");
+					
+					return;
 				}
+				
+				var execute_string = "dbus-send --print-reply --dest=org.mpris.Totem /Player org.freedesktop.MediaPlayer.GetStatus;" +
+					"dbus-send --print-reply --dest=org.mpris.Totem /Player org.freedesktop.MediaPlayer.VolumeGet;" +
+					"dbus-send --print-reply --dest=org.mpris.Totem /TrackList org.freedesktop.MediaPlayer.GetCurrentTrack";
+
+				var child = exec(execute_string, function(error, stdout, stderr) {
+					var status = stdout.replace(/\n/g, " ").split(" ");
+				
+					if(debug)
+						console.log("Output: " + stdout);
+				
+					if((error) || (!status) || (status.length < 70)) {
+						// If no dbus-send or it fails then we have limited information...
+					
+						delete currentStatus.mute;
+						delete currentStatus.volume;
+						delete currentStatus.current;						
+					
+						cb("totem", "running", currentStatus);
+				
+						return;
+					}
+
+					// If plugin was turned on make sure we are good to continue...
+				
+					if(currentStatus.mute == undefined)
+						currentStatus.mute = false;
+					
+					if(currentStatus.volume == undefined)
+						currentStatus.volume = 0;
+					
+					if(currentStatus.current == undefined)
+						 currentStatus.current = {};
+
+					if(status[57] == 0) {
+						currentStatus.mute = true;
+					} else if(status[57] > 0) {
+						storedPlaybackVolume = status[57];
+
+						currentStatus.mute = false;
+						currentStatus.volume = status[57];
+					} else {
+						currentStatus.mute = true;					
+						currentStatus.volume = 0;
+					}
+					
+					var track = status[68];
+
+					if(track == -1) {
+						if(status[18] == 0)
+							cb("totem", "playing", currentStatus);
+						else if(status[18] == 1)
+							cb("totem", "paused", currentStatus);
+						else 
+							cb("totem", "stopped", currentStatus);
+					} else {
+						var execute_string = "dbus-send --print-reply --dest=org.mpris.Totem /TrackList org.freedesktop.MediaPlayer.GetMetadata int32:" + track;
+
+						var child = exec(execute_string, function(error, stdout, stderr) {
+							var current = stdout.replace(/\n/g, " ").split(" ");
+				
+							if(debug)
+								console.log("Output: " + stdout);
+				
+							if(error) {
+								cb("totem", "error", currentStatus);							
+
+								return;
+							}
+						
+							if((current) && (current.length == 66))
+								currentStatus.current.title = current[53].replace(/"/g, "");
+							else
+								currentStatus.current.title = undefined;
+
+							if(status[18] == 0)
+								cb("totem", "playing", currentStatus);							
+							else if(status[18] == 1)
+								cb("totem", "paused", currentStatus);
+							else 
+								cb("totem", "stopped", currentStatus);
+						});
+					}
+					
+					return;
+				});
 			});
 		} else {
-			res.send({"state": "closed"});
+			cb("totem", "closed", currentStatus);
+			
+			return;
 		}
 	});
 };
