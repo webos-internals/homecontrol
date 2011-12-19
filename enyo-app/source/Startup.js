@@ -16,14 +16,14 @@ enyo.kind({
 				{name: "startupScroller", kind: "Scroller", height: "613px", components: [
 					{name: "instructions", content: "<br><center><b>Here is some basic information for new users:</b></center><ul>" +
 						"<li>Some of the controllers can control devices directly, some need a server side application</li>" +
+						"<li>It is recommended to update the server side application when ever you update this application</li>" +
 						"<li>Refer to the wiki on how to configure the required device/server side for the controllers</li>" +
 						"</ul><br>"},
 
-//					{kind: "Divider", caption: "0.8.1"},
-//					{content: "<ul><li>Fixed couple small user interface bugs</li></ul>"},
-
 					{kind: "Divider", caption: "0.8.0"},
-					{content: "<ul><li>First public release of Home Control</li></ul>"},
+					{content: "<ul><li>First public release of Home Control</li>" +
+						"<li>Fixed the scroller in media center user interface</li>" +
+						"<li>Added keyboard controller for OS X (mouse coming later)</li></ul>"},
 
 					{kind: "Divider", caption: "0.7.9"},
 					{content: "<ul><li>Fixed mute toggling in MPD controller</li>" +

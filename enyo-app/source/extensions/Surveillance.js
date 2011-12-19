@@ -146,13 +146,21 @@ enyo.kind({
 		this.$.clientText.hide();
 
 		if(this.module == "cisco") {
+			this.$.clientText.setContent("This controller will be enabled in next release...");
+			
+			this.$.server.hide();
+			this.$.serverImage.hide();
+			this.$.videoObject.hide();
+			this.$.clientText.show();
+/*
 			this.$.imageView.hide();	
 			
 			this.$.server.hide();				
+*/
 		} else {
 			this.$.videoObject.hide();
 
-//			if(device != "touchpad") {
+			if(device != "touchpad") {
 				var date = new Date();
 
 				this.$.server.hide();
@@ -160,7 +168,13 @@ enyo.kind({
 				this.$.serverImage.hide();
 			
 				this.checkStatus();
-/*			} else {
+			} else {
+				this.$.clientText.setContent("This controller will be enabled in next release...");
+			
+				this.$.server.hide();
+				this.$.serverImage.hide();
+				this.$.clientText.show();
+/*
 				this.$.clientImage.hide();
 			
 				this.$.imageObject.rendered();
@@ -176,7 +190,8 @@ enyo.kind({
 						this.$.difference.setContent(difference);
 					}
 				}.bind(this);
-			}			*/
+*/				
+			}
 		}
 	},
     

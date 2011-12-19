@@ -108,14 +108,14 @@ exports.execute = function(cb, url, addr) {
 					return;
 				}
 
+				var output = stdout.split("\n");
+
 				if(output.length == 0) {
 					cb("rhythmbox", "closed", currentStatus);
 					
 					return;
 				}
 
-				var output = stdout.split("\n");
-			
 				if(output[0].slice(0, 17) == "Playback is muted") {
 					currentStatus.mute = true;
 				
