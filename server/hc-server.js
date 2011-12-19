@@ -147,7 +147,7 @@ var http_srv = express.createServer(
 	form({ keepExtensions: true })
 );
 
-http_srv.get("/modules", function(req, res) {
+http_srv.get("/modules", basic.apply, function(req, res) {
 	res.send({request: req.param("id"), modules: loaded});
 }.bind(this));
 

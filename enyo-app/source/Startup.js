@@ -23,6 +23,7 @@ enyo.kind({
 					{kind: "Divider", caption: "0.8.0"},
 					{content: "<ul><li>First public release of Home Control</li>" +
 						"<li>Fixed the scroller in media center user interface</li>" +
+						"<li>Added informative popups/spinner for server scanning</li>" +
 						"<li>Added keyboard controller for OS X (mouse coming later)</li></ul>"},
 
 					{kind: "Divider", caption: "0.7.9"},

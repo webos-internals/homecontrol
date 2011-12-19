@@ -18,7 +18,7 @@ enyo.kind({
 
 // * Status Info: for showing 1-wire status info (ready for 1.0)
 // - Surveillance: support for video/snapshots (ready for 0.7)
-// - System Input: system mouse and keyboard controls (ready for 0.7)
+// * System Input: system mouse and keyboard controls (ready for 1.0)
 // * System Sound: master sound and speaker controls (ready for 1.0)
 // * Media Center: media boxes with d-pad controls (ready for 1.0)
 // * Music Player: music player applications (ready for 1.0)
@@ -96,7 +96,7 @@ enyo.kind({
 
 		{name: "srvPopup", lazy: false, kind: "Popup", style: "width: 80%;max-width: 500px;", components: [
 			{content: "No Controllers Found", flex: 1, style: "text-decoration: underline;text-align: center;margin-bottom: 5px;"},
-			{content: "No servers or supported devices found. You can try the automatic discovery again or " +
+			{content: "No servers or supported devices found. You can try the automatic discovery again (will be enabled in version 0.9) or " +
 				"add server / device manually if they don't support automatic discovery.", className: "enyo-item-secondary",
 				style: "margin: 5px;text-align: justify;"},
 
@@ -123,7 +123,7 @@ enyo.kind({
 				{content: "Server / Device", style: "font-size: 16px;color: gray;"},
 				{flex: 1, className: "custom-divider", style: "margin-left: 5px;margin-bottom: -5px;"}
 			]},
-			{name: "serverAddr", kind: "Input", hint: "Device / Server address...",  
+			{name: "serverAddr", kind: "Input", hint: "Format: <address>:<port>",  
 				autocorrect: false, spellcheck: false, autoCapitalize: "lowercase", alwaysLooksFocused: true, style: "margin: 5px 0px;", onclick: "showKeyboard"},
 			{layoutKind: "HFlexLayout", components: [
 				{kind: "Button", flex: 1, caption: "Cancel", onclick: "cancelAddServer"},
@@ -155,6 +155,39 @@ enyo.kind({
 				{kind: "Button", flex: 1, caption: "OK", className: "enyo-button-affirmative", onclick: "handleAddController"}
 			]}
 		]},	
+
+		{name: "errPopup", lazy: false, kind: "Popup", style: "width: 80%;max-width: 500px;", components: [
+			{content: "Unknown Response", flex: 1, style: "text-decoration: underline;text-align: center;margin-bottom: 5px;"},
+			{content: "The response from the given server was not recognized. Check that the address was correctly entered.", 
+				className: "enyo-item-secondary", style: "margin: 5px;text-align: justify;"},
+
+			{layoutKind: "VFlexLayout", components: [
+				{kind: "Button", flex: 1, caption: "Try Again", onclick: "addNewServer"},
+				{kind: "Button", flex: 1, caption: "Cancel", onclick: "cancelAddServer"}
+			]}
+		]},	
+
+		{name: "authPopup", lazy: false, kind: "Popup", style: "width: 80%;max-width: 500px;", components: [
+			{content: "401 Unauthorized", flex: 1, style: "text-decoration: underline;text-align: center;margin-bottom: 5px;"},
+			{content: "The server you entered requires authentication. You can enter the username and password on the address line:<br><br>" +
+				"USER:PASSWD@ADDR:PORT", className: "enyo-item-secondary", style: "margin: 5px;text-align: justify;"},
+
+			{layoutKind: "VFlexLayout", components: [
+				{kind: "Button", flex: 1, caption: "Try Again", onclick: "addNewServer"},
+				{kind: "Button", flex: 1, caption: "Cancel", onclick: "cancelAddServer"}
+			]}
+		]},	
+
+		{name: "replyPopup", lazy: false, kind: "Popup", style: "width: 80%;max-width: 500px;", components: [
+			{content: "Timeout / No Response", flex: 1, style: "text-decoration: underline;text-align: center;margin-bottom: 5px;"},
+			{content: "No response from the given server address. Check that the server is running and that your firewall is not blocking the port.", 
+				className: "enyo-item-secondary", style: "margin: 5px;text-align: justify;"},
+
+			{layoutKind: "VFlexLayout", components: [
+				{kind: "Button", flex: 1, caption: "Try Again", onclick: "addNewServer"},
+				{kind: "Button", flex: 1, caption: "Cancel", onclick: "cancelAddServer"}				
+			]}
+		]},	
 	
 		{name: "appPane", kind: "SlidingPane", multiViewMinWidth: 300, flex: 1, style: "background: #666666;", 
 			onSlideComplete: "adjustSlidingTag", components: [
@@ -169,7 +202,7 @@ enyo.kind({
 						{name: "leftToolbar", kind: "Toolbar", pack: "left", className: "enyo-toolbar-light", components: [
 							{name: "moreLeft", kind: "ToolButton", icon: "./images/button-more.png", onclick: "updateControls"},
 							{kind: "Spacer", flex: 1},
-							{name: "addButton", kind: "Button", caption: "Add New Controller", onclick: "addNewController"},
+							{name: "addButton", kind: "ActivityButton", caption: "Add New Controller", onclick: "addNewController"},
 							{kind: "Spacer", flex: 1},
 							{name: "moreRight", kind: "ToolButton", icon: "./images/button-nomore.png"},
 						]}
@@ -186,11 +219,15 @@ enyo.kind({
 			]}
 		]},
 		
-		{name: "queryServerControllers", kind: "WebService", onSuccess: "handleServerResponse", onFailure: "handleServerError"}
+		{name: "queryServerControllers", kind: "WebService", timeout: 5000}
 	],
 
 	rendered: function() {
 		this.inherited(arguments);
+
+		this.$.addButton.setActive(true);	
+		this.$.addButton.setDisabled(true);	
+		this.$.addButton.setCaption("Querying Servers...");
 
 		enyo.keyboard.setResizesWindow(false);
 
@@ -310,8 +347,25 @@ enyo.kind({
 	},
 
 	queryServers: function() {
-		for(var i = 0; i < this._servers.length; i++)
-			this.addControllerServer(this._servers[i]);
+		if(this._servers.length == 0) {
+			this.$.addButton.setActive(false);
+			this.$.addButton.setDisabled(false);	
+			this.$.addButton.setCaption("Add New Controller");
+		} else {
+			for(var i = 0; i < this._servers.length; i++) {
+				if(this._servers[i].type == "HC") {
+					this.$.queryServerControllers.call({}, {url: "http://" + this._servers[i].addr + "/modules?id=" + this._servers[i].addr,
+						onSuccess: "handleServerResponse", onFailure: "handleServerError"});
+				} else if(this._servers[i].type == "VLC")
+					this.addControllerOption("app", "any", "vlc", "VLC", "Video Player", this._servers[i].addr);
+				else if(this._servers[i].type == "XBMC")
+					this.addControllerOption("app", "any", "xbmc", "XBMC", "Media Center", this._servers[i].addr);
+				else if(this._servers[i].type == "Boxee")
+					this.addControllerOption("app", "any", "boxee", "Boxee", "Media Center", this._servers[i].addr);
+				else if(this._servers[i].type == "Cisco")
+					this.addControllerOption("app", "any", "cisco", "Cisco IP Cam", "Surveillance", this._servers[i].addr);
+			}
+		}
 		
 		this.setupExtensions();
 	},
@@ -483,13 +537,16 @@ enyo.kind({
 	addNewServer: function() {
 		this.$.srvPopup.close();
 
-		this.$.serverAddr.setValue("");
-
 		this.$.addPopup.openAtCenter();
 	},
 	
 	cancelAddServer: function() {
+		this.$.serverAddr.setValue("");
+
 		this.$.addPopup.close();
+		this.$.errPopup.close();
+		this.$.authPopup.close();
+		this.$.replyPopup.close();
 
 		enyo.keyboard.hide();
 
@@ -497,8 +554,10 @@ enyo.kind({
 	},
 	
 	handleAddServer: function() {
-		var date = new Date();
-	
+		this.$.addButton.setActive(true);	
+		this.$.addButton.setDisabled(true);	
+		this.$.addButton.setCaption("Querying Server...");
+		
 		this.$.addPopup.close();
 
 		enyo.keyboard.hide();
@@ -508,16 +567,17 @@ enyo.kind({
 		var type = this.$.serverType.getValue();
 		var addr = this.$.serverAddr.getValue();
 
-		for(var i = 0; i < this._servers.length; i++) {
-			if(this._servers[i].addr == addr)
-				this._servers.splice(i--, 1);
-		}
-
-		this._servers.push({addr: addr, type: type, timestamp: date.getTime()});
-
-		this.addControllerServer({addr: addr, type: type});
-
-		localStorage["servers"] = enyo.json.stringify(this._servers);
+		if(type == "HC")
+			this.$.queryServerControllers.call({}, {url: "http://" + addr + "/modules?id=" + addr,
+				onSuccess: "handleQueryResponse", onFailure: "handleQueryError"});
+		else if(type == "VLC")
+			this.addControllerOption("app", "any", "vlc", "VLC", "Video Player", addr);
+		else if(type == "XBMC")
+			this.addControllerOption("app", "any", "xbmc", "XBMC", "Media Center", addr);
+		else if(type == "Boxee")
+			this.addControllerOption("app", "any", "boxee", "Boxee", "Media Center", addr);
+		else if(type == "Cisco")
+			this.addControllerOption("app", "any", "cisco", "Cisco IP Cam", "Surveillance", addr);
 	},
 	
 	addNewController: function() {
@@ -591,19 +651,6 @@ enyo.kind({
 			this.$["altExtensionView" + inSender.view].destroy();
 	},
 	
-	addControllerServer: function(inServer) {
-		if(inServer.type == "HC")
-			this.$.queryServerControllers.call({}, {url: "http://" + inServer.addr + "/modules?id=" + inServer.addr});
-		else if(inServer.type == "VLC")
-			this.addControllerOption("app", "any", "vlc", "VLC", "Video Player", inServer.addr);
-		else if(inServer.type == "XBMC")
-			this.addControllerOption("app", "any", "xbmc", "XBMC", "Media Center", inServer.addr);
-		else if(inServer.type == "Boxee")
-			this.addControllerOption("app", "any", "boxee", "Boxee", "Media Center", inServer.addr);
-		else if(inServer.type == "Cisco")
-			this.addControllerOption("app", "any", "cisco", "Cisco IP Cam", "Surveillance", inServer.addr);
-	},
-
 	addControllerOption: function(inCategory, inPlatform, inID, inName, inType, inAddr) {
 		var controllerAdded = false;
 	
@@ -625,9 +672,74 @@ enyo.kind({
 				category: inCategory, servers: [inAddr], value: value});		
 		}
 	},
+
+	sortControllerOptions: function(inOptionA, inOptionB) {
+		if(inOptionA.category == inOptionB.category) {
+			var a = inOptionA.caption.toLowerCase();
+			var b = inOptionB.caption.toLowerCase();
+		} else {
+			var a = inOptionB.category.toLowerCase();
+			var b = inOptionA.category.toLowerCase();
+		}
+		
+		return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+	},
+	
+	handleQueryResponse: function(inSender, inResponse) {
+		enyo.error("Server query - " + enyo.json.stringify(inResponse));
+
+		this.$.addButton.setActive(false);
+		this.$.addButton.setDisabled(false);	
+		this.$.addButton.setCaption("Add New Controller");
+
+		if((inResponse) && (inResponse.request) && (inResponse.modules)) {
+			this.$.serverAddr.setValue("");
+
+			var addr = inResponse.request;
+
+			for(var i = 0; i < this._servers.length; i++) {
+				if(this._servers[i].addr == addr)
+					this._servers.splice(i--, 1);
+			}
+
+			this._servers.push({addr: addr, type: "HC"});
+
+			localStorage["servers"] = enyo.json.stringify(this._servers);
+
+			for(var i = 0; i < inResponse.modules.length; i++) {
+				var category = inResponse.modules[i].category;
+				var platform = inResponse.modules[i].platform;
+
+				var id = inResponse.modules[i].id;
+				var name = inResponse.modules[i].name;
+				var type = inResponse.modules[i].type;
+
+				this.addControllerOption(category, platform, id, name, type, addr);
+			}
+		} else {
+			this.$.errPopup.openAtCenter();
+		}
+	},
+	
+	handleQueryError: function(inSender, inResponse) {
+		this.$.addButton.setActive(false);
+		this.$.addButton.setDisabled(false);	
+		this.$.addButton.setCaption("Add New Controller");
+
+		var regexp = new RegExp("401 Unauthorized");
+
+		if((inResponse) && (inResponse.match(regexp) != null))
+			this.$.authPopup.openAtCenter();
+		else
+			this.$.replyPopup.openAtCenter();
+	},
 	
 	handleServerResponse: function(inSender, inResponse) {
 		enyo.error("Server query - " + enyo.json.stringify(inResponse));
+
+		this.$.addButton.setActive(false);
+		this.$.addButton.setDisabled(false);	
+		this.$.addButton.setCaption("Add New Controller");
 		
 		if((inResponse) && (inResponse.request) && (inResponse.modules)) {
 			for(var i = 0; i < inResponse.modules.length; i++) {
@@ -645,18 +757,10 @@ enyo.kind({
 
 	handleServerError: function(inSender, inResponse) {
 		enyo.error("DEBUG - " + enyo.json.stringify(inResponse));
-	},
-	
-	sortControllerOptions: function(inOptionA, inOptionB) {
-		if(inOptionA.category == inOptionB.category) {
-			var a = inOptionA.caption.toLowerCase();
-			var b = inOptionB.caption.toLowerCase();
-		} else {
-			var a = inOptionB.category.toLowerCase();
-			var b = inOptionA.category.toLowerCase();
-		}
-		
-		return ((a < b) ? -1 : ((a > b) ? 1 : 0));
-	}
+
+		this.$.addButton.setActive(false);	
+		this.$.addButton.setDisabled(false);	
+		this.$.addButton.setCaption("Add New Controller");
+	}	
 });
 
