@@ -570,14 +570,20 @@ enyo.kind({
 		if(type == "HC")
 			this.$.queryServerControllers.call({}, {url: "http://" + addr + "/modules?id=" + addr,
 				onSuccess: "handleQueryResponse", onFailure: "handleQueryError"});
-		else if(type == "VLC")
-			this.addControllerOption("app", "any", "vlc", "VLC", "Video Player", addr);
-		else if(type == "XBMC")
-			this.addControllerOption("app", "any", "xbmc", "XBMC", "Media Center", addr);
-		else if(type == "Boxee")
-			this.addControllerOption("app", "any", "boxee", "Boxee", "Media Center", addr);
-		else if(type == "Cisco")
-			this.addControllerOption("app", "any", "cisco", "Cisco IP Cam", "Surveillance", addr);
+		else {
+			this.$.addButton.setActive(false);
+			this.$.addButton.setDisabled(false);	
+			this.$.addButton.setCaption("Add New Controller");
+				
+			if(type == "VLC")
+				this.addControllerOption("app", "any", "vlc", "VLC", "Video Player", addr);
+			else if(type == "XBMC")
+				this.addControllerOption("app", "any", "xbmc", "XBMC", "Media Center", addr);
+			else if(type == "Boxee")
+				this.addControllerOption("app", "any", "boxee", "Boxee", "Media Center", addr);
+			else if(type == "Cisco")
+				this.addControllerOption("app", "any", "cisco", "Cisco IP Cam", "Surveillance", addr);
+		}
 	},
 	
 	addNewController: function() {
