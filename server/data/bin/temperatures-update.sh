@@ -13,7 +13,7 @@
 	function create_database()
 	{
 		/usr/bin/rrdtool create \
-			./data/temperatures/${1}.rrd \
+			./data/sensors/${1}.rrd \
 			-s 300 \
 			"DS:temp:GAUGE:600:U:U" \
 			"RRA:AVERAGE:0.5:1:2016" \
@@ -33,7 +33,7 @@
 	function update_database()
 	{
 		/usr/bin/rrdtool update \
-			./data/temperatures/${1}.rrd \
+			./data/sensors/${1}.rrd \
 			-t "temp" N:${2}
 	}
 
@@ -43,9 +43,9 @@
 			./data/graphs/${1}_${2}.png \
 	    -s -1${2} -t "Temperatures of last ${2}" \
 			-z -h 102 -w 269 -a "PNG" --border 0 -E \
-			"DEF:temp=./data/temperatures/${1}.rrd:temp:AVERAGE" \
-			"DEF:min=./data/temperatures/${1}.rrd:temp:MIN" \
-	    "DEF:max=./data/temperatures/${1}.rrd:temp:MAX" \
+			"DEF:temp=./data/sensors/${1}.rrd:temp:AVERAGE" \
+			"DEF:min=./data/sensors/${1}.rrd:temp:MIN" \
+	    "DEF:max=./data/sensors/${1}.rrd:temp:MAX" \
 			"LINE1:min#FF3333" "LINE1:max#66FF33" "LINE2:temp#0000FF" \
 			"GPRINT:temp:MIN:Min\\: %3.1lf" \
 			"GPRINT:temp:MAX: Max\\: %3.1lf" \
@@ -62,7 +62,7 @@
 	for SPATH in $(ls /sys/bus/w1/drivers/w1_slave_driver/*/w1_slave) ; do
 		SID=$(basename $(dirname ${SPATH}))
 
-		if [ ! -e ./data/temperatures/${SID}.rrd ]; then
+		if [ ! -e ./data/sensors/${SID}.rrd ]; then
 			echo "- Creating database for ${SID} sensor"
 
 			create_database ${SID}

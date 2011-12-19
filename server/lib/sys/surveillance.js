@@ -38,9 +38,6 @@ var timestamp = null;
 
 var currentStatus = null;
 
-var fs = require('fs');
-var util = require('util');
-
 exports.setup = function(cb, os) {
 	currentStatus = new SystemSurveillanceStatus();
 
@@ -50,47 +47,25 @@ exports.setup = function(cb, os) {
 exports.execute = function(cb, url, addr) {
 	console.log("Executing surveillance command: " + url.command);
 
-	if(url.command == "status") {
-		if(currentStatus.file)
+	switch(url.command) {
+		case "latest":
+			cb("surveillance", null, currentStatus);
+			break;
+
+		case "update":
+			currentStatus.file = url.arguments("file");
+
 			cb("surveillance", "online", currentStatus);
-		else
-			cb("surveillance", "idle", currentStatus);
-	} else if(url.command == "latest") {
-		cb("surveillance", null, currentStatus);
-/*	} else if((url.command == "upload") && (req.method.toLowerCase() == 'get')) {
-	  res.send('<form method="post" enctype="multipart/form-data">' +
-   		'<p>Image: <input type="file" name="image" /></p>' +
-		   '<p><input type="submit" value="Upload" /></p>' +
-		   '</form>');
-	} else if((url.command == "upload") && (req.method.toLowerCase() == 'post')) {
-		var date = new Date();
-	
-		timestamp = date.getTime();
-	
-		if(req.form) {
-			req.form.complete(function(err, fields, files) {
-			 if(err) {
-				next(err);
-			 } else {
-				ins = fs.createReadStream(files.image.path);
-				ous = fs.createWriteStream('./data/surveillance/capture-' + timestamp + ".jpg");
-				
-				util.pump(ins, ous, function(err) {
-				  if(err) {
-				    next(err);
-				  }
-				});
-				
-				console.log('Uploaded surveillance image: capture-%s.jpg', timestamp);
-				
-				res.send('Uploaded image file: capture-' + timestamp + ".jpg");
-			 }
-		  });
-		} else {
-			cb("surveillance", "error", currentStatus);
-		}
-		*/
+			break;
+		
+		default:
+			if(currentStatus.file)
+				cb("surveillance", "online", currentStatus);
+			else
+				cb("surveillance", "idle", currentStatus);
+			break;
 	}
 
 	return;
 };
+

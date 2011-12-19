@@ -36,7 +36,7 @@ var debug = false;
 
 var osType = null;
 
-var modifiers = {};
+var keycodes = null;
 
 var currenStatus = null;
 
@@ -48,16 +48,18 @@ var applescript = null;
 
 var fs = require('fs');
 
-var keycodes = require('../misc/x11-keycodes.js').keycodes;
-
 exports.setup = function(cb, os) {
-/*	if(os == "darwin") {
-		var applescript = require("applescript");
+	if(os == "darwin") {
+		osType = "darwin";
+
+		applescript = require("applescript");
+
+		keycodes = require('../misc/osx-keycodes.js').keycodes;
+
+		currentStatus = new SystemInputStatus("darwin");
 
 		cb("input", "Mac OS X", "System Input");
-	} else 
-*/	
-	if(os == "linux") {
+	} else if(os == "linux") {
 		try { 
 			stats = fs.lstatSync("/tmp/.X0-lock"); 
 
@@ -72,7 +74,24 @@ exports.setup = function(cb, os) {
 					X.require('xtest', function(ext) {
 						X.Test = ext;
 
-						// Reset modifiers...
+						osType = "linux";
+
+						keycodes = require('../misc/x11-keycodes.js').keycodes;
+
+						X.QueryPointer(X.display.screen[0].root, function(pointer) {
+							X.Test.FakeInput(X.Test.ButtonRelease, 1, 0, X.display.screen[0].root,
+								parseInt(pointer[2]), parseInt(pointer[3]));
+						});
+
+						X.QueryPointer(X.display.screen[0].root, function(pointer) {
+							X.Test.FakeInput(X.Test.ButtonRelease, 2, 0, X.display.screen[0].root,
+								parseInt(pointer[2]), parseInt(pointer[3]));
+						});
+
+						X.QueryPointer(X.display.screen[0].root, function(pointer) {
+							X.Test.FakeInput(X.Test.ButtonRelease, 3, 0, X.display.screen[0].root,
+								parseInt(pointer[2]), parseInt(pointer[3]));
+						});
 
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_R"].keycode, 0, X.display.screen[0].root, 0, 0);
@@ -83,9 +102,7 @@ exports.setup = function(cb, os) {
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
 
-						osType = "linux";
-
-						currentStatus = new SystemInputStatus();
+						currentStatus = new SystemInputStatus("linux");
 
 						cb("input", "Linux X11", "System Input");
 					});
@@ -100,15 +117,54 @@ exports.setup = function(cb, os) {
 
 exports.execute = function(cb, url, addr) {
 	console.log("Executing input command: " + url.command);
-/*
+
 	if(osType == "darwin") {
 		var script_string = "";
 		
-//		tell application "System Events" to keystroke "o"
+		if(url.command == "keyboard") {
+			if((url.arguments("key")) || (url.arguments("down"))) {
+				var key = url.arguments("key") || url.arguments("down");
+				
+				currentStatus.update("down", key);
+			}
+			
+			if((url.arguments("key")) || (url.arguments("up"))) {
+				var key = url.arguments("key") || url.arguments("up");
 
-//  with {shift down}
+				currentStatus.update("up", key);
+				
+				var modifiers = [];
+				
+				if(currentStatus.kbdShift)
+					modifiers.push("shift down");
+				else if(currentStatus.kbdLeft)
+					modifiers.push("control down");
+				else if(currentStatus.kbdMiddle)
+					modifiers.push("option down");
+				else if(currentStatus.kbdRight)
+					modifiers.push("command down");
+							
+				if(keycodes[key]) {
+					if(keycodes[key].keystroke) {
+						if(keycodes[key].modifier.length > 0)
+							modifiers.push(keycodes[key].modifier + " down");
+						
+						if(modifiers.length > 0) {
+							script_string = 'tell application "System Events" to keystroke "' + 
+								keycodes[key].keystroke + '" using {' + modifiers.toString() + '}\n';
+						} else {
+							script_string = 'tell application "System Events" to keystroke "' + 
+								keycodes[key].keystroke + '"\n';
+						}
+					} else if(keycodes[key].keycode) {
+						script_string = 'tell application "System Events" to key code ' + 
+							keycodes[key].keycode + '\n';
+					}
+				}
+			}
+		}
 
-		if(url.command == "mouse") {
+/*		if(url.command == "mouse") {
 			if(url.arguments("move")) {
 				var pos = url.arguments("move").split(",");
 
@@ -128,7 +184,7 @@ exports.execute = function(cb, url, addr) {
 				script_string += "click mouse {(item 1 of mypoint), (item 2 of mypoint)}" + 
 					" using " + buttons[btn - 1] + " button\n";
 			}
-		}
+		}*/
 
 		applescript.execString(script_string, function(error, result) {
 			if(error) {
@@ -141,11 +197,34 @@ exports.execute = function(cb, url, addr) {
 			
 			return;
 		});
-	} else 
-	*/
-	
-	if(osType == "linux") {
-		if(url.command == "mouse") {
+	} else if(osType == "linux") {
+		if(url.arguments("refresh") == "true") {
+			console.log("Resetting keyboard modifiers");
+			
+			X.QueryPointer(X.display.screen[0].root, function(pointer) {
+				X.Test.FakeInput(X.Test.ButtonRelease, 1, 0, X.display.screen[0].root,
+					parseInt(pointer[2]), parseInt(pointer[3]));
+			});
+
+			X.QueryPointer(X.display.screen[0].root, function(pointer) {
+				X.Test.FakeInput(X.Test.ButtonRelease, 2, 0, X.display.screen[0].root,
+					parseInt(pointer[2]), parseInt(pointer[3]));
+			});
+
+			X.QueryPointer(X.display.screen[0].root, function(pointer) {
+				X.Test.FakeInput(X.Test.ButtonRelease, 3, 0, X.display.screen[0].root,
+					parseInt(pointer[2]), parseInt(pointer[3]));
+			});			
+			
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_R"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Control_R"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Super_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Multi_key"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["Alt_L"].keycode, 0, X.display.screen[0].root, 0, 0);
+			X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
+		} else if(url.command == "mouse") {
 			if(url.arguments("move")) {
 				var pos = url.arguments("move").split(",");
 
@@ -157,7 +236,9 @@ exports.execute = function(cb, url, addr) {
 			} else if(url.arguments("down")) {
 				var btn = url.arguments("down");
 
-				if(btn != 0) { // Current x11 has a bug that it crashes if btn id is 0
+				currentStatus.update("down", "MouseBtn" + btn);
+
+				if(btn != 0) { 
 					X.QueryPointer(X.display.screen[0].root, function(pointer) {
 						X.Test.FakeInput(X.Test.ButtonPress, btn, 0, X.display.screen[0].root,
 							parseInt(pointer[2]), parseInt(pointer[3]));
@@ -165,8 +246,10 @@ exports.execute = function(cb, url, addr) {
 				}
 			} else if(url.arguments("up")) {
 				var btn = url.arguments("up");
+
+				currentStatus.update("up", "MouseBtn" + btn);
 		
-				if(btn != 0) { // Current x11 has a bug that it crashes if btn id is 0
+				if(btn != 0) { 
 					X.QueryPointer(X.display.screen[0].root, function(pointer) {
 						X.Test.FakeInput(X.Test.ButtonRelease, btn, 0, X.display.screen[0].root,
 							parseInt(pointer[2]), parseInt(pointer[3]));
@@ -178,14 +261,11 @@ exports.execute = function(cb, url, addr) {
 				var key = url.arguments("key") || url.arguments("down");
 
 				if(keycodes[key]) {
-					if(key == "Shift_L")
-						modifiers.shift = true;
-					else if(key == "ISO_Level3_Shift")
-						modifiers.altgr = true;
+					currentStatus.update("down", key);
 
-					if((keycodes[key].modifier == "shift") && (!modifiers.shift))
+					if((keycodes[key].modifier == "shift") && (!currentStatus.kbdShift))
 						X.Test.FakeInput(X.Test.KeyPress, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-					else if((keycodes[key].modifier == "altgr") && (!modifiers.altgr))
+					else if((keycodes[key].modifier == "altgr") && (currentStatus.kbdRight != 2))
 						X.Test.FakeInput(X.Test.KeyPress, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
 									
 //					console.log("Key press: " + key + " " + keycodes[key].keycode);
@@ -198,18 +278,15 @@ exports.execute = function(cb, url, addr) {
 				var key = url.arguments("key") || url.arguments("up");
 
 				if(keycodes[key]) {
-					if(key == "Shift_L")
-						modifiers.shift = false;
-					else if(key == "ISO_Level3_Shift")
-						modifiers.altgr = false;
+					currentStatus.update("up", key);
 
 //					console.log("Key release: " + key + " " + keycodes[key].keycode);
 					
 					X.Test.FakeInput(X.Test.KeyRelease, keycodes[key].keycode, 0, X.display.screen[0].root, 0, 0);
 
-					if((keycodes[key].modifier == "shift") && (!modifiers.shift))
+					if((keycodes[key].modifier == "shift") && (!currentStatus.kbdShift))
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["Shift_L"].keycode, 0, X.display.screen[0].root, 0, 0);
-					else if((keycodes[key].modifier == "altgr") && (!modifiers.altgr))
+					else if((keycodes[key].modifier == "altgr") && (currentStatus.kbdRight != 2))
 						X.Test.FakeInput(X.Test.KeyRelease, keycodes["ISO_Level3_Shift"].keycode, 0, X.display.screen[0].root, 0, 0);
 				}
 			}

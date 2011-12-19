@@ -326,13 +326,143 @@ exports.systemSoundStatus = System1WireStatus = function(useSensors) {
 // SYSTEM INPUT STATUS OBJECT
 //
 
-exports.systemInputStatus = SystemInputStatus = function() {
+exports.systemInputStatus = SystemInputStatus = function(os) {
 	// Public data
+
+	this.os = os || "linux";
+	
+	this.kbdShift = 0;
+	
+	this.kbdLeft = 0;
+	this.kbdMiddle = 0;
+	this.kbdRight = 0;
+
+	this.mouseLeft = 0;
+	this.mouseMiddle = 0;
+	this.mouseRight = 0;
 
 	// Public functions
 
+	this.reset = function(address) {
+		this.kbdLeft = 0;
+		this.kbdMiddle = 0;
+		this.kbdRight = 0;
+	},
+
+	this.update = function(state, key) {
+		if(this.os == "darwin") {
+			if(state == "down") {
+				if(key == "Shift_L")
+					this.kbdShift = 1;
+				else if(key == "Control")
+					this.kbdLeft = 1;
+				else if(key == "Option")
+					this.kbdMiddle = 1;				
+				else if(key == "Command")
+					this.kbdRight = 1;
+				else if(key == "MouseBtn1")
+					this.mouseLeft = 1;
+				else if(key == "MouseBtn2")
+					this.mouseMiddle = 1;
+				else if(key == "MouseBtn3")
+					this.mouseRight = 1;
+			} else if (state == "up") {
+				if(key == "Shift_L")
+					this.kbdShift = 0;
+				else if(key == "Control")
+					this.kbdLeft = 0;
+				else if(key == "Option")
+					this.kbdMiddle = 0;				
+				else if(key == "Command")
+					this.kbdRight = 0;
+				else if(key == "MouseBtn1")
+					this.mouseLeft = 0;
+				else if(key == "MouseBtn2")
+					this.mouseMiddle = 0;
+				else if(key == "MouseBtn3")
+					this.mouseRight = 0;									
+			}
+		} else if(this.os == "linux") {
+			if(state == "down") {
+				if(key == "Shift_L")
+					this.kbdShift = 1;
+				else if(key == "Control_L")
+					this.kbdLeft = 1;
+				else if(key == "Control_R")
+					this.kbdLeft = 2;					
+				else if(key == "Super_L")
+					this.kbdMiddle = 1;				
+				else if(key == "Multi_key")
+					this.kbdMiddle = 2;				
+				else if(key == "Alt_L")
+					this.kbdRight = 1;				
+				else if(key == "ISO_Level3_Shift")																				
+					this.kbdRight = 2;				
+				else if(key == "MouseBtn1")
+					this.mouseLeft = 1;
+				else if(key == "MouseBtn2")
+					this.mouseMiddle = 1;
+				else if(key == "MouseBtn3")
+					this.mouseRight = 1;
+			} else if (state == "up") {
+				if(key == "Shift_L")
+					this.kbdShift = 0;
+				else if((key == "Control_L") && (this.kbdLeft == 1))
+					this.kbdLeft = 0;
+				else if((key == "Control_R") && (this.kbdLeft == 2))
+					this.kbdLeft = 0;					
+				else if((key == "Super_L") && (this.kbdMiddle == 1))
+					this.kbdMiddle = 0;				
+				else if((key == "Multi_key") && (this.kbdMiddle == 2))
+					this.kbdMiddle = 0;				
+				else if((key == "Alt_L") && (this.kbdRight == 1))
+					this.kbdRight = 0;				
+				else if((key == "ISO_Level3_Shift")	&& (this.kbdRight == 2))															
+					this.kbdRight = 0;		
+				else if((key == "MouseBtn1") && (this.mouseLeft == 1))
+					this.mouseLeft = 0;
+				else if((key == "MouseBtn2") && (this.mouseMiddle == 1))
+					this.mouseMiddle = 0;
+				else if((key == "MouseBtn3") && (this.mouseRight == 1))
+					this.mouseRight = 0;	
+			}
+		}
+	},
+
 	this.getStatus = function(address, state) {
 		var status = {"state": state};
+
+		if(this.os == "darwin") {
+			status.modifiers = {
+				left: {state: this.kbdLeft, keys: [
+					{id: "Control", label: "Ctrl"}, 
+					{id: "Control", label: "Ctrl"}]},
+				middle: {state: this.kbdMiddle, keys: [
+					{id: "Option", label: "Option"},
+					{id: "Option", label: "Option"}]},
+				right: {state: this.kbdRight, keys: [
+					{id: "Command", label: "Cmd"},
+					{id: "Command", label: "Cmd"}]}};
+		} else if(this.os == "linux") {
+			status.buttons = {
+				left: this.mouseLeft,
+				middle: this.mouseMiddle,
+				right: this.mouseRight};
+
+			status.modifiers = {
+				left: {state: this.kbdLeft, keys: [
+					{id: "Control", label: "Ctrl"}, 
+					{id: "Control_L", label: "CtrlL"},
+					{id: "Control_R", label: "CtrlR"}]},
+				middle: {state: this.kbdMiddle, keys: [
+					{id: "Super", label: "Super"},
+					{id: "Super_L", label: "SuperL"},
+					{id: "Multi_key", label: "SuperR"}]},
+				right: {state: this.kbdRight, keys: [
+					{id: "Alt", label: "Alt"},
+					{id: "Alt_L", label: "AltL"}, 
+					{id: "ISO_Level3_Shift", label: "AltGr"}]}};
+		}
 
 		return status;
 	}
@@ -384,6 +514,8 @@ exports.systemSoundStatus = SystemSoundStatus = function(inputCtl, outputCtl) {
 
 /*
 	status
+	latest
+	update?file=<file>
 */
 
 //
@@ -393,12 +525,12 @@ exports.systemSoundStatus = SystemSoundStatus = function(inputCtl, outputCtl) {
 exports.systemSurveillanceStatus = SystemSurveillanceStatus = function() {
 	// Public data
 
-	this.file = "capture-test.jpg"; // null;
+	this.file = null;
 
 	// Public functions
 
 	this.getFile = function(address) {
-		return "./data/surveillance/" + this.file;
+		return "./data/upload/" + this.file;
 	},
 
 	this.getStatus = function(address, state) {

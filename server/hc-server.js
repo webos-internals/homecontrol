@@ -36,16 +36,22 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var addr = "127.0.0.1";
 
-var port_ssd = 1900;
-var port_http = 3000;
-
 var os = require("os");
+var fs = require('fs');
 var net = require('net');
+var util = require('util');
 var dgram = require('dgram');
 var express = require('express');
 var form = require('connect-form');
+var auth = require('http-auth');
+
+var config = require('./config.js');
 
 var hcdata = require('./lib/data-types.js');
+
+//
+// MODULES
+//
 
 var loaded = [];
 
@@ -54,43 +60,25 @@ var modules = ["app/banshee", "app/frontrow", "app/itunes", "app/mpd",
 	"sys/1-wire", "sys/input", "sys/sound", "sys/surveillance"];
 
 //
-// HANDLE ARGUMENTS
+// NOTIFY USER
 //
 
-if(process.argv.length > 2) {
-	switch(process.argv[2]) {
-		case "-p":
-			if((!process.argv[3]) || (isNaN(parseInt(process.argv[3])))) {
-				console.log("The given port number is not a valid number!");
-				return;
-			} else {
-				port_http = parseInt(process.argv[3]);
-			}
-
-			if((process.argv[4]) && (!isNaN(parseInt(process.argv[4])))) {
-				port_ssd = parseInt(process.argv[4]);
-			}
-			break;
-	
-		case "-h":
-		default:
-			console.log("Usage: hc-server.js -h | -p <http_port> [<ssd_port>]");
-			return;
-	}	
-}
-
 console.log("Home Control server: starting");
-console.log("Listening on a port: " + port_http);
-console.log("SSD listening port: " + port_ssd);
 
 //
 // CREATE SSD SERVER
 //
 
+if(isNaN(parseInt(config.ssd_port))) {
+	console.log("Invalid port set for SSD in config.js!");
+	return;
+}
+
+console.log("SSD listening port: " + config.ssd_port);
+
 var socket = net.createConnection(80, 'www.google.com');
 
 socket.on('connect', function() {
-
 	addr = socket.address().address;
 
 	var ssd_srv = dgram.createSocket("udp4");
@@ -101,14 +89,14 @@ socket.on('connect', function() {
 		if(msg.slice(0, 8) == "M-SEARCH") {
 			var message = new Buffer(
 				"HTTP/1.1 200 OK\r\n" +
-				"LOCATION: http://" + addr + ":" + port_http + "/\r\n" +
+				"LOCATION: http://" + addr + ":" + config.http_port + "/\r\n" +
 				"SERVER: Home Control\r\n" +
 				"ST: " +
 				"EXT: " +
 				"\r\n"
 			);
 
-			console.log("Sending SSD message: " + addr + ":" + port_http);
+			console.log("Sending SSD message: " + addr + ":" + config.http_port);
 
 			var client = dgram.createSocket("udp4");
 
@@ -118,7 +106,7 @@ socket.on('connect', function() {
 		}
 	});
 
-	ssd_srv.bind(port_ssd);
+	ssd_srv.bind(config.ssd_port);
 
 	try {
 		ssd_srv.addMembership('239.255.255.250');
@@ -133,13 +121,69 @@ socket.on('connect', function() {
 // CREATE HTTP SERVER
 //
 
+if(isNaN(parseInt(config.http_port))) {
+	console.log("Invalid port set for HTTP in config.js!");
+	return;
+}
+
+console.log("Listening on a port: " + config.http_port);
+
+var basic = {
+	apply: function(req, res, next) {
+		next();
+	}
+};
+
+if(config.auth == "basic") {
+	console.log("Using authentication: basic");
+
+	basic = auth({
+		authRealm : "Private API",
+		authList : [config.username + ":" + config.password]
+	});
+}
+
 var http_srv = express.createServer(
 	form({ keepExtensions: true })
 );
 
 http_srv.get("/modules", function(req, res) {
 	res.send({request: req.param("id"), modules: loaded});
-});
+}.bind(this));
+
+http_srv.get("/uploads", basic.apply, function(req, res) {
+	res.send('<form method="post" enctype="multipart/form-data">' + 
+		'<p>File: <input type="file" name="file" /></p>' + 
+		'<p><input type="submit" value="Upload" /></p>' + 
+		'</form>');
+}.bind(this));
+
+http_srv.post("/uploads", basic.apply, function(req, res) {
+	var date = new Date();
+
+	var timestamp = date.getTime();
+
+	if(req.form) {
+		req.form.complete(function(err, fields, files) {
+			if(err) {
+				next(err);
+			} else {
+				ins = fs.createReadStream(files.file.path);
+
+				ous = fs.createWriteStream("./data/upload/file-" + timestamp + ".dat");
+
+				util.pump(ins, ous, function(err) {
+					if(err)
+						next(err);
+				});
+
+				console.log("File was uploaded: file-%s.dat", timestamp);
+			
+				res.send({file: "file-" + timestamp + ".dat"});
+			}
+		});
+	}
+}.bind(this));
 
 //
 // SETUP HTTP MODULES
@@ -154,7 +198,7 @@ for(var i = 0; i < modules.length; i++) {
 		if((moduleID) && (moduleName) && (moduleCategory)) {
 			console.log("Loading " + moduleCategory + " module: " + moduleName);
 
-			http_srv.get("/" + moduleID + "/*", function(moduleExecute, req, res) {
+			http_srv.get("/" + moduleID + "/*", basic.apply, function(execute, req, res) {
 				// Make sure that the request is still a live
 
 				try { var addr = req.socket.address().address; } catch(error) { return; }
@@ -163,34 +207,12 @@ for(var i = 0; i < modules.length; i++) {
 					return req.param(arg);
 				}};
 
-				moduleExecute(function(moduleID, moduleState, statusObject) {
+				execute(function(moduleID, moduleState, statusObject) {
 					res.header('Content-Type', 'text/javascript');
 
-					if(req.param("refresh" == "true"))
+					if(req.param("refresh") == "true")
 						statusObject.reset(addr);
 					
-					if(!moduleState)
-						res.sendfile(statusObject.getFile(addr));
-					else if(moduleState)
-						res.send(statusObject.getStatus(addr, moduleState));
-				}, url, addr);
-			}.bind(this, module.execute));
-
-			http_srv.post("/" + moduleID + "/*", function(moduleExecute, req, res) {
-				// Make sure that the request is still a live
-
-				try { var addr = req.socket.address().address; } catch(error) { return; }
-
-				var url = {command: req.params[0], arguments: function(arg) {
-					return req.param(arg);
-				}};
-
-				moduleExecute(function(moduleID, moduleState, statusObject) {
-					res.header('Content-Type', 'text/javascript');
-
-					if(req.param("refresh" == "true"))
-						statusObject.reset(addr);
-
 					if(!moduleState)
 						res.sendfile(statusObject.getFile(addr));
 					else if(moduleState)
@@ -204,5 +226,5 @@ for(var i = 0; i < modules.length; i++) {
 	}.bind(this, module, modules[i].slice(0, 3)), osType);
 }
 
-http_srv.listen(port_http);
+http_srv.listen(config.http_port);
 

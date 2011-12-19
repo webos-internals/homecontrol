@@ -65,29 +65,29 @@ exports.execute = function(cb, url, addr) {
 			switch(url.command) {
 				case "output/mute":
 					if(url.arguments("state") == "true") {
-						var execute_string = "rhythmbox-client --mute;";
+						var execute_string = "rhythmbox-client --no-start --mute;";
 					} else {
 						// Go around a bug in rhythmbox-client by setting volume
 			
-						var execute_string = "rhythmbox-client --unmute; rhythmbox-client --set-volume " + 
+						var execute_string = "rhythmbox-client --no-start --unmute; rhythmbox-client --set-volume " + 
 							(currentStatus.volume / 100) + ";";
 					}
 					break;
 
 				case "output/volume":
-					var execute_string = "rhythmbox-client --unmute; rhythmbox-client --set-volume " + 
+					var execute_string = "rhythmbox-client --no-start --unmute; rhythmbox-client --set-volume " + 
 						(url.arguments("level") / 100) + ";";
 					break;
 
 				case "playback/state":
-					var execute_string = "rhythmbox-client --" + url.arguments("action") + ";";
+					var execute_string = "rhythmbox-client --no-start --" + url.arguments("action") + ";";
 					break;
 
 				case "playback/skip":
 					if(url.arguments("action") == "prev")
-						var execute_string = "rhythmbox-client --previous;";
+						var execute_string = "rhythmbox-client --no-start --previous;";
 					else if(url.arguments("action") == "next")
-						var execute_string = "rhythmbox-client --next;";
+						var execute_string = "rhythmbox-client --no-start --next;";
 					break;
 
 				case "playback/seek":
@@ -97,13 +97,19 @@ exports.execute = function(cb, url, addr) {
 					break;
 			}
 
-			execute_string += "rhythmbox-client --print-volume;";
+			execute_string += "rhythmbox-client --no-start --print-volume;";
 		
-			execute_string += "rhythmbox-client --print-playing-format='%ta;%at;%tt;%td;%te'";
+			execute_string += "rhythmbox-client --no-start --print-playing-format='%ta;%at;%tt;%td;%te'";
 		
 			var child = exec(execute_string, function(error, stdout, stderr) {
 				if(error) {
 					cb("rhythmbox", "error", currentStatus);
+					
+					return;
+				}
+
+				if(output.length == 0) {
+					cb("rhythmbox", "closed", currentStatus);
 					
 					return;
 				}

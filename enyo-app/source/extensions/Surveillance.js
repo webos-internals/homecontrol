@@ -292,8 +292,8 @@ enyo.kind({
 
 		this.$.uploadFile.call({
 			"fileName": "/media/internal/test-" + this._timestamps[this._shot] + ".jpg",
-			"fileLabel":"image",
-			"url": "http://" + this.address + "surveillance/upload",
+			"fileLabel":"file",
+			"url": "http://" + this.address + "/uploads",
 			"contentType": "image/jpg",
 			"subscribe": true 
 		});	
