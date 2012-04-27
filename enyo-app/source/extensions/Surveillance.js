@@ -146,12 +146,10 @@ enyo.kind({
 		this.$.clientText.hide();
 
 		if(this.module == "cisco") {
-			this.$.clientText.setContent("This controller will be enabled in next release...");
-			
 			this.$.server.hide();
 			this.$.serverImage.hide();
-			this.$.videoObject.hide();
-			this.$.clientText.show();
+            
+            this.playVideo();
 /*
 			this.$.imageView.hide();	
 			
